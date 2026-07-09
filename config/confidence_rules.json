@@ -1,0 +1,32 @@
+{
+    "confidence_weights": {
+        "trend_score": 0.15,
+        "momentum_score": 0.15,
+        "volume_score": 0.10,
+        "structure_score": 0.15,
+        "relative_strength_score": 0.10,
+        "sector_rotation_score": 0.10,
+        "multi_timeframe_score": 0.10,
+        "entry_score": 0.05,
+        "risk_score": 0.05,
+        "walk_forward_score": 0.05,
+        "strategy_rank_score": 0.0
+    },
+    "grade_thresholds": {
+        "A_PLUS": 90.0,
+        "A": 80.0,
+        "B": 65.0,
+        "C": 50.0,
+        "D": 35.0
+    },
+    "status_thresholds": {
+        "HIGH": 80.0,
+        "MEDIUM": 50.0,
+        "LOW": 35.0
+    },
+    "normalization_bounds": {
+        "default_min": 0.0,
+        "default_max": 100.0
+    },
+    "minimum_required_engines": 5
+}

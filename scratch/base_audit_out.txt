@@ -1,0 +1,451 @@
+2026-07-06 20:53:09,971 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-06 20:53:09,971 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-07-06 20:53:09,971 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+2026-07-06 20:53:09,971 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-06 20:53:09,972 - market.market_engine - INFO - MarketEngine initialized securely.
+2026-07-06 20:53:09,972 - ranking.ranking_engine - INFO - RankingEngine initialized securely.
+2026-07-06 20:53:09,973 - scanner.scanner_engine - INFO - ScannerEngine initialized securely with all core sub-engines.
+2026-07-06 20:53:09,973 - scanner.scanner_engine - INFO - Starting batch market scan | Target Count: 10
+2026-07-06 20:53:11,560 - market.yahoo_provider - WARNING - No OHLCV data returned for SBI.NS on attempt 1.
+2026-07-06 20:53:11,617 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=29.81
+2026-07-06 20:53:11,657 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.44
+2026-07-06 20:53:11,723 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=72.02
+2026-07-06 20:53:11,767 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=36.40
+2026-07-06 20:53:11,779 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=11.74
+2026-07-06 20:53:11,791 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=40.76
+
+========================================
+DEBUG PIPELINE: HINDUNILVR.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      2202.00
+EMA20:             2169.07
+EMA50:             2164.29
+VWAP:              2184.14
+RSI:               57.02
+Old ADX (Mom):     20.27
+ADX Engine ADX:    19.40
+AVWAP Engine:      2140.77 (Premium)
+MTF Confluence:    30 (Conflict)
+Trend Score:       30
+Momentum Score:    20
+Structure Score:   65
+Market Score:      17.44
+Decision Score:    46.25
+Confidence:        61.03
+Decision:          WATCH
+Reasons:
+  - EMA20 above EMA50
+  - Price above EMA20
+  - Price above VWAP
+  - EMA20 rising
+  - Higher timeframe confirmed
+  - Supertrend Bullish (Trend Confirmation)
+  - RSI above 55
+  - RSI rising
+  - +DI above -DI
+  - MACD Bullish (Above Signal & Zero)
+  - Bearish Structure (LH + LL) detected.
+  - Bullish CHoCH: Price closed above last Lower High (2200.90).
+  - Supply Zone Active near 2201.55.
+  - Demand Zone Active near 2146.75.
+  - Structure Quality: Healthy Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 25.00
+  - Momentum Weight (Max 25.0) Score: 25.00
+  - Structure Weight (Max 25.0) Score: 16.25
+  - Neutral Market: +0.00
+  - Decision: [BUY] - Trend, Momentum, and Structure all agree.
+  - ADX < 20 (19.4): Weak Trend. Low Conviction. Penalty applied.
+  - Validation Pending: Not meeting strict entry rules.
+  - ADX < 20 Sideways Filter: Downgrading BUY to WATCH.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BULL
+  - 4H Trend: STRONG_BEAR
+  - Major Conflict: Weekly is Bearish but Daily is Bullish. Reduce Confidence.
+  - ADX & AVWAP Adjusted Confidence: 81.03%
+  - MTCE Confidence Penalty: -20% -> 61.03%
+  - Anchor Point: Volume Spike (38)
+  - Price is at Premium (>2% above AVWAP). Institutional Bias: Bullish.
+  - Institutional Strength: Price above AVWAP + Increasing Volume.
+========================================
+
+2026-07-06 20:53:11,872 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=43.87
+2026-07-06 20:53:11,894 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=53.96
+
+========================================
+DEBUG PIPELINE: RELIANCE.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      1321.30
+EMA20:             1311.07
+EMA50:             1320.34
+VWAP:              1339.29
+RSI:               52.72
+Old ADX (Mom):     16.10
+ADX Engine ADX:    15.16
+AVWAP Engine:      1310.25 (Fair Value)
+MTF Confluence:    100 (Strong Sell Environment)
+Trend Score:       5
+Momentum Score:    5
+Structure Score:   25
+Market Score:      29.81
+Decision Score:    27.5
+Confidence:        39.98
+Decision:          WATCH
+Reasons:
+  - Price above EMA20
+  - RSI rising
+  - Expanding/Volatile Structure (HH + LL).
+  - Supply Zone Active near 1363.74.
+  - Demand Zone Active near 1293.75.
+  - Structure Quality: Weak Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 5.00
+  - Momentum Weight (Max 25.0) Score: 6.25
+  - Structure Weight (Max 25.0) Score: 6.25
+  - Neutral Market: +0.00
+  - Decision: [SELL] - Trend and Momentum are both weak.
+  - ADX < 20 (15.16): Weak Trend. Low Conviction. Penalty applied.
+  - Validation Pending: Not meeting strict entry rules.
+  - ADX < 20 Sideways Filter: Downgrading SELL to WATCH.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BEAR
+  - 4H Trend: STRONG_BEAR
+  - Strong Bearish Confluence across all timeframes.
+  - MTCE: Perfect Alignment! Boosting Elite Score (+10).
+  - ADX & AVWAP Adjusted Confidence: 29.98%
+  - MTCE Confidence Boost: +10% -> 39.98%
+  - Anchor Point: 52W Low (47)
+  - Price is near Fair Value (within ±2% of AVWAP).
+  - Flag: Possible Bear Trap / Fake Breakdown (Crossed below AVWAP, returned above).
+========================================
+
+
+========================================
+DEBUG PIPELINE: BHARTIARTL.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      1925.70
+EMA20:             1868.75
+EMA50:             1851.99
+VWAP:              1846.96
+RSI:               65.03
+Old ADX (Mom):     16.29
+ADX Engine ADX:    15.42
+AVWAP Engine:      1843.85 (Premium)
+MTF Confluence:    30 (Conflict)
+Trend Score:       30
+Momentum Score:    20
+Structure Score:   35
+Market Score:      36.4
+Decision Score:    42.39
+Confidence:        51.48
+Decision:          WATCH
+Reasons:
+  - EMA20 above EMA50
+  - Price above EMA20
+  - Price above VWAP
+  - EMA20 rising
+  - Higher timeframe confirmed
+  - Supertrend Bullish (Trend Confirmation)
+  - RSI above 55
+  - RSI rising
+  - +DI above -DI
+  - MACD Bullish (Above Signal & Zero)
+  - Bullish Structure (HH + HL) detected.
+  - Bull Trap: Upside Fake Breakout detected.
+  - Supply Zone Active near 1899.85.
+  - Demand Zone Active near 1769.8.
+  - Structure Quality: Weak Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 25.00
+  - Momentum Weight (Max 25.0) Score: 25.00
+  - Structure Weight (Max 25.0) Score: 8.75
+  - Bullish Market Adjustment: +3.64
+  - Decision: [WATCH] - Only two engines agree.
+  - ADX < 20 (15.42): Weak Trend. Low Conviction. Penalty applied.
+  - Validation Pending: Not meeting strict entry rules.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BULL
+  - 4H Trend: STRONG_BEAR
+  - Major Conflict: Weekly is Bearish but Daily is Bullish. Reduce Confidence.
+  - ADX & AVWAP Adjusted Confidence: 71.48%
+  - MTCE Confidence Penalty: -20% -> 51.48%
+  - Anchor Point: Volume Spike (38)
+  - Price is at Premium (>2% above AVWAP). Institutional Bias: Bullish.
+  - Positive Confirmation: Retest of AVWAP holding.
+========================================
+
+
+========================================
+DEBUG PIPELINE: HDFCBANK.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      829.85
+EMA20:             785.63
+EMA50:             771.70
+VWAP:              768.41
+RSI:               75.31
+Old ADX (Mom):     30.90
+ADX Engine ADX:    30.03
+AVWAP Engine:      822.12 (Fair Value)
+MTF Confluence:    30 (Conflict)
+Trend Score:       30
+Momentum Score:    25
+Structure Score:   70
+Market Score:      72.02
+Decision Score:    54.7
+Confidence:        61.0
+Decision:          WAIT
+Reasons:
+  - EMA20 above EMA50
+  - Price above EMA20
+  - Price above VWAP
+  - EMA20 rising
+  - Higher timeframe confirmed
+  - Supertrend Bullish (Trend Confirmation)
+  - RSI above 55
+  - RSI rising
+  - ADX above 25
+  - +DI above -DI
+  - MACD Bullish (Above Signal & Zero)
+  - Bullish Structure (HH + HL) detected.
+  - Bullish BOS: Price broke above last Higher High (806.10).
+  - Supply Zone Active near 779.78.
+  - Demand Zone Active near 720.8.
+  - Structure Quality: Strong Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 25.00
+  - Momentum Weight (Max 25.0) Score: 25.00
+  - Structure Weight (Max 25.0) Score: 17.50
+  - Bullish Market Adjustment: +7.20
+  - Decision: [BUY] - Trend, Momentum, and Structure all agree.
+  - ADX 25-35 (30.03): Healthy Trend. Positive Score.
+  - BUY Validated (+DI > -DI and ADX > 25).
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BULL
+  - 4H Trend: STRONG_BEAR
+  - Major Conflict: Weekly is Bearish but Daily is Bullish. Reduce Confidence.
+  - MTCE: Major Conflict. Rejecting BUY trade. Downgrading to WAIT.
+  - ADX & AVWAP Adjusted Confidence: 81.00%
+  - MTCE Confidence Penalty: -20% -> 61.00%
+  - Anchor Point: 52W High (64)
+  - Price is near Fair Value (within ±2% of AVWAP).
+========================================
+
+
+========================================
+DEBUG PIPELINE: TCS.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      2057.60
+EMA20:             2118.29
+EMA50:             2214.29
+VWAP:              2291.22
+RSI:               41.63
+Old ADX (Mom):     24.90
+ADX Engine ADX:    24.02
+AVWAP Engine:      2185.96 (Discount)
+MTF Confluence:    100 (Strong Sell Environment)
+Trend Score:       0
+Momentum Score:    5
+Structure Score:   50
+Market Score:      43.87
+Decision Score:    24.36
+Confidence:        38.15
+Decision:          WATCH
+Reasons:
+  - RSI rising
+  - Bearish Structure (LH + LL) detected.
+  - Supply Zone Active near 2461.14.
+  - Structure Quality: Healthy Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 0.00
+  - Momentum Weight (Max 25.0) Score: 6.25
+  - Structure Weight (Max 25.0) Score: 12.50
+  - Bearish Market Adjustment: -4.39
+  - Decision: [SELL] - Trend and Momentum are both weak.
+  - ADX 20-25 (24.02): Trend Starting. Neutral.
+  - Validation Pending: Not meeting strict entry rules.
+  - ADX Engine: Failed SELL validation (-DI > +DI & ADX > 25). Downgrading to WATCH.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BEAR
+  - 4H Trend: STRONG_BEAR
+  - Strong Bearish Confluence across all timeframes.
+  - MTCE: Perfect Alignment! Boosting Elite Score (+10).
+  - ADX & AVWAP Adjusted Confidence: 28.15%
+  - MTCE Confidence Boost: +10% -> 38.15%
+  - Anchor Point: Volume Spike (38)
+  - Price is at Discount (<2% below AVWAP). Institutional Bias: Bearish.
+========================================
+
+
+========================================
+DEBUG PIPELINE: INFY.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      1042.20
+EMA20:             1068.93
+EMA50:             1120.73
+VWAP:              1152.86
+RSI:               42.91
+Old ADX (Mom):     24.50
+ADX Engine ADX:    23.63
+AVWAP Engine:      1110.99 (Discount)
+MTF Confluence:    100 (Strong Sell Environment)
+Trend Score:       0
+Momentum Score:    5
+Structure Score:   50
+Market Score:      40.76
+Decision Score:    24.67
+Confidence:        37.85
+Decision:          WATCH
+Reasons:
+  - RSI rising
+  - Bearish Structure (LH + LL) detected.
+  - Supply Zone Active near 1162.18.
+  - Demand Zone Active near 1127.31.
+  - Structure Quality: Healthy Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 0.00
+  - Momentum Weight (Max 25.0) Score: 6.25
+  - Structure Weight (Max 25.0) Score: 12.50
+  - Bearish Market Adjustment: -4.08
+  - Decision: [SELL] - Trend and Momentum are both weak.
+  - ADX 20-25 (23.63): Trend Starting. Neutral.
+  - Validation Pending: Not meeting strict entry rules.
+  - ADX Engine: Failed SELL validation (-DI > +DI & ADX > 25). Downgrading to WATCH.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BEAR
+  - 4H Trend: STRONG_BEAR
+  - Strong Bearish Confluence across all timeframes.
+  - MTCE: Perfect Alignment! Boosting Elite Score (+10).
+  - ADX & AVWAP Adjusted Confidence: 27.85%
+  - MTCE Confidence Boost: +10% -> 37.85%
+  - Anchor Point: Volume Spike (38)
+  - Price is at Discount (<2% below AVWAP). Institutional Bias: Bearish.
+========================================
+
+
+========================================
+DEBUG PIPELINE: ICICIBANK.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      1426.90
+EMA20:             1360.04
+EMA50:             1318.85
+VWAP:              1301.53
+RSI:               76.02
+Old ADX (Mom):     37.50
+ADX Engine ADX:    36.63
+AVWAP Engine:      1423.37 (Fair Value)
+MTF Confluence:    50 (Wait for Confirmation)
+Trend Score:       30
+Momentum Score:    25
+Structure Score:   70
+Market Score:      53.96
+Decision Score:    72.9
+Confidence:        83.4
+Decision:          WAIT
+Reasons:
+  - EMA20 above EMA50
+  - Price above EMA20
+  - Price above VWAP
+  - EMA20 rising
+  - Higher timeframe confirmed
+  - Supertrend Bullish (Trend Confirmation)
+  - RSI above 55
+  - RSI rising
+  - ADX above 25
+  - +DI above -DI
+  - MACD Bullish (Above Signal & Zero)
+  - Bullish Structure (HH + HL) detected.
+  - Bullish BOS: Price broke above last Higher High (1404.00).
+  - Supply Zone Active near 1297.9.
+  - Demand Zone Active near 1218.5.
+  - Structure Quality: Strong Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 25.00
+  - Momentum Weight (Max 25.0) Score: 25.00
+  - Structure Weight (Max 25.0) Score: 17.50
+  - Bullish Market Adjustment: +5.40
+  - Decision: [BUY] - Trend, Momentum, and Structure all agree.
+  - ADX 35-50 (36.63): Strong Trend. High Score.
+  - BUY Validated (+DI > -DI and ADX > 25).
+  - Weekly Trend: BULL
+  - Daily Trend: STRONG_BULL
+  - 4H Trend: STRONG_BEAR
+  - Wait: Daily is Bullish but 4H entry timeframe is Bearish. No immediate entry.
+  - MTCE: Wait for confirmation. Downgrading BUY to WAIT.
+  - ADX & AVWAP Adjusted Confidence: 83.40%
+  - Anchor Point: 52W High (64)
+  - Price is near Fair Value (within ±2% of AVWAP).
+========================================
+
+
+========================================
+DEBUG PIPELINE: ITC.NS
+========================================
+Interval:          1d
+Candles Loaded:    65
+Latest Close:      288.25
+EMA20:             289.23
+EMA50:             290.26
+VWAP:              293.24
+RSI:               48.21
+Old ADX (Mom):     16.12
+ADX Engine ADX:    15.24
+AVWAP Engine:      286.44 (Fair Value)
+MTF Confluence:    100 (Strong Sell Environment)
+Trend Score:       4
+Momentum Score:    5
+Structure Score:   25
+Market Score:      11.74
+Decision Score:    25.33
+Confidence:        36.8
+Decision:          WATCH
+Reasons:
+  - EMA20 rising
+  - RSI rising
+  - Expanding/Volatile Structure (HH + LL).
+  - Supply Zone Active near 309.27.
+  - Demand Zone Active near 292.58.
+  - Structure Quality: Weak Structure.
+  - --- Dynamic Weighted Math ---
+  - Trend Weight (Max 25.0) Score: 4.00
+  - Momentum Weight (Max 25.0) Score: 6.25
+  - Structure Weight (Max 25.0) Score: 6.25
+  - Bearish Market Adjustment: -1.17
+  - Decision: [SELL] - Trend and Momentum are both weak.
+  - ADX < 20 (15.24): Weak Trend. Low Conviction. Penalty applied.
+  - Validation Pending: Not meeting strict entry rules.
+  - ADX < 20 Sideways Filter: Downgrading SELL to WATCH.
+  - Weekly Trend: STRONG_BEAR
+  - Daily Trend: STRONG_BEAR
+  - 4H Trend: STRONG_BEAR
+  - Strong Bearish Confluence across all timeframes.
+  - MTCE: Perfect Alignment! Boosting Elite Score (+10).
+  - ADX & AVWAP Adjusted Confidence: 26.80%
+  - MTCE Confidence Boost: +10% -> 36.80%
+  - Anchor Point: 52W Low (42)
+  - Price is near Fair Value (within ±2% of AVWAP).
+========================================
+
+2026-07-06 20:53:13,142 - market.yahoo_provider - WARNING - No OHLCV data returned for SBI.NS on attempt 2.
+2026-07-06 20:53:13,346 - market.yahoo_provider - WARNING - No OHLCV data returned for L&T.NS on attempt 1.
+2026-07-06 20:53:14,202 - market.yahoo_provider - WARNING - No OHLCV data returned for SBI.NS on attempt 3.
+2026-07-06 20:53:15,205 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for SBI.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:53:15,206 - scanner.scanner_engine - WARNING - Skipping SBI.NS: No OHLCV data retrieved.
+2026-07-06 20:53:15,757 - market.yahoo_provider - WARNING - No OHLCV data returned for L&T.NS on attempt 2.
+2026-07-06 20:53:17,504 - market.yahoo_provider - WARNING - No OHLCV data returned for L&T.NS on attempt 3.
+2026-07-06 20:53:18,509 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for L&T.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:53:18,510 - scanner.scanner_engine - WARNING - Skipping L&T.NS: No OHLCV data retrieved.
+2026-07-06 20:53:18,515 - scanner.scanner_engine - INFO - Market scan completed successfully. Processed 8 assets.

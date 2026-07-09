@@ -1,0 +1,774 @@
+2026-07-06 20:49:22,718 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-06 20:49:22,719 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-06 20:49:22,719 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-07-06 20:49:22,720 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+2026-07-06 20:49:22,720 - market.market_engine - INFO - MarketEngine initialized securely.
+2026-07-06 20:49:22,720 - ranking.ranking_engine - INFO - RankingEngine initialized securely.
+2026-07-06 20:49:22,722 - scanner.scanner_engine - INFO - ScannerEngine initialized securely with all core sub-engines.
+================================================
+ROOT CAUSE ISOLATION AUDIT - PIPELINE TRACE
+================================================
+
+2026-07-06 20:49:22,722 - scanner.scanner_engine - INFO - Starting batch market scan | Target Count: 178
+2026-07-06 20:49:24,801 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.35
+2026-07-06 20:49:24,813 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=9.28
+2026-07-06 20:49:24,827 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=31.36
+2026-07-06 20:49:24,838 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=2.75
+2026-07-06 20:49:24,848 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=67.98
+2026-07-06 20:49:24,864 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=37.62
+2026-07-06 20:49:24,896 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=14.95
+2026-07-06 20:49:24,921 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=46.00
+2026-07-06 20:49:25,001 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=21.82
+2026-07-06 20:49:25,183 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=84.68
+2026-07-06 20:49:25,979 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=19.82
+2026-07-06 20:49:25,996 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=66.71
+2026-07-06 20:49:26,011 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=69.19
+2026-07-06 20:49:26,097 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=2.79
+2026-07-06 20:49:26,109 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=88.11
+2026-07-06 20:49:26,134 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=96.43
+2026-07-06 20:49:26,147 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=55.04
+2026-07-06 20:49:26,158 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=1.42
+2026-07-06 20:49:26,598 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=20.64
+2026-07-06 20:49:26,775 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=8.61
+2026-07-06 20:49:27,179 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.26
+2026-07-06 20:49:27,194 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=84.81
+2026-07-06 20:49:27,253 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=50.52
+2026-07-06 20:49:27,267 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=33.32
+2026-07-06 20:49:27,366 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=70.94
+2026-07-06 20:49:27,520 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=47.70
+2026-07-06 20:49:27,647 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=41.25
+2026-07-06 20:49:27,841 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=3.01
+2026-07-06 20:49:27,914 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=70.04
+2026-07-06 20:49:28,082 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=36.40
+2026-07-06 20:49:28,415 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=44.18
+2026-07-06 20:49:28,436 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=60.27
+2026-07-06 20:49:28,443 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=14.47
+2026-07-06 20:49:28,523 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.44
+2026-07-06 20:49:28,673 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=33.15
+2026-07-06 20:49:28,858 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=64.61
+2026-07-06 20:49:28,998 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=2.50
+2026-07-06 20:49:29,062 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=37.10
+2026-07-06 20:49:29,074 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=42.79
+2026-07-06 20:49:29,545 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=59.93
+2026-07-06 20:49:29,556 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=68.06
+2026-07-06 20:49:29,566 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=4.59
+2026-07-06 20:49:29,815 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=4.91
+2026-07-06 20:49:29,911 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=5.42
+2026-07-06 20:49:30,303 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=27.95
+2026-07-06 20:49:30,317 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=22.04
+2026-07-06 20:49:30,350 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=75.13
+2026-07-06 20:49:30,410 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=84.73
+2026-07-06 20:49:30,434 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=57.24
+2026-07-06 20:49:30,732 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=32.10
+2026-07-06 20:49:30,806 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=22.71
+2026-07-06 20:49:30,820 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=43.66
+2026-07-06 20:49:30,962 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=29.76
+2026-07-06 20:49:31,168 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=33.07
+2026-07-06 20:49:31,420 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=67.57
+2026-07-06 20:49:31,558 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=43.59
+2026-07-06 20:49:31,575 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=63.45
+2026-07-06 20:49:31,578 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=43.08
+2026-07-06 20:49:31,590 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=19.60
+2026-07-06 20:49:32,274 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=30.21
+2026-07-06 20:49:32,362 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=14.38
+2026-07-06 20:49:32,476 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=38.16
+2026-07-06 20:49:32,756 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=33.33
+2026-07-06 20:49:32,796 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=27.23
+2026-07-06 20:49:33,196 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=6.37
+2026-07-06 20:49:33,238 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=76.92
+2026-07-06 20:49:33,262 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=59.40
+2026-07-06 20:49:33,284 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=68.83
+2026-07-06 20:49:34,019 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=18.37
+2026-07-06 20:49:34,040 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=25.35
+2026-07-06 20:49:34,053 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 1.
+2026-07-06 20:49:34,079 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=6.88
+2026-07-06 20:49:34,286 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=32.73
+2026-07-06 20:49:34,404 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=72.02
+2026-07-06 20:49:34,773 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=12.67
+2026-07-06 20:49:34,920 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=11.24
+2026-07-06 20:49:34,948 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=7.46
+2026-07-06 20:49:34,959 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=39.36
+2026-07-06 20:49:35,326 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=7.53
+2026-07-06 20:49:35,353 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=53.96
+2026-07-06 20:49:35,366 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.44
+2026-07-06 20:49:35,525 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.06
+2026-07-06 20:49:35,944 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=10.29
+2026-07-06 20:49:36,632 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 2.
+2026-07-06 20:49:36,708 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=49.26
+2026-07-06 20:49:36,759 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=18.18
+2026-07-06 20:49:36,810 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=29.59
+2026-07-06 20:49:36,953 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=42.10
+2026-07-06 20:49:36,974 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=52.38
+2026-07-06 20:49:37,242 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=26.64
+2026-07-06 20:49:37,271 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=58.65
+2026-07-06 20:49:37,292 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=55.76
+2026-07-06 20:49:37,582 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=52.01
+2026-07-06 20:49:37,950 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=40.76
+2026-07-06 20:49:37,979 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=56.46
+2026-07-06 20:49:38,052 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=NEUTRAL, ADX=2.88
+2026-07-06 20:49:38,166 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=91.71
+2026-07-06 20:49:38,254 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=35.98
+2026-07-06 20:49:38,582 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 3.
+2026-07-06 20:49:38,624 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=11.74
+2026-07-06 20:49:38,646 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=30.90
+2026-07-06 20:49:38,692 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=2.53
+2026-07-06 20:49:38,914 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=34.26
+2026-07-06 20:49:39,255 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=49.34
+2026-07-06 20:49:39,295 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=38.59
+2026-07-06 20:49:39,504 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=22.73
+2026-07-06 20:49:39,587 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GMRINFRA.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:49:39,588 - scanner.scanner_engine - WARNING - Skipping GMRINFRA.NS: No OHLCV data retrieved.
+2026-07-06 20:49:39,952 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=4.88
+2026-07-06 20:49:39,962 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=82.96
+2026-07-06 20:49:40,339 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=38.97
+2026-07-06 20:49:40,437 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=57.20
+2026-07-06 20:49:40,581 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=79.16
+2026-07-06 20:49:40,731 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.24
+2026-07-06 20:49:41,787 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=33.12
+2026-07-06 20:49:41,807 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 1.
+2026-07-06 20:49:42,133 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=14.77
+2026-07-06 20:49:42,156 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=0.17
+2026-07-06 20:49:42,165 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=24.02
+2026-07-06 20:49:42,180 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=71.46
+2026-07-06 20:49:42,653 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=1.88
+2026-07-06 20:49:42,746 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=18.00
+2026-07-06 20:49:42,808 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.89
+2026-07-06 20:49:42,871 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=11.50
+2026-07-06 20:49:43,066 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=26.62
+2026-07-06 20:49:43,300 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=19.97
+2026-07-06 20:49:43,359 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=15.93
+2026-07-06 20:49:43,808 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=18.03
+2026-07-06 20:49:43,813 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=4.75
+2026-07-06 20:49:43,860 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 2.
+2026-07-06 20:49:44,140 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=71.55
+2026-07-06 20:49:44,203 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=43.14
+2026-07-06 20:49:44,412 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=83.80
+2026-07-06 20:49:44,575 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=16.58
+2026-07-06 20:49:44,728 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=69.76
+2026-07-06 20:49:44,763 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=29.52
+2026-07-06 20:49:45,225 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=51.31
+2026-07-06 20:49:45,237 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=13.70
+2026-07-06 20:49:45,969 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=26.51
+2026-07-06 20:49:45,994 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 3.
+2026-07-06 20:49:46,454 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 1.
+2026-07-06 20:49:46,484 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=13.93
+2026-07-06 20:49:46,527 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=32.75
+2026-07-06 20:49:46,806 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=54.35
+2026-07-06 20:49:46,837 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=60.84
+2026-07-06 20:49:46,848 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=33.68
+2026-07-06 20:49:47,000 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for LTIM.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:49:47,001 - scanner.scanner_engine - WARNING - Skipping LTIM.NS: No OHLCV data retrieved.
+2026-07-06 20:49:47,061 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=26.68
+2026-07-06 20:49:47,103 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=20.02
+2026-07-06 20:49:47,583 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=40.82
+2026-07-06 20:49:47,765 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=13.51
+2026-07-06 20:49:47,936 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=29.81
+2026-07-06 20:49:47,950 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=60.46
+2026-07-06 20:49:48,490 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 2.
+2026-07-06 20:49:48,536 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=61.58
+2026-07-06 20:49:48,545 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=3.19
+2026-07-06 20:49:48,568 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=15.96
+2026-07-06 20:49:48,578 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=15.56
+2026-07-06 20:49:48,681 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=34.81
+2026-07-06 20:49:49,231 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=56.93
+2026-07-06 20:49:49,328 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=69.83
+2026-07-06 20:49:49,514 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=5.96
+2026-07-06 20:49:49,712 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=5.35
+2026-07-06 20:49:49,735 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=92.19
+2026-07-06 20:49:49,809 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=47.02
+2026-07-06 20:49:49,844 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=42.93
+2026-07-06 20:49:50,002 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=10.81
+2026-07-06 20:49:50,299 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 3.
+2026-07-06 20:49:50,365 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=4.13
+2026-07-06 20:49:50,619 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=15.31
+2026-07-06 20:49:50,941 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=58.13
+2026-07-06 20:49:50,990 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=43.87
+2026-07-06 20:49:51,304 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for PEL.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:49:51,305 - scanner.scanner_engine - WARNING - Skipping PEL.NS: No OHLCV data retrieved.
+2026-07-06 20:49:51,659 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 1.
+2026-07-06 20:49:51,705 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=4.86
+2026-07-06 20:49:51,734 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=18.94
+2026-07-06 20:49:51,841 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=73.27
+2026-07-06 20:49:51,987 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=38.44
+2026-07-06 20:49:52,015 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=89.21
+2026-07-06 20:49:52,320 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=44.10
+2026-07-06 20:49:52,346 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=27.63
+2026-07-06 20:49:52,598 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.29
+2026-07-06 20:49:52,643 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=7.65
+2026-07-06 20:49:52,826 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=21.20
+2026-07-06 20:49:52,993 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=2.93
+2026-07-06 20:49:53,294 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=34.92
+2026-07-06 20:49:53,959 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 2.
+2026-07-06 20:49:53,988 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=54.08
+2026-07-06 20:49:54,016 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=18.45
+2026-07-06 20:49:55,911 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 3.
+2026-07-06 20:49:56,913 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for TATAMOTORS.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 20:49:56,914 - scanner.scanner_engine - WARNING - Skipping TATAMOTORS.NS: No OHLCV data retrieved.
+2026-07-06 20:49:56,919 - scanner.scanner_engine - INFO - Market scan completed successfully. Processed 174 assets.
+GMRINFRA.NS
+Data / OHLCV FAIL
+--------------------------------
+LTIM.NS
+Data / OHLCV FAIL
+--------------------------------
+PEL.NS
+Data / OHLCV FAIL
+--------------------------------
+TATAMOTORS.NS
+Data / OHLCV FAIL
+--------------------------------
+IPCALAB.NS
+Base Scanner FAIL
+--------------------------------
+AUROPHARMA.NS
+Base Scanner FAIL
+--------------------------------
+GODREJPROP.NS
+Base Scanner FAIL
+--------------------------------
+TRENT.NS
+Base Scanner FAIL
+--------------------------------
+EXIDEIND.NS
+Base Scanner FAIL
+--------------------------------
+APOLLOHOSP.NS
+Base Scanner FAIL
+--------------------------------
+BAJFINANCE.NS
+Base Scanner FAIL
+--------------------------------
+LUPIN.NS
+Base Scanner FAIL
+--------------------------------
+OFSS.NS
+Base Scanner FAIL
+--------------------------------
+SHRIRAMFIN.NS
+Base Scanner FAIL
+--------------------------------
+ABCAPITAL.NS
+Base Scanner FAIL
+--------------------------------
+BOSCHLTD.NS
+Base Scanner FAIL
+--------------------------------
+CHOLAFIN.NS
+Base Scanner FAIL
+--------------------------------
+GRANULES.NS
+Base Scanner FAIL
+--------------------------------
+ZYDUSLIFE.NS
+Base Scanner FAIL
+--------------------------------
+ICICIBANK.NS
+Base Scanner FAIL
+--------------------------------
+TITAN.NS
+Base Scanner FAIL
+--------------------------------
+ALKEM.NS
+Base Scanner FAIL
+--------------------------------
+ADANIENT.NS
+Base Scanner FAIL
+--------------------------------
+BHARATFORG.NS
+Base Scanner FAIL
+--------------------------------
+DRREDDY.NS
+Base Scanner FAIL
+--------------------------------
+SUNPHARMA.NS
+Base Scanner FAIL
+--------------------------------
+RECLTD.NS
+Base Scanner FAIL
+--------------------------------
+INDIGO.NS
+Base Scanner FAIL
+--------------------------------
+INDUSINDBK.NS
+Base Scanner FAIL
+--------------------------------
+PAGEIND.NS
+Base Scanner FAIL
+--------------------------------
+CUB.NS
+Base Scanner FAIL
+--------------------------------
+ASHOKLEY.NS
+Base Scanner FAIL
+--------------------------------
+TVSMOTOR.NS
+Base Scanner FAIL
+--------------------------------
+NESTLEIND.NS
+Base Scanner FAIL
+--------------------------------
+LAURUSLABS.NS
+Base Scanner FAIL
+--------------------------------
+NAVINFLUOR.NS
+Base Scanner FAIL
+--------------------------------
+INDHOTEL.NS
+Base Scanner FAIL
+--------------------------------
+MANAPPURAM.NS
+Base Scanner FAIL
+--------------------------------
+OBEROIRLTY.NS
+Base Scanner FAIL
+--------------------------------
+FEDERALBNK.NS
+Base Scanner FAIL
+--------------------------------
+IDFCFIRSTB.NS
+Base Scanner FAIL
+--------------------------------
+TORNTPHARM.NS
+Base Scanner FAIL
+--------------------------------
+MARICO.NS
+Base Scanner FAIL
+--------------------------------
+CIPLA.NS
+Base Scanner FAIL
+--------------------------------
+CANFINHOME.NS
+Base Scanner FAIL
+--------------------------------
+M&MFIN.NS
+Base Scanner FAIL
+--------------------------------
+ABBOTINDIA.NS
+Base Scanner FAIL
+--------------------------------
+GRASIM.NS
+Base Scanner FAIL
+--------------------------------
+DLF.NS
+Base Scanner FAIL
+--------------------------------
+HDFCAMC.NS
+Base Scanner FAIL
+--------------------------------
+AUBANK.NS
+Base Scanner FAIL
+--------------------------------
+HAL.NS
+Base Scanner FAIL
+--------------------------------
+PIDILITIND.NS
+Base Scanner FAIL
+--------------------------------
+LALPATHLAB.NS
+Base Scanner FAIL
+--------------------------------
+ASIANPAINT.NS
+Base Scanner FAIL
+--------------------------------
+ADANIPORTS.NS
+Base Scanner FAIL
+--------------------------------
+BIOCON.NS
+Base Scanner FAIL
+--------------------------------
+SBIN.NS
+Base Scanner FAIL
+--------------------------------
+DALBHARAT.NS
+Base Scanner FAIL
+--------------------------------
+METROPOLIS.NS
+Base Scanner FAIL
+--------------------------------
+BAJAJFINSV.NS
+Base Scanner FAIL
+--------------------------------
+APOLLOTYRE.NS
+Base Scanner FAIL
+--------------------------------
+DIVISLAB.NS
+Base Scanner FAIL
+--------------------------------
+HDFCBANK.NS
+Base Scanner FAIL
+--------------------------------
+UBL.NS
+Base Scanner FAIL
+--------------------------------
+GAIL.NS
+Base Scanner FAIL
+--------------------------------
+DIXON.NS
+Base Scanner FAIL
+--------------------------------
+SHREECEM.NS
+Base Scanner FAIL
+--------------------------------
+AARTIIND.NS
+Base Scanner FAIL
+--------------------------------
+ABB.NS
+Base Scanner FAIL
+--------------------------------
+BATAINDIA.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+MPHASIS.NS
+Base Scanner FAIL
+--------------------------------
+GODREJCP.NS
+Base Scanner FAIL
+--------------------------------
+MRF.NS
+Base Scanner FAIL
+--------------------------------
+IDEA.NS
+Base Scanner FAIL
+--------------------------------
+NAUKRI.NS
+Base Scanner FAIL
+--------------------------------
+RAMCOCEM.NS
+Base Scanner FAIL
+--------------------------------
+M&M.NS
+Base Scanner FAIL
+--------------------------------
+PVRINOX.NS
+Base Scanner FAIL
+--------------------------------
+AMBUJACEM.NS
+Base Scanner FAIL
+--------------------------------
+SRF.NS
+Base Scanner FAIL
+--------------------------------
+COFORGE.NS
+Base Scanner FAIL
+--------------------------------
+HINDUNILVR.NS
+Base Scanner FAIL
+--------------------------------
+UPL.NS
+Base Scanner FAIL
+--------------------------------
+TATACOMM.NS
+Base Scanner FAIL
+--------------------------------
+CONCOR.NS
+Base Scanner FAIL
+--------------------------------
+RBLBANK.NS
+Base Scanner FAIL
+--------------------------------
+BERGEPAINT.NS
+Base Scanner FAIL
+--------------------------------
+MARUTI.NS
+Base Scanner FAIL
+--------------------------------
+MOTHERSON.NS
+Base Scanner FAIL
+--------------------------------
+ACC.NS
+Base Scanner FAIL
+--------------------------------
+COROMANDEL.NS
+Base Scanner FAIL
+--------------------------------
+BEL.NS
+Base Scanner FAIL
+--------------------------------
+COLPAL.NS
+Base Scanner FAIL
+--------------------------------
+BHARTIARTL.NS
+Base Scanner FAIL
+--------------------------------
+BANDHANBNK.NS
+Base Scanner FAIL
+--------------------------------
+ABFRL.NS
+Base Scanner FAIL
+--------------------------------
+EICHERMOT.NS
+Base Scanner FAIL
+--------------------------------
+HCLTECH.NS
+Base Scanner FAIL
+--------------------------------
+POLYCAB.NS
+Base Scanner FAIL
+--------------------------------
+VOLTAS.NS
+Base Scanner FAIL
+--------------------------------
+DABUR.NS
+Base Scanner FAIL
+--------------------------------
+JUBLFOOD.NS
+Base Scanner FAIL
+--------------------------------
+SBILIFE.NS
+Base Scanner FAIL
+--------------------------------
+ICICIGI.NS
+Base Scanner FAIL
+--------------------------------
+BAJAJ-AUTO.NS
+Base Scanner FAIL
+--------------------------------
+ESCORTS.NS
+Base Scanner FAIL
+--------------------------------
+GNFC.NS
+Base Scanner FAIL
+--------------------------------
+LICHSGFIN.NS
+Base Scanner FAIL
+--------------------------------
+TECHM.NS
+Base Scanner FAIL
+--------------------------------
+HEROMOTOCO.NS
+Base Scanner FAIL
+--------------------------------
+ONGC.NS
+Base Scanner FAIL
+--------------------------------
+PETRONET.NS
+Base Scanner FAIL
+--------------------------------
+BRITANNIA.NS
+Base Scanner FAIL
+--------------------------------
+VEDL.NS
+Base Scanner FAIL
+--------------------------------
+DEEPAKNTR.NS
+Base Scanner FAIL
+--------------------------------
+ULTRACEMCO.NS
+Base Scanner FAIL
+--------------------------------
+MUTHOOTFIN.NS
+Base Scanner FAIL
+--------------------------------
+BHEL.NS
+Base Scanner FAIL
+--------------------------------
+CUMMINSIND.NS
+Base Scanner FAIL
+--------------------------------
+KOTAKBANK.NS
+Base Scanner FAIL
+--------------------------------
+JINDALSTEL.NS
+Base Scanner FAIL
+--------------------------------
+WIPRO.NS
+Base Scanner FAIL
+--------------------------------
+HAVELLS.NS
+Base Scanner FAIL
+--------------------------------
+BPCL.NS
+Base Scanner FAIL
+--------------------------------
+AXISBANK.NS
+Base Scanner FAIL
+--------------------------------
+ZEEL.NS
+Base Scanner FAIL
+--------------------------------
+HINDPETRO.NS
+Base Scanner FAIL
+--------------------------------
+SYNGENE.NS
+Base Scanner FAIL
+--------------------------------
+BALKRISIND.NS
+Base Scanner FAIL
+--------------------------------
+JKCEMENT.NS
+Base Scanner FAIL
+--------------------------------
+CANBK.NS
+Base Scanner FAIL
+--------------------------------
+MFSL.NS
+Base Scanner FAIL
+--------------------------------
+BSOFT.NS
+Base Scanner FAIL
+--------------------------------
+ASTRAL.NS
+Base Scanner FAIL
+--------------------------------
+SUNTV.NS
+Base Scanner FAIL
+--------------------------------
+RELIANCE.NS
+Base Scanner FAIL
+--------------------------------
+TATACONSUM.NS
+Base Scanner FAIL
+--------------------------------
+CHAMBLFERT.NS
+Base Scanner FAIL
+--------------------------------
+LT.NS
+Base Scanner FAIL
+--------------------------------
+PNB.NS
+Base Scanner FAIL
+--------------------------------
+ICICIPRULI.NS
+Base Scanner FAIL
+--------------------------------
+PERSISTENT.NS
+Base Scanner FAIL
+--------------------------------
+IOC.NS
+Base Scanner FAIL
+--------------------------------
+SBICARD.NS
+Base Scanner FAIL
+--------------------------------
+ITC.NS
+Base Scanner FAIL
+--------------------------------
+IRCTC.NS
+Base Scanner FAIL
+--------------------------------
+ATUL.NS
+Base Scanner FAIL
+--------------------------------
+INFY.NS
+Base Scanner FAIL
+--------------------------------
+CROMPTON.NS
+Base Scanner FAIL
+--------------------------------
+TCS.NS
+Base Scanner FAIL
+--------------------------------
+HDFCLIFE.NS
+Base Scanner FAIL
+--------------------------------
+PIIND.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+IEX.NS
+Base Scanner FAIL
+--------------------------------
+INDIAMART.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+INDUSTOWER.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+IGL.NS
+Base Scanner FAIL
+--------------------------------
+INDIACEM.NS
+Base Scanner FAIL
+--------------------------------
+TATACHEM.NS
+Base Scanner FAIL
+--------------------------------
+NATIONALUM.NS
+Base Scanner FAIL
+--------------------------------
+TATAPOWER.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+MGL.NS
+Base Scanner FAIL
+--------------------------------
+GUJGASLTD.NS
+Base Scanner PASS
+Institution PASS
+Execution PASS
+Elite Selection FAIL
+--------------------------------
+GLENMARK.NS
+Base Scanner FAIL
+--------------------------------
+BANKBARODA.NS
+Base Scanner FAIL
+--------------------------------
+LTTS.NS
+Base Scanner FAIL
+--------------------------------
+NTPC.NS
+Base Scanner FAIL
+--------------------------------
+POWERGRID.NS
+Base Scanner FAIL
+--------------------------------
+HINDALCO.NS
+Base Scanner FAIL
+--------------------------------
+TATASTEEL.NS
+Base Scanner FAIL
+--------------------------------
+HINDCOPPER.NS
+Base Scanner FAIL
+--------------------------------
+SIEMENS.NS
+Base Scanner FAIL
+--------------------------------
+JSWSTEEL.NS
+Base Scanner FAIL
+--------------------------------
+NMDC.NS
+Base Scanner FAIL
+--------------------------------
+SAIL.NS
+Base Scanner FAIL
+--------------------------------
+COALINDIA.NS
+Base Scanner FAIL
+--------------------------------
+MCX.NS
+Base Scanner FAIL
+--------------------------------
+PFC.NS
+Base Scanner FAIL
+--------------------------------
+
+================================================
+STAGE-WISE REJECTION COUNTS
+================================================
+
+Data / OHLCV: 4
+Base Scanner (Watch/Neutral): 168
+Validation (Institutional/False Breakout): 0
+Execution Center: 0
+Elite Selection (TQI/RR/Conf): 6
+Precision Entry: 0
+
+Final Trades Passed: 0
+
+SINGLE ENGINE RESPONSIBLE FOR HIGHEST REJECTIONS: Base Scanner (Watch/Neutral) (168 symbols)

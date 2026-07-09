@@ -1,0 +1,24 @@
+{
+    "execution_settings": {
+        "default_mode": "PAPER",
+        "maximum_position_size": 1000,
+        "maximum_concurrent_trades": 10,
+        "execution_timeout_ms": 5000,
+        "max_queue_size": 50
+    },
+    "risk_limits": {
+        "maximum_risk_per_trade_pct": 2.0,
+        "maximum_slippage_pct": 0.5,
+        "minimum_confidence_to_execute": 75.0
+    },
+    "simulation_settings": {
+        "default_slippage_pct": 0.1,
+        "default_commission_pct": 0.05,
+        "simulated_latency_ms": 50
+    },
+    "export_settings": {
+        "default_export_path": "exports/executions/",
+        "enable_pdf_export": true,
+        "enable_csv_export": true
+    }
+}

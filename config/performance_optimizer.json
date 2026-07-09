@@ -1,0 +1,14 @@
+{
+    "performance_thresholds": {
+        "maximum_cpu_percent": 80.0,
+        "maximum_memory_mb": 1024.0,
+        "target_execution_time_ms": 500.0,
+        "maximum_threads": 8,
+        "cache_size_mb": 256.0
+    },
+    "optimization_settings": {
+        "default_optimization_level": "STANDARD",
+        "aggressive_cpu_threshold": 90.0,
+        "aggressive_memory_threshold": 2048.0
+    }
+}

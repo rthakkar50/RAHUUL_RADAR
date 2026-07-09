@@ -1,0 +1,32 @@
+{
+    "validation_thresholds": {
+        "minimum_overall_score": 75.0,
+        "minimum_confidence": 70.0,
+        "minimum_walk_forward_score": 60.0,
+        "minimum_ranking_score": 65.0,
+        "minimum_performance_score": 50.0,
+        "maximum_drawdown_pct": 20.0
+    },
+    "grade_thresholds": {
+        "A_PLUS": 95.0,
+        "A": 85.0,
+        "B": 75.0,
+        "C": 65.0,
+        "D": 50.0
+    },
+    "module_weights": {
+        "false_signal_weight": 0.20,
+        "mtf_weight": 0.10,
+        "entry_weight": 0.15,
+        "exit_weight": 0.10,
+        "walk_forward_weight": 0.15,
+        "ranking_weight": 0.10,
+        "confidence_weight": 0.15,
+        "performance_weight": 0.05
+    },
+    "export_settings": {
+        "default_export_path": "exports/validation_reports/",
+        "enable_pdf_export": true,
+        "enable_csv_export": true
+    }
+}

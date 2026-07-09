@@ -1,0 +1,19 @@
+{
+    "validation_thresholds": {
+        "minimum_win_rate": 45.0,
+        "minimum_profit_factor": 1.5,
+        "maximum_drawdown": 20.0,
+        "minimum_trades": 30,
+        "minimum_expectancy": 0.2,
+        "minimum_sharpe_ratio": 1.0
+    },
+    "window_settings": {
+        "window_size_days": 180,
+        "training_split_percentage": 70,
+        "testing_split_percentage": 30
+    },
+    "future_config": {
+        "enable_strict_mode": false,
+        "penalty_for_overfitting": 0.1
+    }
+}

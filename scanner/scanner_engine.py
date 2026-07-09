@@ -1,0 +1,697 @@
+"""
+Scanner engine module for RAHUUL_RADAR.
+Orchestrates the market scanning pipeline by coordinating data fetching and scoring algorithms.
+"""
+from typing import List, Optional
+from datetime import datetime, time as dtime
+import pandas as pd
+import numpy as np
+import concurrent.futures
+import yfinance as yf
+
+from utils.logger import get_logger
+from market.data_provider import MarketDataProvider
+from core.trend_engine import TrendEngine
+from core.momentum_engine import MomentumEngine
+from core.structure_engine import StructureEngine
+from ranking.score_engine import ScoreEngine
+from data.stocks import Stock
+
+from market.market_engine import MarketEngine
+from core.decision_engine import DecisionEngine
+from ranking.ranking_engine import RankingEngine
+from core.models import ScanResult
+from ranking.scoring_rules import SignalStrength
+
+logger = get_logger(__name__)
+
+# Toggle this to True to enable deep mathematical pipeline output
+DEBUG = False
+
+# ── F&O Accuracy Filters ──────────────────────────────────────────────────────
+# India VIX thresholds for safe option buying
+VIX_MAX_SAFE   = 20.0   # VIX above this → premiums too expensive, skip
+VIX_IDEAL_MAX  = 14.0   # VIX below this → best option buying environment
+
+# Best intraday option buying windows (IST)
+_OPT_WINDOWS = [
+    (dtime(9, 20),  dtime(10, 30)),   # Morning trend window
+    (dtime(14, 0),  dtime(14, 45)),   # Afternoon breakout window
+]
+
+# Volume surge multiplier — stock volume must be N× its 20-bar average
+VOL_SURGE_MULTIPLIER = 2.0
+
+
+def _fetch_india_vix() -> Optional[float]:
+    """Fetch live India VIX from Yahoo Finance. Returns None on failure."""
+    try:
+        ticker = yf.Ticker("^INDIAVIX")
+        hist = ticker.history(period="2d", interval="1d")
+        if not hist.empty:
+            return float(hist["Close"].iloc[-1])
+    except Exception as exc:
+        logger.warning(f"Could not fetch India VIX: {exc}")
+    return None
+
+
+def _is_good_trading_time() -> bool:
+    """Returns True if current IST time falls inside a high-accuracy option window."""
+    now = datetime.now().time()
+    for start, end in _OPT_WINDOWS:
+        if start <= now <= end:
+            return True
+    return False
+
+
+def _volume_surge_ok(ohlcv_list, multiplier: float = VOL_SURGE_MULTIPLIER) -> bool:
+    """Returns True if latest candle volume >= multiplier × 20-bar average."""
+    if len(ohlcv_list) < 20:
+        return False
+    avg_vol = sum(c.volume for c in ohlcv_list[-20:-1]) / 19
+    latest_vol = ohlcv_list[-1].volume
+    return avg_vol > 0 and (latest_vol >= multiplier * avg_vol)
+
+
+def _fetch_pcr(symbol: str) -> Optional[float]:
+    """
+    Fetch Put-Call Ratio from yfinance options chain.
+    PCR < 0.7  → Extremely Bullish (good for CALL buying)
+    PCR > 1.3  → Extremely Bearish (good for PUT buying)
+    Returns None if options data unavailable.
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        exp_dates = ticker.options
+        if not exp_dates:
+            return None
+        # Use nearest expiry for intraday accuracy
+        chain = ticker.option_chain(exp_dates[0])
+        total_call_oi = chain.calls["openInterest"].sum()
+        total_put_oi  = chain.puts["openInterest"].sum()
+        if total_call_oi > 0:
+            return round(total_put_oi / total_call_oi, 3)
+    except Exception as exc:
+        logger.debug(f"PCR fetch failed for {symbol}: {exc}")
+    return None
+
+
+def _check_oi_change(symbol: str) -> Optional[str]:
+    """
+    Detect OI change direction from options chain.
+    Returns: 'BULLISH', 'BEARISH', or None if unavailable.
+    """
+    pcr = _fetch_pcr(symbol)
+    if pcr is None:
+        return None
+    if pcr < 0.7:
+        return "BULLISH"
+    elif pcr > 1.3:
+        return "BEARISH"
+    return "NEUTRAL"
+
+
+def _fetch_oi_volume_analysis(symbol: str) -> Optional[dict]:
+    """
+    Deep OI + Volume analysis for F&O options.
+
+    Detects:
+      1. HEAVY CALL BUYING  → Large call volume + rising OI → Strong BULLISH
+      2. HEAVY PUT BUYING   → Large put volume  + rising OI → Strong BEARISH
+      3. CALL WRITING       → High call OI at upper strikes → Resistance / mild BEARISH
+      4. PUT WRITING        → High put OI at lower strikes  → Support / mild BULLISH
+      5. SHORT COVERING     → OI falling + price rising     → Temporary BULLISH
+      6. LONG UNWINDING     → OI falling + price falling    → BEARISH
+
+    Returns dict with keys:
+      signal        : 'STRONG_BUY_CALL' | 'STRONG_BUY_PUT' | 'CALL_WRITING' |
+                      'PUT_WRITING' | 'SHORT_COVERING' | 'LONG_UNWINDING' | 'NEUTRAL'
+      call_vol      : total call volume
+      put_vol       : total put volume
+      call_oi       : total call open interest
+      put_oi        : total put open interest
+      pcr_vol       : put/call volume ratio
+      pcr_oi        : put/call OI ratio
+      activity      : human-readable label
+      emoji         : display emoji
+      bias          : 'BULLISH' | 'BEARISH' | 'NEUTRAL'
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        exp_dates = ticker.options
+        if not exp_dates:
+            return None
+
+        # Use nearest expiry (most liquid)
+        chain = ticker.option_chain(exp_dates[0])
+        calls = chain.calls
+        puts  = chain.puts
+
+        # ── Aggregate Stats ────────────────────────────────────────────────
+        call_vol = int(calls["volume"].fillna(0).sum())
+        put_vol  = int(puts["volume"].fillna(0).sum())
+        call_oi  = int(calls["openInterest"].fillna(0).sum())
+        put_oi   = int(puts["openInterest"].fillna(0).sum())
+
+        total_vol = call_vol + put_vol
+        total_oi  = call_oi  + put_oi
+
+        if total_vol == 0 or total_oi == 0:
+            return None
+
+        pcr_vol = round(put_vol / call_vol, 3) if call_vol > 0 else 0
+        pcr_oi  = round(put_oi  / call_oi,  3) if call_oi  > 0 else 0
+
+        call_vol_pct = round(call_vol / total_vol * 100, 1)
+        put_vol_pct  = round(put_vol  / total_vol * 100, 1)
+
+        # ── Signal Logic ───────────────────────────────────────────────────
+        # Threshold: >65% of volume on one side = HEAVY activity
+        HEAVY = 65.0
+
+        if call_vol_pct >= HEAVY and pcr_oi < 0.8:
+            signal   = "STRONG_BUY_CALL"
+            activity = f"Heavy CALL Buying ({call_vol_pct:.0f}% vol)"
+            emoji    = "🚀"
+            bias     = "BULLISH"
+
+        elif put_vol_pct >= HEAVY and pcr_oi > 1.2:
+            signal   = "STRONG_BUY_PUT"
+            activity = f"Heavy PUT Buying ({put_vol_pct:.0f}% vol)"
+            emoji    = "🔴"
+            bias     = "BEARISH"
+
+        elif call_vol_pct >= HEAVY and pcr_oi >= 1.2:
+            # High call volume but OI shows put dominance → Call writing (bearish)
+            signal   = "CALL_WRITING"
+            activity = f"Call Writing Detected ({call_vol_pct:.0f}% vol)"
+            emoji    = "✍️"
+            bias     = "BEARISH"
+
+        elif put_vol_pct >= HEAVY and pcr_oi <= 0.8:
+            # High put volume but OI shows call dominance → Put writing (bullish)
+            signal   = "PUT_WRITING"
+            activity = f"Put Writing Detected ({put_vol_pct:.0f}% vol)"
+            emoji    = "✍️"
+            bias     = "BULLISH"
+
+        elif pcr_oi < 0.7:
+            signal   = "CALL_SIDE_DOMINANT"
+            activity = f"Calls Dominant (PCR OI: {pcr_oi})"
+            emoji    = "📈"
+            bias     = "BULLISH"
+
+        elif pcr_oi > 1.3:
+            signal   = "PUT_SIDE_DOMINANT"
+            activity = f"Puts Dominant (PCR OI: {pcr_oi})"
+            emoji    = "📉"
+            bias     = "BEARISH"
+
+        else:
+            signal   = "NEUTRAL"
+            activity = f"Balanced (C:{call_vol_pct:.0f}% P:{put_vol_pct:.0f}%)"
+            emoji    = "⚖️"
+            bias     = "NEUTRAL"
+            
+        # ── Max Pain & F&O Strength ─────────────────────────────────────────
+        strikes = sorted(list(set(calls["strike"].dropna()).union(set(puts["strike"].dropna()))))
+        max_pain_strike = 0
+        min_loss = float('inf')
+        for strike in strikes:
+            total_loss = 0
+            for idx, row in calls.dropna(subset=['strike', 'openInterest']).iterrows():
+                if row['strike'] < strike:
+                    total_loss += (strike - row['strike']) * row['openInterest']
+            for idx, row in puts.dropna(subset=['strike', 'openInterest']).iterrows():
+                if row['strike'] > strike:
+                    total_loss += (row['strike'] - strike) * row['openInterest']
+            if total_loss < min_loss:
+                min_loss = total_loss
+                max_pain_strike = strike
+                
+        fno_strength = 50
+        if bias == "BULLISH":
+            fno_strength = min(100, 70 + int((max(0, 1.0 - pcr_oi)) * 30))
+        elif bias == "BEARISH":
+            fno_strength = max(0, 30 - int((max(0, pcr_oi - 1.0)) * 30))
+
+        return {
+            "signal":    signal,
+            "call_vol":  call_vol,
+            "put_vol":   put_vol,
+            "call_oi":   call_oi,
+            "put_oi":    put_oi,
+            "pcr_vol":   pcr_vol,
+            "pcr_oi":    pcr_oi,
+            "max_pain":  max_pain_strike,
+            "fno_strength": fno_strength,
+            "call_pct":  call_vol_pct,
+            "put_pct":   put_vol_pct,
+            "activity":  activity,
+            "emoji":     emoji,
+            "bias":      bias,
+        }
+
+    except Exception as exc:
+        logger.debug(f"OI/Volume analysis failed for {symbol}: {exc}")
+        return None
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+
+class ScannerEngine:
+    """
+    Core engine responsible for orchestrating stock scans across the market.
+    Connects the MarketDataProvider and all technical engines to generate actionable DecisionResults.
+    """
+
+    def __init__(
+        self, 
+        data_provider: MarketDataProvider, 
+        trend_engine: TrendEngine,
+        momentum_engine: MomentumEngine,
+        structure_engine: StructureEngine,
+        score_engine: ScoreEngine,
+        sector_engine = None
+    ) -> None:
+        """
+        Initializes the ScannerEngine with its required dependencies.
+        Instantiates MarketEngine, DecisionEngine, and RankingEngine internally to maintain backward compatibility.
+        """
+        self.data_provider = data_provider
+        self.trend_engine = trend_engine
+        self.momentum_engine = momentum_engine
+        self.structure_engine = structure_engine
+        self.score_engine = score_engine
+        self.sector_engine = sector_engine
+        
+        # Instantiate internally to protect legacy main.py bindings
+        self.market_engine = MarketEngine()
+        self.decision_engine = DecisionEngine()
+        self.ranking_engine = RankingEngine()
+        
+        # Instantiate new ADX, AVWAP, and MTF engines
+        from core.adx_engine import AdxEngine
+        from core.avwap_engine import AvwapEngine
+        from core.mtf_engine import MtfEngine
+        self.adx_engine = AdxEngine()
+        self.avwap_engine = AvwapEngine()
+        self.mtf_engine = MtfEngine()
+        
+        logger.info("ScannerEngine initialized securely with all core sub-engines.")
+
+    def _enrich_dataframe(self, ohlcv_list) -> pd.DataFrame:
+        if not ohlcv_list: return pd.DataFrame()
+        df = pd.DataFrame([
+            {'Date': c.timestamp, 'Open': c.open, 'High': c.high, 'Low': c.low, 'Close': c.close, 'Volume': c.volume}
+            for c in ohlcv_list
+        ])
+        if df.empty: return df
+        # Cache Indicators
+        df['EMA9'] = df['Close'].ewm(span=9, adjust=False).mean()
+        df['EMA10'] = df['Close'].ewm(span=10, adjust=False).mean()
+        df['EMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
+        df['EMA50'] = df['Close'].ewm(span=50, adjust=False).mean()
+        df['EMA200'] = df['Close'].ewm(span=200, adjust=False).mean()
+        # RSI
+        delta = df['Close'].diff()
+        gain = delta.clip(lower=0)
+        loss = -1 * delta.clip(upper=0)
+        avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+        df['RSI_14'] = 100 - (100 / (1 + (avg_gain / avg_loss.replace(0, 1e-10))))
+        # MACD
+        df['MACD'] = df['Close'].ewm(span=12, adjust=False).mean() - df['Close'].ewm(span=26, adjust=False).mean()
+        df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+        # ATR & ADX
+        tr1 = df['High'] - df['Low']
+        tr2 = (df['High'] - df['Close'].shift(1)).abs()
+        tr3 = (df['Low'] - df['Close'].shift(1)).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        df['ATR'] = tr.ewm(alpha=1/14, adjust=False).mean()
+        
+        up = df['High'] - df['High'].shift(1)
+        down = df['Low'].shift(1) - df['Low']
+        plus_dm = pd.Series(np.where((up > down) & (up > 0), up, 0.0), index=df.index)
+        minus_dm = pd.Series(np.where((down > up) & (down > 0), down, 0.0), index=df.index)
+        plus_di = 100 * (plus_dm.ewm(alpha=1/14, adjust=False).mean() / df['ATR'])
+        minus_di = 100 * (minus_dm.ewm(alpha=1/14, adjust=False).mean() / df['ATR'])
+        df['ADX_14'] = (100 * (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-10)).ewm(alpha=1/14, adjust=False).mean()
+        df['PLUS_DI_14'] = plus_di
+        df['MINUS_DI_14'] = minus_di
+        # VWAP
+        tp = (df['High'] + df['Low'] + df['Close']) / 3
+        df['VWAP'] = (tp * df['Volume']).cumsum() / df['Volume'].cumsum()
+        
+        # SuperTrend (basic approximate calculation using ATR)
+        hl2 = (df['High'] + df['Low']) / 2
+        df['SuperTrend_Upper'] = hl2 + (3 * df['ATR'])
+        df['SuperTrend_Lower'] = hl2 - (3 * df['ATR'])
+        
+        # 52W High / Low
+        df['52W_High'] = df['High'].rolling(window=252, min_periods=1).max()
+        df['52W_Low'] = df['Low'].rolling(window=252, min_periods=1).min()
+        
+        # Gap Detection (Percentage)
+        df['Gap_Up'] = ((df['Open'] - df['Close'].shift(1)) / df['Close'].shift(1)) * 100
+        df['Gap_Down'] = ((df['Close'].shift(1) - df['Open']) / df['Close'].shift(1)) * 100
+        
+        return df
+
+    def scan_market(self, stock_list: List[Stock], mode: str = "SWING", progress_callback=None) -> List[ScanResult]:
+        """
+        Executes a full batch market scan.
+        Loops through every stock, processes the entire dynamic pipeline, and ranks the final output.
+        For OPTIONS mode, applies India VIX, Time-of-Day, and Volume Surge pre-filters.
+        """
+        import time
+        import psutil
+        import os
+        start_time = time.time()
+        start_dt = datetime.now()
+        logger.info(f"Starting batch market scan | Target Count: {len(stock_list)}")
+        
+        # ── OPTIONS mode: Global pre-flight checks ─────────────────────────────
+        if mode == "OPTIONS":
+            # 1. India VIX check
+            vix = _fetch_india_vix()
+            if vix is not None:
+                logger.info(f"India VIX: {vix:.2f}")
+                if vix > VIX_MAX_SAFE:
+                    logger.warning(f"India VIX ({vix:.2f}) > {VIX_MAX_SAFE} — OPTIONS scan BLOCKED. Premiums too expensive.")
+                    return []   # Return empty — unsafe to buy options
+                elif vix > VIX_IDEAL_MAX:
+                    logger.warning(f"India VIX ({vix:.2f}) elevated. Proceed with caution.")
+                else:
+                    logger.info(f"India VIX ({vix:.2f}) — Safe zone. Options buying environment is good.")
+            else:
+                logger.warning("India VIX unavailable. Proceeding without VIX filter.")
+
+            # 2. Time of Day check
+            if not _is_good_trading_time():
+                now_str = datetime.now().strftime("%H:%M")
+                logger.warning(
+                    f"Current time ({now_str} IST) is outside high-accuracy option windows "
+                    f"(9:20-10:30 or 14:00-14:45). Proceeding with scan anyway for user testing."
+                )
+                # return []   # Allow scanning anytime
+        # ───────────────────────────────────────────────────────────────────────
+        
+        results: List[ScanResult] = []
+        
+        def process_stock(stock):
+            try:
+                # 1. Download OHLCV Data
+                if mode == "OPTIONS":
+                    ohlcv_list = self.data_provider.get_ohlcv(stock.symbol, interval="5m", period="5d")
+                else:
+                    ohlcv_list = self.data_provider.get_ohlcv(stock.symbol)
+                if not ohlcv_list:
+                    logger.warning(f"Skipping {stock.symbol}: No OHLCV data retrieved.")
+                    return ScanResult(
+                        symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                        trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                        volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                        status="NO_DATA"
+                    )
+                
+                # ── OPTIONS: Volume Surge per-stock check ──────────────────────
+                if mode == "OPTIONS":
+                    if not _volume_surge_ok(ohlcv_list):
+                        logger.info(f"Skipping {stock.symbol}: Volume surge insufficient for OPTIONS.")
+                        return ScanResult(
+                            symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                            trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                            volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                            status="EXCLUDED"
+                        )
+                # ──────────────────────────────────────────────────────────────
+                    
+                # Convert to Pandas DataFrame for dynamic engines
+                import numpy as np
+                df = self._enrich_dataframe(ohlcv_list)
+                if df.empty:
+                    logger.warning(f"Skipping {stock.symbol}: Empty DataFrame constructed.")
+                    return ScanResult(
+                        symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                        trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                        volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                        status="NO_DATA"
+                    )
+                
+                # ── MTF: 15m + 1H Confluence (Phase 2) ────────────────────────
+                mtf_score = 0.0
+                mtf_15m_bull = False
+                mtf_1h_bull  = False
+
+                ohlcv_15m = self.data_provider.get_ohlcv(stock.symbol, interval="15m", period="5d")
+                if ohlcv_15m and len(ohlcv_15m) >= 20:
+                    df_15m = self._enrich_dataframe(ohlcv_15m)
+                    trend_15m = self.trend_engine.calculate(df=df_15m)
+                    if trend_15m.ema20 > trend_15m.ema50:
+                        mtf_15m_bull = True
+                        mtf_score += 5.0   # 15m bullish bonus
+
+                ohlcv_1h = self.data_provider.get_ohlcv(stock.symbol, interval="1h", period="1mo")
+                if ohlcv_1h and len(ohlcv_1h) >= 20:
+                    df_1h = self._enrich_dataframe(ohlcv_1h)
+                    trend_1h = self.trend_engine.calculate(df=df_1h)
+                    if trend_1h.ema20 > trend_1h.ema50:
+                        mtf_1h_bull = True
+                        mtf_score += 5.0   # 1H bullish bonus
+
+                # OPTIONS: require at least 15m confirmation; skip if both disagree
+                if mode == "OPTIONS":
+                    if not mtf_15m_bull and not mtf_1h_bull:
+                        logger.info(f"Skipping {stock.symbol}: No MTF confirmation (15m+1H both bearish).")
+                        return ScanResult(
+                            symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                            trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                            volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                            status="EXCLUDED"
+                        )
+
+                # ── PCR / OI Filter (Phase 2, OPTIONS only) ───────────────────
+                pcr_value = None
+                oi_bias   = None
+                if mode == "OPTIONS":
+                    pcr_value = _fetch_pcr(stock.symbol)
+                    oi_bias   = _check_oi_change(stock.symbol)
+                    oi_activity = oi_bias if oi_bias else "N/A"
+                    logger.info(f"{stock.symbol} | PCR: {pcr_value} | OI Bias: {oi_bias}")
+                    # Hard block: if OI clearly against the trade direction, skip
+                    if oi_bias == "BEARISH":
+                        logger.info(f"Skipping {stock.symbol}: OI Bias is BEARISH — not suitable for CALL buying.")
+                        return ScanResult(
+                            symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                            trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                            volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                            status="EXCLUDED"
+                        )
+                # ──────────────────────────────────────────────────────────────
+                    
+                # 2. Run MarketEngine (Requires raw List[OHLCV])
+                market_state = self.market_engine.evaluate(ohlcv_list, df=df)
+                
+                # 3. Run TrendEngine
+                trend_result = self.trend_engine.calculate(df=df)
+                
+                # 4. Run MomentumEngine
+                momentum_result = self.momentum_engine.calculate(df=df)
+                
+                # 5. Run StructureEngine
+                structure_result = self.structure_engine.calculate(df=df)
+
+                # 2a. Run SectorEngine (Stage 6)
+                sector_result = None
+                if self.sector_engine:
+                    sector_result = self.sector_engine.get_sector_score_and_detail(stock.sector)
+                    
+                # Run AdxEngine and AvwapEngine
+                adx_result = self.adx_engine.evaluate(df=df)
+                avwap_result = self.avwap_engine.evaluate(df=df)
+                
+                # Fetch MTCE data and evaluate
+                ohlcv_weekly = self.data_provider.get_ohlcv(stock.symbol, interval="1wk", period="1y")
+                df_weekly = self._enrich_dataframe(ohlcv_weekly) if ohlcv_weekly else pd.DataFrame()
+                
+                # We reuse ohlcv_1h if fetched previously for OPTIONS, otherwise fetch
+                if not hasattr(self, '_cached_ohlcv_1h_for_mtf'):
+                    ohlcv_1h_mtf = self.data_provider.get_ohlcv(stock.symbol, interval="1h", period="1mo")
+                else:
+                    ohlcv_1h_mtf = None # Just in case
+                    
+                df_4h = pd.DataFrame()
+                if ohlcv_1h_mtf and len(ohlcv_1h_mtf) > 0:
+                    df_1h = pd.DataFrame([{'Date': c.timestamp, 'Open': c.open, 'High': c.high, 'Low': c.low, 'Close': c.close, 'Volume': c.volume} for c in ohlcv_1h_mtf])
+                    df_1h.set_index('Date', inplace=True)
+                    df_4h = df_1h.resample('4h').agg({'Open': 'first', 'High': 'max', 'Low': 'min', 'Close': 'last', 'Volume': 'sum'}).dropna().reset_index()
+                
+                mtf_result = self.mtf_engine.evaluate(df_weekly=df_weekly, df_daily=df, df_4h=df_4h)
+
+                # 6. Run DecisionEngine
+                decision_result = self.decision_engine.calculate(
+                    trend_result=trend_result,
+                    momentum_result=momentum_result,
+                    structure_result=structure_result,
+                    market_state=market_state,
+                    mode=mode,
+                    sector_result=sector_result,
+                    oi_activity=oi_activity if mode == "OPTIONS" else None,
+                    adx_result=adx_result,
+                    avwap_result=avwap_result,
+                    mtf_result=mtf_result
+                )
+                
+                # DEBUG MODE Output
+                if DEBUG:
+                    print("\n" + "="*40)
+                    print(f"DEBUG PIPELINE: {stock.symbol}")
+                    print("="*40)
+                    print(f"Interval:          1d") # Hardcoded default from YahooProvider
+                    print(f"Candles Loaded:    {len(df)}")
+                    print(f"Latest Close:      {df['Close'].iloc[-1]:.2f}")
+                    print(f"EMA20:             {trend_result.ema20:.2f}")
+                    print(f"EMA50:             {trend_result.ema50:.2f}")
+                    print(f"VWAP:              {trend_result.vwap:.2f}")
+                    print(f"RSI:               {momentum_result.rsi:.2f}")
+                    print(f"Old ADX (Mom):     {momentum_result.adx:.2f}")
+                    print(f"ADX Engine ADX:    {adx_result.adx:.2f}")
+                    print(f"AVWAP Engine:      {avwap_result.avwap_value:.2f} ({avwap_result.position})")
+                    print(f"MTF Confluence:    {mtf_result.confluence_score} ({mtf_result.decision})")
+                    print(f"Trend Score:       {trend_result.score}")
+                    print(f"Momentum Score:    {momentum_result.score}")
+                    print(f"Structure Score:   {structure_result.score}")
+                    print(f"Market Score:      {market_state.strength if market_state else 0.0}")
+                    print(f"Decision Score:    {decision_result.total_score}")
+                    print(f"Confidence:        {decision_result.confidence}")
+                    print(f"Decision:          {decision_result.decision}")
+                    print("Reasons:")
+                    for r in decision_result.reasons:
+                        print(f"  - {r}")
+                    print("="*40 + "\n")
+                
+                # Map Decision string to SignalStrength enum
+                signal_map = {
+                    "BUY": SignalStrength.BUY,
+                    "WATCH": SignalStrength.WATCH,
+                    "SELL": SignalStrength.SELL
+                }
+                mapped_signal = signal_map.get(decision_result.decision, SignalStrength.WATCH)
+
+                # Calculate ATR (14) for Risk Reward Engine
+                atr_value = 0.0
+                if len(df) >= 15:
+                    tr1 = df['High'] - df['Low']
+                    tr2 = abs(df['High'] - df['Close'].shift(1))
+                    tr3 = abs(df['Low'] - df['Close'].shift(1))
+                    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+                    atr_value = float(tr.rolling(14).mean().iloc[-1])
+
+                breakdown_detail = getattr(decision_result, "breakdown_detail", {}) or {}
+                breakdown_detail["atr"] = atr_value
+                breakdown_detail["structure"] = getattr(structure_result, "details", {})
+                
+                # Map complete data flow into the final ScanResult wrapper so ranking logic doesn't drop anything
+                scan_result = ScanResult(
+                    symbol=stock.symbol,
+                    company_name=stock.company_name,
+                    sector=stock.sector,
+                    trend_direction=getattr(trend_result, "direction", "SIDEWAYS"),
+                    trend_score=float(trend_result.score),
+                    momentum_score=float(momentum_result.score),
+                    structure_score=float(structure_result.score),
+                    volume_score=0.0,
+                    volatility_score=0.0,
+                    relative_strength_score=0.0,
+                    risk_score=0.0,
+                    mtf_score=mtf_score,
+                    total_score=decision_result.total_score,
+                    price=float(df['Close'].iloc[-1]) if not df.empty else 0.0,
+                    volume=float(df['Volume'].iloc[-1]) if not df.empty else 0.0,
+                    signal=mapped_signal,
+                    timestamp=datetime.now(),
+                    breakdown_detail=breakdown_detail,
+                    quality_grade=getattr(decision_result, "quality_grade", "N/A")
+                )
+                
+                # Append upstream reasons safely inside ScanResult instance dynamically if needed
+                setattr(scan_result, "reasons", decision_result.reasons)
+                setattr(scan_result, "raw_score", getattr(decision_result, "raw_score", 0))
+                setattr(scan_result, "adjusted_score", getattr(decision_result, "adjusted_score", decision_result.total_score))
+                setattr(scan_result, "confidence", decision_result.confidence)
+                
+                return scan_result
+                
+            except Exception as e:
+                logger.exception(f"Failed scanning {stock.symbol}.")
+                return ScanResult(
+                    symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                    trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                    volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                    total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                    status="ERROR"
+                )
+                
+        # Run with ThreadPoolExecutor for faster scanning
+        completed_count = 0
+        total_stocks = len(stock_list)
+        
+        import os
+        adaptive_workers = min(32, (os.cpu_count() or 1) + 4)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=adaptive_workers) as executor:
+            future_to_stock = {executor.submit(process_stock, stock): stock for stock in stock_list}
+            for future in concurrent.futures.as_completed(future_to_stock):
+                res = future.result()
+                if res:
+                    results.append(res)
+                
+                completed_count += 1
+                if progress_callback:
+                    progress_callback(completed_count, total_stocks)
+                
+        # Split results by status to maintain counter integrity
+        ranked_pool = [r for r in results if r.status == "RANKED"]
+        excluded_pool = [r for r in results if r.status == "EXCLUDED"]
+        nodata_pool = [r for r in results if r.status == "NO_DATA"]
+        error_pool = [r for r in results if r.status == "ERROR"]
+
+        # 7. Run RankingEngine securely to apply tie-breaker rules
+        ranked_results = self.ranking_engine.sort_by_score(ranked_pool)
+        
+        # Performance & Coverage Logging
+        elapsed_time = time.time() - start_time
+        end_dt = datetime.now()
+        proc = psutil.Process(os.getpid())
+        mem_mb = proc.memory_info().rss / 1024 / 1024
+        cpu_pct = psutil.cpu_percent()
+        
+        logger.info(
+            f"--- SCANNER METRICS ---\n"
+            f"Start Time: {start_dt.strftime('%H:%M:%S')} | End Time: {end_dt.strftime('%H:%M:%S')} | Elapsed: {elapsed_time:.2f}s\n"
+            f"Universe: {total_stocks} | Ranked: {len(ranked_pool)} | Excluded: {len(excluded_pool)} | No Data: {len(nodata_pool)} | Errors: {len(error_pool)}\n"
+            f"Memory: {mem_mb:.1f} MB | CPU: {cpu_pct}%\n"
+            f"-----------------------"
+        )
+        
+        logger.info(f"Market scan completed successfully. Processed {len(ranked_results)} assets.")
+        return ranked_results
+
+    def scan_stock(self, stock: Stock) -> ScanResult:
+        """
+        Wrapper to scan a single stock utilizing the batch processor.
+        """
+        results = self.scan_market([stock])
+        return results[0] if results else None
+
+    def scan_sector(self, stock_list: List[Stock]) -> List[ScanResult]:
+        """
+        Wrapper to scan a sector utilizing the batch processor.
+        """
+        return self.scan_market(stock_list)

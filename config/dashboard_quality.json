@@ -1,0 +1,28 @@
+{
+    "refresh_interval_ms": 5000,
+    "gauge_thresholds": {
+        "good_min": 75.0,
+        "warning_min": 40.0,
+        "critical_max": 39.9
+    },
+    "warning_levels": {
+        "memory_warning_mb": 1024.0,
+        "cpu_warning_pct": 75.0,
+        "latency_warning_ms": 300.0
+    },
+    "panel_visibility": {
+        "panel_1_overall_quality": true,
+        "panel_2_confidence": true,
+        "panel_3_engine_status": true,
+        "panel_4_strategy_ranking": true,
+        "panel_5_recent_signals": true,
+        "panel_6_market_status": true,
+        "panel_7_performance": true,
+        "panel_8_validation": true
+    },
+    "export_settings": {
+        "default_export_path": "exports/",
+        "enable_pdf_export": true,
+        "enable_csv_export": true
+    }
+}

@@ -1,0 +1,92 @@
+Initializing providers...
+2026-07-06 13:07:37,002 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-06 13:07:37,002 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-07-06 13:07:37,002 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+Running sequential deep scan...
+2026-07-06 13:07:52,025 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 1.
+2026-07-06 13:07:53,901 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 2.
+2026-07-06 13:07:56,211 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 3.
+2026-07-06 13:07:57,217 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GMRINFRA.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 13:08:07,200 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 1.
+2026-07-06 13:08:08,818 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 2.
+2026-07-06 13:08:10,676 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 3.
+2026-07-06 13:08:11,682 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for LTIM.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 13:08:18,117 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 1.
+2026-07-06 13:08:19,857 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 2.
+2026-07-06 13:08:21,490 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 3.
+2026-07-06 13:08:22,493 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for PEL.NS after 3 attempts. Invalid symbol or network error.
+2026-07-06 13:08:30,097 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 1.
+2026-07-06 13:08:31,781 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 2.
+2026-07-06 13:08:33,661 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 3.
+2026-07-06 13:08:34,663 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for TATAMOTORS.NS after 3 attempts. Invalid symbol or network error.
+====================================================
+INTRADAY FILTER FUNNEL REPORT
+====================================================
+↓
+Stage: Symbol Loader
+Input: 178 | Passed: 178 | Rejected: 0 (0.0%)
+↓
+Stage: Data Availability
+Input: 178 | Passed: 174 | Rejected: 4 (2.2%)
+↓
+Stage: Trend Engine
+Input: 174 | Passed: 111 | Rejected: 63 (36.2%)
+↓
+Stage: Volume Engine
+Input: 111 | Passed: 104 | Rejected: 7 (6.3%)
+↓
+Stage: Momentum Engine
+Input: 104 | Passed: 78 | Rejected: 26 (25.0%)
+↓
+Stage: ADX Filter
+Input: 78 | Passed: 51 | Rejected: 27 (34.6%)
+↓
+Stage: Anchored VWAP
+Input: 51 | Passed: 51 | Rejected: 0 (0.0%)
+↓
+Stage: Smart Money Engine
+Input: 51 | Passed: 46 | Rejected: 5 (9.8%)
+↓
+Stage: Relative Strength
+Input: 46 | Passed: 46 | Rejected: 0 (0.0%)
+↓
+Stage: Sector Strength
+Input: 46 | Passed: 46 | Rejected: 0 (0.0%)
+↓
+Stage: AI Score
+Input: 46 | Passed: 46 | Rejected: 0 (0.0%)
+↓
+Stage: Confidence
+Input: 46 | Passed: 1 | Rejected: 45 (97.8%)
+↓
+Stage: Trade Quality Index (TQI)
+Input: 1 | Passed: 0 | Rejected: 1 (100.0%)
+↓
+Stage: Risk Reward
+Input: 0 | Passed: 0 | Rejected: 0 (0.0%)
+↓
+Stage: Institutional Validation
+Input: 0 | Passed: 0 | Rejected: 0 (0.0%)
+↓
+Stage: Capital Protection
+Input: 0 | Passed: 0 | Rejected: 0 (0.0%)
+↓
+Stage: Elite Selection
+Input: 0 | Passed: 0 | Rejected: 0 (0.0%)
+↓
+Stage: Execution Readiness
+Input: 0 | Passed: 0 | Rejected: 0 (0.0%)
+↓
+Final BUY: 0
+↓
+Final SELL: 0
+====================================================
+TOP 5 REJECTION FILTERS
+1. Trend Engine: 63 rejections
+2. Confidence: 45 rejections
+3. ADX Filter: 27 rejections
+4. Momentum Engine: 26 rejections
+5. Volume Engine: 7 rejections
+====================================================
+FINAL VERDICT
+System behaving correctly (A). The strict filtering is expected for Intraday V1.0 rules.

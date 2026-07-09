@@ -1,0 +1,38 @@
+{
+    "balance": 1000014.9998779297,
+    "positions": {},
+    "trade_history": [
+        {
+            "symbol": "RELIANCE",
+            "trade_type": "BUY",
+            "quantity": 10,
+            "price": 1306.5,
+            "timestamp": 1782925189.177144,
+            "pnl": 0.0
+        },
+        {
+            "symbol": "RELIANCE",
+            "trade_type": "SELL",
+            "quantity": 10,
+            "price": 1308.0,
+            "timestamp": 1782925198.7124639,
+            "pnl": 15.0
+        },
+        {
+            "symbol": "INFY",
+            "trade_type": "BUY",
+            "quantity": 10,
+            "price": 985.3,
+            "timestamp": 1782931720.860953,
+            "pnl": 0.0
+        },
+        {
+            "symbol": "INFY",
+            "trade_type": "SELL",
+            "quantity": 10,
+            "price": 985.2999877929688,
+            "timestamp": 1782931732.7116852,
+            "pnl": -0.0001220703125
+        }
+    ]
+}

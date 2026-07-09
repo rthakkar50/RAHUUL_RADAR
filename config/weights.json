@@ -1,0 +1,12 @@
+{
+  "trend": 20,
+  "momentum": 15,
+  "volume": 10,
+  "structure": 10,
+  "risk": 15,
+  "relative_strength": 10,
+  "sector_rotation": 10,
+  "option_chain": 5,
+  "adaptive_strategy": 5,
+  "master_ai": 10
+}
