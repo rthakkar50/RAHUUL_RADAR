@@ -30,3 +30,16 @@ trade_forensics.db
 *.db
 *.zip
 *.log
+
+# === SECURITY - NEVER COMMIT SECRETS ===
+config.json
+config/config.json
+ui_settings.json
+*secret*
+*credential*
+*.key
+.env
+.env.*
+*_private*
+*_backup*
+*token*
