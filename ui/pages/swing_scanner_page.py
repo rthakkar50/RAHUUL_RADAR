@@ -360,6 +360,12 @@ class SwingScannerPage(QWidget):
         logger.info(f"Execution Time (Scan): {scan_t:.2f}s | (UI): {ui_render_t:.2f}s | (Total): {exec_t:.2f}s")
 
     def _populate_table(self, results, total_scanned=0, rejected_count=0):
+        # DEBUG: Print raw signals before any mapping
+        print(f"[DEBUG] _populate_table received {len(results)} results")
+        for r in results:
+            if "BUY" in str(r.get("Signal", "")).upper():
+                print(f"[DEBUG] Raw BUY Candidate entering GUI: Symbol={r.get('Symbol')}, Signal={r.get('Signal')}")
+
         # Dynamic Signal Alias Mapping for Backend Compatibility
         for r in results:
             sig = str(r.get("Signal", "")).upper()

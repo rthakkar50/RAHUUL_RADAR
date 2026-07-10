@@ -336,7 +336,7 @@ class SwingScannerService:
             import os
             adaptive_workers = min(32, (os.cpu_count() or 1) + 4)
             with concurrent.futures.ThreadPoolExecutor(max_workers=adaptive_workers) as executor:
-                futures = [executor.submit(process_post_scan, r) for r in raw_results]
+                print("RAW RESULTS:"); [print(f"RAW: {r.symbol} score={r.adjusted_score} signal={getattr(r.signal, 'value', str(r.signal))}") for r in raw_results if "GODREJ" in r.symbol]; futures = [executor.submit(process_post_scan, r) for r in raw_results]
                 for future in concurrent.futures.as_completed(futures):
                     try:
                         res = future.result()
@@ -496,18 +496,6 @@ class SwingScannerService:
             if progress_callback:
                 progress_callback(100)
                 
-            print("\n========== FIRST RESULT ==========")
-            if qualified_results:
-                from pprint import pprint
-                pprint(qualified_results[0])
-            print("==================================")
-
-            from collections import Counter
-            print(Counter(
-                str(x.get("Signal", "<missing>"))
-                for x in qualified_results
-            ))
-
             return {
                 "total_scanned": len(processed_results),
                 "total_universe": len(stock_list),

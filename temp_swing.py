@@ -399,7 +399,7 @@ class SwingScannerService:
                             item["_reasons"] = []
                         item["_reasons"].extend(downgrade_reasons)
                 
-                # PHASE 3: READY / SETUP Signal Promotion
+                print(f"BEFORE PHASE 3: symbol={item['Symbol']} signal={signal} item_signal={item['Signal']} score={score} conf={conf} rr={rr} downgrade_reasons={locals().get('downgrade_reasons', [])}"); # PHASE 3: READY / SETUP Signal Promotion
                 # If pipeline outputted WATCH (because breakout pending), but scores/RR are strong enough -> promote to READY
                 if signal == "WATCH" and score >= min_score and conf >= min_conf and rr >= min_rr:
                     trend_upper = trend.upper()
@@ -496,18 +496,6 @@ class SwingScannerService:
             if progress_callback:
                 progress_callback(100)
                 
-            print("\n========== FIRST RESULT ==========")
-            if qualified_results:
-                from pprint import pprint
-                pprint(qualified_results[0])
-            print("==================================")
-
-            from collections import Counter
-            print(Counter(
-                str(x.get("Signal", "<missing>"))
-                for x in qualified_results
-            ))
-
             return {
                 "total_scanned": len(processed_results),
                 "total_universe": len(stock_list),

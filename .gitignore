@@ -1,35 +1,32 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Logs and databases
-logs/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
 *.log
-
-# Caches
-.cache/
-.pytest_cache/
-
-# Exports & Reports
+.env
+venv/
+env/
+dist/
+build/
+*.zip
+*.spec
+.DS_Store
+data/
 exports/
 reports/
+logs/
+journal/
+out*.txt
+*.csv
+*.xlsx
+test_export.*
+radar.db
+trade_forensics.db
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-*.spec
+# private backups - never upload
+*backup*.json
+*_private*
+*.db
+*.zip
+*.log
