@@ -1,4 +1,6 @@
-from .backtest_engine import BacktestEngine, BacktestDataProvider
-from .trade_evaluator import TradeEvaluator
+from .backtest_orchestrator import BacktestOrchestrator
+from .historical_data_provider import HistoricalDataProvider
+from .simulated_broker import SimulatedBroker
+from .performance_analytics import PerformanceAnalytics
 
-__all__ = ["BacktestEngine", "BacktestDataProvider", "TradeEvaluator"]
+__all__ = ["BacktestOrchestrator", "HistoricalDataProvider", "SimulatedBroker", "PerformanceAnalytics"]

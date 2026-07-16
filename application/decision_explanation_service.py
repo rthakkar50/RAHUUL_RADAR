@@ -95,8 +95,8 @@ class DecisionExplanationService:
                 rr_val = float(rr_str.split(":")[1])
                 if rr_val >= 2.5: bullets.append("Excellent Risk Reward Profile")
                 elif rr_val < 1.5: bullets.append("Poor Risk Reward Profile")
-        except:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in decision_explanation_service.py:98: %s", _e)
             
         conf_score = scan_data.get("Confidence", 0.0)
         if conf_score > 85: bullets.append("High Confluence Across Engines")

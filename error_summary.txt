@@ -1,0 +1,92 @@
+2026-07-16 22:23:38.551 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.593 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.630 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.665 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.678 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.690 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.702 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.717 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.772 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.792 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38,793 - scanner.scanner_engine - WARNING - Skipping GMRINFRA.NS: No OHLCV data retrieved.
+2026-07-16 22:23:38.846 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.860 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38,886 - market.market_engine - WARNING - Insufficient data for reliable market evaluation. Defaulting to NEUTRAL.
+2026-07-16 22:23:38.907 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.941 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.952 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.957 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.970 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for REALTY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:38.981 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.002 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.032 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.049 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.123 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.130 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.137 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.160 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.194 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.224 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.260 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.297 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for REALTY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.325 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.440 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.480 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.493 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.516 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.550 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39,666 - scanner.scanner_engine - WARNING - Skipping LTIM.NS: No OHLCV data retrieved.
+2026-07-16 22:23:39.686 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.726 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.753 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.764 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.822 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.834 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:39.916 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.030 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40,077 - scanner.scanner_engine - WARNING - Skipping PEL.NS: No OHLCV data retrieved.
+2026-07-16 22:23:40.085 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.114 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.160 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for REALTY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.162 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.182 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.206 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.228 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.237 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.360 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.417 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.602 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40,606 - scanner.scanner_engine - WARNING - Skipping TATAMOTORS.NS: No OHLCV data retrieved.
+2026-07-16 22:23:40.637 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.667 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for ENERGY: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.686 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.717 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.768 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.792 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.829 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for FMCG: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.869 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for AUTO: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.920 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for IT: 'list' object has no attribute 'empty'
+2026-07-16 22:23:40.941 | WARNING  | core.sector_engine:get_sector_score_and_detail:77 - Failed to fetch sector data for PHARMA: 'list' object has no attribute 'empty'
+Universe: 178 | Ranked: 174 | Excluded: 0 | No Data: 4 | Errors: 0
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+Threshold Downgrade
+js: 2026-07-16T16:53:55.383Z:Fetch:POST https://telemetry.tradingview.com/free/report. TypeError: Failed to fetch
+js: [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.

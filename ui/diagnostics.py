@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from ui.styles import CARD_BG, TEXT_PRIMARY, BTN_BLUE, BG_COLOR
 import sys
 import os
+import time
 import psutil
 from datetime import datetime
 

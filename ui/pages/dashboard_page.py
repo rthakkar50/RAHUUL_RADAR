@@ -297,8 +297,8 @@ class Dashboard(QWidget):
         try:
             strength_val = int(mkt_health_str.split("(")[1].split("/")[0])
             self.market_breadth_card.update_breadth(strength_val)
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in dashboard_page.py:300: %s", _e)
             
         # Refresh dashboard stats via service (Sprint 73 / Sprint 76 Integration Fix)
         try:

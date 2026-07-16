@@ -1,3 +1,4 @@
+import logging
 import json
 import os
 from dotenv import load_dotenv, set_key
@@ -37,8 +38,8 @@ class ConfigManager:
                 with open(self.filepath, 'r') as f:
                     data = json.load(f)
                     self.settings.update(data)
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in config_manager.py:40: %s", _e)
                 
         # Read from environment variables, overriding config.json
         self.settings["telegram_token"] = os.environ.get("TELEGRAM_TOKEN", self.settings.get("telegram_token", ""))

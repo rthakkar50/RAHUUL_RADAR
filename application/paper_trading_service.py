@@ -1,12 +1,11 @@
 import sqlite3
-import uuid
-import time
-import json
 import logging
 from datetime import datetime
-from PySide6.QtCore import QObject, Signal
 import pandas as pd
-import numpy as np
+from PySide6.QtCore import QObject, Signal
+
+from core.paper_portfolio_engine import PaperPortfolioEngine
+from core.models.paper_portfolio_models import PaperPosition
 
 logger = logging.getLogger("PaperTradingEngine")
 
@@ -41,27 +40,25 @@ class PaperTradingEngine:
             raise Exception("Singleton class!")
             
         self.signals = PaperTradingSignals()
+        self.db_path = "data/paper_trading.db"
         
-        # Portfolio Settings
-        self.starting_capital = 1000000.0  # ₹10,00,000
-        self.available_capital = self.starting_capital
-        self.used_margin = 0.0
+        # We assume config is already loaded globally or we load a fresh instance
+        from config.config import AppConfig
+        conf = AppConfig()
+        conf.load()
         
-        # Risk Settings
-        self.max_risk_per_trade_pct = 1.0 # 1% of capital
-        self.daily_loss_limit = -20000.0
-        self.max_open_positions = 5
-        self.max_exposure_pct = 80.0
-        
-        self.active_positions = {}
-        self.trade_history = []
-        self.equity_curve = []
+        # Instantiate the Core Engine
+        self.engine = PaperPortfolioEngine(
+            starting_capital=conf.paper_trading_starting_capital,
+            max_open_positions=conf.paper_trading_max_open_positions,
+            max_risk_per_trade_pct=conf.paper_trading_max_risk_per_trade_pct,
+            max_exposure_pct=conf.paper_trading_max_exposure_pct
+        )
         
         self._init_db()
         self._load_state()
 
     def _init_db(self):
-        self.db_path = "data/paper_trading.db"
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS positions (
@@ -73,7 +70,12 @@ class PaperTradingEngine:
             entry_price REAL,
             cmp REAL,
             target REAL,
+            target_1 REAL,
+            target_2 REAL,
+            target_3 REAL,
             sl REAL,
+            trailing_stop REAL,
+            time_exit_dt TEXT,
             status TEXT,
             entry_time TEXT,
             exit_price REAL,
@@ -93,177 +95,151 @@ class PaperTradingEngine:
     def _load_state(self):
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
+        
+        # Load capital
+        c.execute("SELECT capital FROM portfolio ORDER BY id DESC LIMIT 1")
+        res = c.fetchone()
+        if res:
+            self.engine.virtual_capital = res[0]
+            self.engine.available_cash = res[0]
+            
+        # Load open positions
         c.execute("SELECT * FROM positions WHERE status='OPEN'")
         rows = c.fetchall()
         cols = [description[0] for description in c.description]
         
         for r in rows:
-            pos = dict(zip(cols, r))
-            self.active_positions[pos['id']] = pos
-            
-        # Load capital
-        c.execute("SELECT capital FROM portfolio ORDER BY id DESC LIMIT 1")
-        res = c.fetchone()
-        if res:
-            self.available_capital = res[0]
+            pos_dict = dict(zip(cols, r))
+            pos = PaperPosition(
+                position_id=pos_dict['id'],
+                symbol=pos_dict['symbol'],
+                direction=pos_dict['direction'],
+                qty=pos_dict['qty'],
+                entry_price=pos_dict['entry_price'],
+                current_price=pos_dict['cmp'],
+                sl=pos_dict['sl'],
+                target=pos_dict['target'],
+                target_1=pos_dict.get('target_1', 0.0) or 0.0,
+                target_2=pos_dict.get('target_2', 0.0) or 0.0,
+                target_3=pos_dict.get('target_3', 0.0) or 0.0,
+                trailing_stop=pos_dict.get('trailing_stop', 0.0) or 0.0,
+                time_exit_dt=pos_dict.get('time_exit_dt', None),
+                status='OPEN',
+                used_margin=pos_dict['qty'] * pos_dict['entry_price'],
+                charges=pos_dict['charges']
+            )
+            self.engine.open_positions[pos.position_id] = pos
             
         conn.close()
-        self._update_margin()
+        
+        # Sync engine state
+        self.engine.used_margin = sum(p.used_margin for p in self.engine.open_positions.values())
+        self._emit_portfolio_update()
 
-    def calculate_charges(self, qty, price, is_delivery=False):
-        # Realistic Indian Equity Charges (Approximate)
-        turnover = qty * price
-        brokerage = min(20, turnover * 0.0003) if not is_delivery else 0
-        stt = turnover * 0.00025 if not is_delivery else turnover * 0.001
-        exchange = turnover * 0.0000345
-        gst = (brokerage + exchange) * 0.18
-        sebi = turnover * 0.000001
-        stamp = turnover * 0.00003 if not is_delivery else turnover * 0.00015
-        return brokerage + stt + exchange + gst + sebi + stamp
-
-    def _update_margin(self):
-        self.used_margin = sum(p['qty'] * p['entry_price'] for p in self.active_positions.values())
-        self.signals.portfolio_updated.emit(self.get_portfolio_summary())
-
-    def get_portfolio_summary(self):
-        today = datetime.now().strftime("%Y-%m-%d")
+    def _emit_portfolio_update(self):
+        state = self.engine.get_portfolio_state()
         
-        open_pnl = sum(
-            (p['cmp'] - p['entry_price']) * p['qty'] if p['direction'] == 'BUY' else 
-            (p['entry_price'] - p['cmp']) * p['qty']
-            for p in self.active_positions.values()
-        )
-        
-        # In a real scenario we'd query today's closed trades from DB
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute("SELECT SUM(net_pnl) FROM positions WHERE status='CLOSED' AND exit_time LIKE ?", (today + "%",))
-        closed_pnl = c.fetchone()[0] or 0.0
-        conn.close()
-        
-        total_ret = self.available_capital + open_pnl - self.starting_capital
-        
-        return {
-            "capital": self.available_capital,
-            "margin": self.used_margin,
-            "open_pnl": open_pnl,
-            "closed_pnl": closed_pnl,
-            "today_pnl": open_pnl + closed_pnl,
-            "total_return": total_ret
+        # Map to old dict format for UI compatibility
+        summary = {
+            "capital": state.virtual_capital,
+            "margin": state.used_margin,
+            "open_pnl": state.unrealized_pnl,
+            "closed_pnl": state.realized_pnl,
+            "today_pnl": state.unrealized_pnl + state.realized_pnl,
+            "total_return": state.total_equity - self.engine.starting_capital
         }
+        self.signals.portfolio_updated.emit(summary)
 
     def execute_trade(self, symbol, direction, price, sl, target, order_type=OrderType.MARKET, sizing=PositionSizing.AUTO_RISK):
-        # Risk Check
-        if len(self.active_positions) >= self.max_open_positions:
-            self.signals.notification.emit("Risk Rejected", "Max open positions reached.")
+        success, pos_id, msg = self.engine.execute_trade(symbol, direction, price, sl, target)
+        
+        if not success:
+            self.signals.notification.emit("Risk Rejected", msg)
             return None
             
-        # Position Sizing
-        risk_amount = self.available_capital * (self.max_risk_per_trade_pct / 100)
-        price_risk = abs(price - sl)
-        if price_risk <= 0: price_risk = price * 0.01 # Fallback 1% risk
+        self.signals.notification.emit("Order Executed", msg)
+        pos = self.engine.open_positions[pos_id]
         
-        qty = int(risk_amount / price_risk)
-        if qty <= 0: qty = 1
+        # DB Persistence
+        self._save_position(pos)
+        self._save_portfolio()
         
-        trade_val = qty * price
-        
-        # Exposure Check
-        if (self.used_margin + trade_val) > (self.available_capital * (self.max_exposure_pct / 100)):
-            self.signals.notification.emit("Risk Rejected", "Max exposure limit exceeded.")
-            return None
-            
-        # Execute
-        pos_id = str(uuid.uuid4())[:8]
-        charges = self.calculate_charges(qty, price)
-        
-        pos = {
-            'id': pos_id,
-            'symbol': symbol,
-            'order_type': order_type,
-            'direction': direction,
-            'qty': qty,
-            'entry_price': price,
-            'cmp': price,
-            'target': target,
-            'sl': sl,
-            'status': 'OPEN',
-            'entry_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'exit_price': 0.0,
-            'exit_time': "",
-            'pnl': 0.0,
-            'charges': charges,
-            'net_pnl': -charges
+        # Map for UI
+        pos_dict = {
+            'id': pos.position_id,
+            'symbol': pos.symbol,
+            'direction': pos.direction,
+            'qty': pos.qty,
+            'cmp': pos.current_price,
+            'pnl': pos.unrealized_pnl,
+            'net_pnl': pos.unrealized_pnl - pos.charges
         }
         
-        self.available_capital -= charges
-        self.active_positions[pos_id] = pos
-        
-        self._save_position(pos)
-        self._update_margin()
-        
-        self.signals.order_executed.emit(pos)
-        self.signals.notification.emit("Order Executed", f"{direction} {qty} {symbol} @ {price}")
+        self.signals.order_executed.emit(pos_dict)
+        self._emit_portfolio_update()
         return pos_id
 
     def update_market_price(self, symbol, cmp):
-        for pid, p in list(self.active_positions.items()):
-            if p['symbol'] == symbol:
-                p['cmp'] = cmp
+        state, exits = self.engine.update_market_prices({symbol: cmp})
+        
+        # Check what was closed during the update
+        open_ids_now = set(self.engine.open_positions.keys())
+        
+        # We need to sync the UI for updated positions
+        for pid, pos in self.engine.open_positions.items():
+            if pos.symbol == symbol:
+                pos_dict = {
+                    'id': pos.position_id,
+                    'symbol': pos.symbol,
+                    'direction': pos.direction,
+                    'qty': pos.qty,
+                    'cmp': pos.current_price,
+                    'pnl': pos.unrealized_pnl,
+                    'net_pnl': pos.unrealized_pnl - pos.charges
+                }
+                self.signals.position_updated.emit(pos_dict)
+                self._save_position(pos) # Save partial updates or trailing stop changes
                 
-                # Calc PNL
-                if p['direction'] == 'BUY':
-                    p['pnl'] = (cmp - p['entry_price']) * p['qty']
-                else:
-                    p['pnl'] = (p['entry_price'] - cmp) * p['qty']
+        # Emit notifications for the exits
+        for pid, exit_price, reason, close_qty in exits:
+            is_partial = False
+            if pid in open_ids_now:
+                is_partial = True
                 
-                p['net_pnl'] = p['pnl'] - p['charges']
-                
-                # Auto Exit
-                if p['direction'] == 'BUY':
-                    if cmp >= p['target'] and p['target'] > 0: self.close_position(pid, cmp, "Target Hit")
-                    elif cmp <= p['sl'] and p['sl'] > 0: self.close_position(pid, cmp, "SL Hit")
-                else:
-                    if cmp <= p['target'] and p['target'] > 0: self.close_position(pid, cmp, "Target Hit")
-                    elif cmp >= p['sl'] and p['sl'] > 0: self.close_position(pid, cmp, "SL Hit")
-                    
-                self.signals.position_updated.emit(p)
-                
-        self.signals.portfolio_updated.emit(self.get_portfolio_summary())
+            if is_partial:
+                self._save_portfolio()
+                self.signals.notification.emit("Partial Exit", f"{symbol} partially closed ({close_qty} qty): {reason}")
+            
+        # Let's save all recently closed positions
+        for pos in self.engine.closed_positions:
+            if pos.symbol == symbol and pos.exit_price == cmp: # Just closed in this tick
+                self._save_position(pos)
+                self._save_portfolio()
+                self.signals.notification.emit("Position Closed", f"{pos.symbol} closed. PNL: {pos.realized_pnl:.2f}")
+
+        self._emit_portfolio_update()
 
     def close_position(self, pos_id, exit_price, reason="Manual"):
-        if pos_id in self.active_positions:
-            p = self.active_positions[pos_id]
-            p['exit_price'] = exit_price
-            p['exit_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            p['status'] = 'CLOSED'
+        if pos_id in self.engine.open_positions:
+            self.engine.close_position(pos_id, exit_price, reason)
             
-            # Recalculate PnL and exit charges
-            if p['direction'] == 'BUY': p['pnl'] = (exit_price - p['entry_price']) * p['qty']
-            else: p['pnl'] = (p['entry_price'] - exit_price) * p['qty']
-                
-            exit_charges = self.calculate_charges(p['qty'], exit_price)
-            p['charges'] += exit_charges
-            p['net_pnl'] = p['pnl'] - p['charges']
-            
-            self.available_capital += p['net_pnl']
-            
-            self._save_position(p)
+            # The last closed position
+            pos = self.engine.closed_positions[-1]
+            self._save_position(pos)
             self._save_portfolio()
             
-            del self.active_positions[pos_id]
-            self._update_margin()
-            
-            self.signals.notification.emit("Position Closed", f"{p['symbol']} closed: {reason} PNL: {p['net_pnl']:.2f}")
+            self._emit_portfolio_update()
+            self.signals.notification.emit("Position Closed", f"{pos.symbol} closed: {reason} PNL: {pos.realized_pnl:.2f}")
 
-    def _save_position(self, p):
+    def _save_position(self, p: PaperPosition):
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute('''INSERT OR REPLACE INTO positions 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
-            p['id'], p['symbol'], p['order_type'], p['direction'], p['qty'],
-            p['entry_price'], p['cmp'], p['target'], p['sl'], p['status'],
-            p['entry_time'], p['exit_price'], p['exit_time'], p['pnl'], p['charges'], p['net_pnl']
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (
+            p.position_id, p.symbol, OrderType.MARKET, p.direction, p.qty,
+            p.entry_price, p.current_price, p.target, p.target_1, p.target_2, p.target_3,
+            p.sl, p.trailing_stop, p.time_exit_dt, p.status,
+            p.entry_time, p.exit_price, p.exit_time, p.unrealized_pnl + p.realized_pnl, p.charges, p.realized_pnl if p.status == 'CLOSED' else p.unrealized_pnl - p.charges
         ))
         conn.commit()
         conn.close()
@@ -272,7 +248,7 @@ class PaperTradingEngine:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute("INSERT INTO portfolio (capital, date) VALUES (?, ?)", 
-                 (self.available_capital, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                 (self.engine.virtual_capital, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         conn.commit()
         conn.close()
 
@@ -293,8 +269,7 @@ class PaperTradingEngine:
         avg_loss = abs(losses['net_pnl'].mean()) if not losses.empty else 0
         profit_factor = (wins['net_pnl'].sum() / abs(losses['net_pnl'].sum())) if not losses.empty and losses['net_pnl'].sum() != 0 else 0
         
-        # Max Drawdown simplified
-        equity = self.starting_capital + df['net_pnl'].cumsum()
+        equity = self.engine.starting_capital + df['net_pnl'].cumsum()
         peak = equity.cummax()
         drawdown = (equity - peak) / peak * 100
         max_dd = drawdown.min()
@@ -307,3 +282,15 @@ class PaperTradingEngine:
             "profit_factor": round(profit_factor, 2),
             "max_drawdown": round(max_dd, 2)
         }
+
+    def get_portfolio_history(self):
+        """
+        Returns a DataFrame of the portfolio capital over time for the equity curve.
+        """
+        conn = sqlite3.connect(self.db_path)
+        try:
+            df = pd.read_sql("SELECT capital, date FROM portfolio ORDER BY date ASC", conn)
+        except sqlite3.OperationalError:
+            df = pd.DataFrame(columns=['capital', 'date'])
+        conn.close()
+        return df

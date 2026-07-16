@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any
 
 logger = logging.getLogger("MasterSignalPipeline")
 
@@ -116,7 +117,12 @@ class MasterSignalPipeline:
             if not signals:
                 # If collect_timeframes returns None/empty (placeholder),
                 # construct mock signals to keep the engine functional and testable
-                current_trend = collected_results.get("trend") or "BULL"
+                current_trend_obj = collected_results.get("trend")
+                if isinstance(current_trend_obj, dict):
+                    current_trend = current_trend_obj.get("direction", "BULL")
+                else:
+                    current_trend = current_trend_obj or "BULL"
+                print(f"DEBUG: current_trend is {current_trend} | type: {type(current_trend)}")
                 signals = [
                     TimeframeSignal("1m", current_trend, 80.0, 80.0),
                     TimeframeSignal("5m", current_trend, 80.0, 80.0),
@@ -134,14 +140,16 @@ class MasterSignalPipeline:
             # Call build_alignment_report()
             alignment_report = mtf_engine.build_alignment_report()
             if alignment_report is None:
-                alignment_report = f"Alignment Status: {alignment_status} | Score: {alignment_score:.1f} | Confirmed: {confirmed_count}/{total_count}"
+                alignment_report = [f"Alignment Status: {alignment_status} | Score: {alignment_score:.1f} | Confirmed: {confirmed_count}/{total_count}"]
+            elif isinstance(alignment_report, str):
+                alignment_report = [alignment_report]
                 
         except Exception as e:
             logger.exception("MultiTimeframeEngine failed. Continuing pipeline using previous behavior.")
             # Fallback values
             alignment_status = "CONFIRMED"
             alignment_score = 100.0
-            alignment_report = "MTF Evaluation Error (Bypassed)"
+            alignment_report = ["MTF Evaluation Error (Bypassed)"]
 
         if alignment_status == "REJECTED":
             # Store the report in a pipeline attribute
@@ -178,6 +186,8 @@ class MasterSignalPipeline:
             
             # Helper to safely map string metadata to floats
             def to_float(val, default=50.0):
+                if isinstance(val, dict):
+                    val = val.get("score", default)
                 if isinstance(val, (int, float)):
                     return float(val)
                 if isinstance(val, str):
@@ -190,6 +200,7 @@ class MasterSignalPipeline:
                         return float(val)
                     except ValueError:
                         pass
+                return default
                 return default
             
             rel_strength = to_float(collected_results.get("relative_strength"))
@@ -477,6 +488,11 @@ class MasterSignalPipeline:
         }
         
         for key in results.keys():
+            # SPRINT-77 FIX: Do not recalculate if the caller explicitly provided the value
+            if key in kwargs and kwargs[key] is not None:
+                results[key] = kwargs[key]
+                continue
+                
             if key in self.engines and self.engines[key]:
                 try:
                     engine_instance = self.engines[key]

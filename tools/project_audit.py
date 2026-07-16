@@ -1,3 +1,4 @@
+import logging
 import os
 import ast
 from typing import Dict, Any, List
@@ -40,5 +41,5 @@ class ProjectAudit:
                 elif isinstance(node, ast.Call):
                     if isinstance(node.func, ast.Name) and node.func.id == "print":
                         self.issues.append({"level": "WARNING", "file": path, "msg": "print() found (use proper logging)"})
-        except:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in project_audit.py:43: %s", _e)

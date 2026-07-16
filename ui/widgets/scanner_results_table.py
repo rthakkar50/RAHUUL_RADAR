@@ -1,3 +1,4 @@
+import logging
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
 from PySide6.QtGui import QColor, QBrush, QFont
 from PySide6.QtCore import Qt
@@ -200,7 +201,8 @@ class ScannerResultsTable(QTableWidget):
                     if val >= 3: rr_item.setForeground(QBrush(QColor("#00B69B")))
                     elif val >= 2: rr_item.setForeground(QBrush(QColor("#2962FF")))
                     elif val >= 1.5: rr_item.setForeground(QBrush(QColor("#F1C40F")))
-                except: pass
+                except Exception as _e:
+                    logging.getLogger(__name__).debug("Suppressed exception in scanner_results_table.py:203: %s", _e)
             self.setItem(row, 11, rr_item)
             
             # 12 Volume

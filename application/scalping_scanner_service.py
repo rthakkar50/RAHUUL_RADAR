@@ -189,18 +189,13 @@ class ScalpingScannerService:
                 cal_conf = pipeline_res.get("calibrated_confidence")
                 confidence = safe_float(cal_conf if cal_conf else pipeline_res.get("exit_confidence", getattr(r, "confidence", 80.0)), 80.0)
                 
-                entry = safe_float(pipeline_res.get("recommended_entry", price), price)
-                if entry == 0.0:
-                    entry = price
-                sl = safe_float(pipeline_res.get("stop_loss", price * 0.98), price * 0.98)
-                if sl == 0.0:
-                    sl = price * 0.98
-                t1 = safe_float(pipeline_res.get("target_1", price * 1.02), price * 1.02)
-                if t1 == 0.0:
-                    t1 = price * 1.02
-                t2 = safe_float(pipeline_res.get("target_2", price * 1.05), price * 1.05)
-                if t2 == 0.0:
-                    t2 = price * 1.05
+                entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
+                sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
+                t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
+                t2 = safe_float(pipeline_res.get("target_2", 0.0), 0.0)
+
+                if entry == 0.0 or sl == 0.0 or t1 == 0.0:
+                    return None
                 rr = pipeline_res.get("risk_reward", 2.0)
                 
                 # 4. Institutional Validation Engine

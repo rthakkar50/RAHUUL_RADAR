@@ -351,8 +351,8 @@ class Dashboard(QWidget):
             strength_val = int(mkt_health_str.split("(")[1].split("/")[0])
             if hasattr(self, 'market_breadth_card'):
                 self.market_breadth_card.update_breadth(strength_val)
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in dashboard.py:354: %s", _e)
             
         # Market Regime (Sprint 73)
         try:

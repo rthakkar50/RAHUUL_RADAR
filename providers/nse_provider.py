@@ -19,8 +19,8 @@ class NSEProvider:
     def _get_cookies(self):
         try:
             self.session.get("https://www.nseindia.com", timeout=10)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"NSE cookie warm-up failed (will retry on request): {e}")
 
     def fetch_option_chain(self, symbol="NIFTY"):
         if symbol in ["SENSEX", "BANKEX"]: return None

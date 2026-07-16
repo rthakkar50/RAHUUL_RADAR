@@ -1,0 +1,163 @@
+import sys
+import time
+from typing import List, Dict, Any
+from utils.logger import get_logger
+
+from backtest.historical_data_provider import HistoricalDataProvider
+
+logger = get_logger(__name__)
+
+class BacktestOrchestrator:
+    """
+    Orchestrates HistoricalDataProvider -> Core Pipeline -> SimulatedBroker.
+    """
+    def __init__(self):
+        pass
+
+    def run(self, symbol_list: List[str], start_date: str, end_date: str, timeframe: str = "1d") -> List[Dict[str, Any]]:
+        start_time = time.time()
+        
+        print("\n======================================================================")
+        print(f"Backtest Synchronization Started (PRODUCTION PIPELINE)")
+        print(f"Symbols: {len(symbol_list)}")
+        print(f"Period:  {start_date} to {end_date}")
+        print("======================================================================")
+        print("Initializing Production Engines...")
+        
+        from core.trend_engine import TrendEngine
+        from core.momentum_engine import MomentumEngine
+        from core.structure_engine import StructureEngine
+        from core.relative_strength_engine import RelativeStrengthEngine
+        from core.sector_rotation_engine import SectorRotationEngine
+        from core.adaptive_strategy_engine import AdaptiveStrategyEngine
+        from core.master_ai_decision_engine import MasterAIDecisionEngine
+        from core.master_signal_pipeline import MasterSignalPipeline
+        from ranking.score_engine import ScoreEngine
+        from core.sector_engine import SectorEngine
+        from scanner.scanner_engine import ScannerEngine
+        from data.stocks import Stock
+        
+        data_provider = HistoricalDataProvider(start_date, end_date, timeframe)
+        data_provider._fetch_symbol("^NSEI")
+        for sym in ["BANKNIFTY.NS", "NIFTYIT.NS", "NIFTYAUTO.NS", "NIFTYFMCG.NS", "NIFTYMETAL.NS", "NIFTYPHARMA.NS"]:
+            data_provider._fetch_symbol(sym)
+            
+        engines = {
+            
+            "adaptive_strategy": AdaptiveStrategyEngine.get_instance() if hasattr(AdaptiveStrategyEngine, 'get_instance') else AdaptiveStrategyEngine(),
+            "master_ai": MasterAIDecisionEngine()
+        }
+        pipeline = MasterSignalPipeline()
+        
+        score_engine = ScoreEngine()
+        sector_rotation_service = SectorEngine(data_provider)
+        scanner = ScannerEngine(
+            data_provider=data_provider,
+            trend_engine=engines["trend"],
+            momentum_engine=engines["momentum"],
+            structure_engine=engines["structure"],
+            score_engine=score_engine,
+            sector_engine=sector_rotation_service
+        )
+        
+        all_signals = []
+        
+        for idx, symbol in enumerate(symbol_list):
+            try:
+                data_provider.set_main_symbol(symbol)
+                main_df = data_provider.cache.get(symbol)
+                if main_df is None or main_df.empty:
+                    continue
+            except Exception as e:
+                logger.error(f"Failed to initialize backtest data for {symbol}: {e}")
+                continue
+                
+            min_lookback = 50
+            trading_days = len(main_df)
+            
+            if trading_days <= min_lookback:
+                logger.error(f"Insufficient data for {symbol}.")
+                continue
+                
+            stock_obj = Stock(symbol=symbol, company_name=symbol, sector="N/A", is_fno=False, is_nifty50=False)
+                
+            for i in range(min_lookback, trading_days):
+                data_provider.current_date_index = i
+                current_date = main_df.index[i]
+                
+                # Scan exactly as production does
+                raw_results = scanner.scan_market([stock_obj], mode="SWING")
+                
+                if not raw_results:
+                    continue
+                    
+                r = raw_results[0]
+                price = getattr(r, 'price', 0.0)
+                decision_str = getattr(r.signal, 'value', str(r.signal))
+                
+                # Only process actionable signals to save time in backtest
+                if decision_str not in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
+                    continue
+                    
+                breakdown = getattr(r, 'breakdown_detail', {}) or {}
+                atr_val = breakdown.get("atr", 0.0)
+                structure_details = breakdown.get("structure", {})
+                
+                # Refine with Master Signal Pipeline
+                pipeline_res = pipeline.run(
+                    symbol=symbol,
+                    price=price,
+                    decision=decision_str,
+                    confidence=getattr(r, 'confidence', 80.0),
+                    trend=getattr(r, 'trend_direction', 'SIDEWAYS'),
+                    momentum={"score": getattr(r, 'momentum_score', 50.0)},
+                    structure={"score": getattr(r, 'structure_score', 50.0), "details": structure_details},
+                    volume={"score": getattr(r, 'volume_score', 50.0)},
+                    risk={"score": getattr(r, 'risk_score', 50.0)},
+                    relative_strength={"score": getattr(r, 'relative_strength_score', 50.0)},
+                    atr=atr_val
+                )
+                
+                engine_score = getattr(r, "adjusted_score", getattr(r, "total_score", 50))
+                
+                # Exact single source of truth for targets
+                entry = pipeline_res.get("recommended_entry", 0.0)
+                sl = pipeline_res.get("stop_loss", 0.0)
+                t1 = pipeline_res.get("target_1", 0.0)
+                t2 = pipeline_res.get("target_2", 0.0)
+
+                if entry == 0.0 or sl == 0.0 or t1 == 0.0:
+                    continue
+
+                all_signals.append({
+                    "Date": current_date,
+                    "Symbol": symbol,
+                    "Signal": "BUY" if decision_str in ["BUY", "STRONG_BUY"] else "SELL",
+                    "Entry Price": entry,
+                    "Stop Loss": sl,
+                    "Target 1": t1,
+                    "Target 2": t2,
+                    "Trend Score": getattr(r, 'trend_score', 0),
+                    "Momentum Score": getattr(r, 'momentum_score', 0),
+                    "Structure Score": getattr(r, 'structure_score', 0),
+                    "Raw Score": getattr(r, 'total_score', engine_score),
+                    "Adjusted Score": engine_score,
+                    "Confidence": pipeline_res.get("calibrated_confidence", getattr(r, 'confidence', 80.0))
+                })
+                    
+            if not hasattr(self, '_bt_start_time'):
+                self._bt_start_time = time.time()
+                
+            progress = int(((idx + 1) / len(symbol_list)) * 100)
+            elapsed = time.time() - self._bt_start_time
+            speed = (idx + 1) / elapsed if elapsed > 0 else 0
+            eta = int((len(symbol_list) - (idx + 1)) / speed) if speed > 0 else 0
+            
+            sys.stdout.write(f"\rProgress: {progress}% | ETA: {eta}s | {idx+1}/{len(symbol_list)}")
+            sys.stdout.flush()
+            
+        sys.stdout.write("\nCompleted Pipeline Execution\n")
+        exec_time = time.time() - start_time
+        print(f"Pipeline executed in {exec_time:.2f} seconds.")
+        
+        return all_signals

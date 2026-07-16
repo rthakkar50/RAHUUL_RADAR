@@ -537,17 +537,23 @@ class ScannerEngine:
 
                 # 6. Run DecisionEngine
                 decision_result = self.decision_engine.calculate(
-                    trend_result=trend_result,
-                    momentum_result=momentum_result,
-                    structure_result=structure_result,
-                    market_state=market_state,
-                    mode=mode,
-                    sector_result=sector_result,
-                    oi_activity=oi_activity if mode == "OPTIONS" else None,
-                    adx_result=adx_result,
-                    avwap_result=avwap_result,
-                    mtf_result=mtf_result
+                trend_result=trend_result,
+                momentum_result=momentum_result,
+                structure_result=structure_result,
+                market_state=market_state,
+                mode=mode,
+                sector_result=sector_result,
+                oi_activity=oi_activity if mode == "OPTIONS" else None,
+                adx_result=adx_result,
+                avwap_result=avwap_result,
+                mtf_result=mtf_result
                 )
+
+                print("=" * 60)
+                print("ENGINE SYMBOL  :", stock.symbol)
+                print("ENGINE SCORE   :", decision_result.adjusted_score)
+                print("ENGINE DECISION:", decision_result.decision)
+                print("=" * 60)
                 
                 # DEBUG MODE Output
                 if DEBUG:
@@ -681,8 +687,17 @@ class ScannerEngine:
         )
         
         logger.info(f"Market scan completed successfully. Processed {len(ranked_results)} assets.")
+        
+        # Expose scan statistics separately without changing return type
+        self.last_scan_stats = {
+            "universe": total_stocks,
+            "engine_success": len(ranked_results),
+            "no_data": len(nodata_pool),
+            "errors": len(error_pool),
+            "excluded": len(excluded_pool),
+        }
+        
         return ranked_results
-
     def scan_stock(self, stock: Stock) -> ScanResult:
         """
         Wrapper to scan a single stock utilizing the batch processor.

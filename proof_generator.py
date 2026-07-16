@@ -51,8 +51,8 @@ def generate_proof():
                 res = engine.evaluate(sym, o_intra, o_1d)
                 if res and res.get("status") == "RANKED":
                     all_results.append(res)
-            except Exception as e:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in proof_generator.py:54: %s", _e)
                 
         all_results.sort(key=lambda x: x["score"], reverse=True)
         reports[mode_name] = all_results

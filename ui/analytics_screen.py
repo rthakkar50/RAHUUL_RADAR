@@ -1,3 +1,4 @@
+import logging
 import csv
 import os
 from datetime import datetime
@@ -165,8 +166,8 @@ class AnalyticsScreen(QWidget):
             ret_val = 0.0
             try:
                 ret_val = float(ret_str.replace('%', '').replace('+', ''))
-            except:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in analytics_screen.py:168: %s", _e)
                 
             total_return += ret_val
             if ret_val > 0:

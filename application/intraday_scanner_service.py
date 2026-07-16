@@ -204,10 +204,13 @@ class IntradayScannerService:
                         
                     confidence = safe_float(pipeline_res.get("calibrated_confidence", getattr(r, "confidence", 80.0)), 80.0)
                     
-                    entry = safe_float(pipeline_res.get("recommended_entry", price), price)
-                    sl = safe_float(pipeline_res.get("stop_loss", price * 0.98), price * 0.98)
-                    t1 = safe_float(pipeline_res.get("target_1", price * 1.02), price * 1.02)
-                    t2 = safe_float(pipeline_res.get("target_2", price * 1.05), price * 1.05)
+                    entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
+                    sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
+                    t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
+                    t2 = safe_float(pipeline_res.get("target_2", 0.0), 0.0)
+
+                    if entry == 0.0 or sl == 0.0 or t1 == 0.0:
+                        continue
                     rr = pipeline_res.get("risk_reward", 2.0)
                     
                     sector = getattr(r, "sector", "Unknown")

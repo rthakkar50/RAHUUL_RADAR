@@ -1,3 +1,4 @@
+import logging
 from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QPushButton, QStackedWidget, QMessageBox, QScrollArea
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint, QRect
@@ -19,6 +20,7 @@ from ui.watchlist import WatchlistScreen
 from ui.performance_screen import PerformanceScreen
 from ui.live_trades_page import LiveTradesPage
 from ui.pages.active_trading_scanner_page import ActiveTradingScannerPage
+from ui.pages.paper_trading_dashboard import PaperTradingDashboard
 from strategy.swing_engine import SwingEngine
 from strategy.intraday_engine import IntradayEngine
 from strategy.option_scalping_engine import OptionScalpingEngine
@@ -99,6 +101,7 @@ class MainWindow(QMainWindow):
         self.btn_diagnostics = self.create_nav_btn("Diagnostics")
         self.btn_settings = self.create_nav_btn("Settings")
         self.btn_live_trades = self.create_nav_btn("Live Trades")
+        self.btn_paper_dashboard = self.create_nav_btn("Paper Dashboard")
         
         sidebar_layout.addWidget(self.btn_dashboard)
         sidebar_layout.addWidget(self.btn_swing)
@@ -117,6 +120,7 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(self.btn_diagnostics)
         sidebar_layout.addWidget(self.btn_settings)
         sidebar_layout.addWidget(self.btn_live_trades)
+        sidebar_layout.addWidget(self.btn_paper_dashboard)
         sidebar_layout.addStretch()
         
         sidebar_scroll.setWidget(sidebar)
@@ -144,6 +148,7 @@ class MainWindow(QMainWindow):
         self.diagnostics = DiagnosticsScreen()
         self.settings = SettingsScreen()
         self.live_trades = LiveTradesPage(self)
+        self.paper_dashboard = PaperTradingDashboard(self)
         
         self.stack.addWidget(self.dashboard)      # 0
         self.stack.addWidget(self.swing_page)     # 1
@@ -162,6 +167,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.diagnostics)    # 14
         self.stack.addWidget(self.settings)       # 15
         self.stack.addWidget(self.live_trades)    # 16
+        self.stack.addWidget(self.paper_dashboard)# 17
         
         # Connect buttons to NavigationManager
         self.btn_dashboard.clicked.connect(lambda: NavigationManager.navigate_to("Dashboard"))
@@ -181,6 +187,7 @@ class MainWindow(QMainWindow):
         self.btn_diagnostics.clicked.connect(lambda: NavigationManager.navigate_to("Diagnostics"))
         self.btn_settings.clicked.connect(lambda: NavigationManager.navigate_to("Settings"))
         self.btn_live_trades.clicked.connect(lambda: NavigationManager.navigate_to("Live Trades"))
+        self.btn_paper_dashboard.clicked.connect(lambda: NavigationManager.navigate_to("Paper Dashboard"))
         
         # Connect dashboard buttons
         self.dashboard.navigate_to_chart.connect(self.navigate_to_chart)
@@ -247,6 +254,7 @@ class MainWindow(QMainWindow):
             "Diagnostics": (14, "btn_diagnostics"),
             "Settings": (15, "btn_settings"),
             "Live Trades": (16, "btn_live_trades"),
+            "Paper Dashboard": (17, "btn_paper_dashboard"),
         }
         self.INDEX_TO_PAGE = {v[0]: k for k, v in self.PAGES.items()}
         
@@ -318,20 +326,19 @@ class MainWindow(QMainWindow):
             cpu_pct = psutil.cpu_percent(interval=None)
             self.mem_usage_lbl.setText(f" 🧠 Mem: {mem_mb:.1f} MB ")
             self.cpu_usage_lbl.setText(f" ⚡ CPU: {cpu_pct:.1f}% ")
-        except:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in main_window.py:321: %s", _e)
 
     def _update_footer_stats(self, stats: dict):
-        scanned = stats.get("scanned", 0)
         universe = stats.get("universe", 0)
-        exec_t = stats.get("exec_time", 0.0)
+        processed = stats.get("scanned", 0)
+        qualified = stats.get("qualified", 0)
+        wait_cnt = stats.get("wait_count", 0)
+        no_data = stats.get("no_data_count", 0)
         errors = stats.get("errors", 0)
+        exec_t = stats.get("exec_time", 0.0)
         
-        if scanned < universe and universe > 0:
-            err_str = f" (Errors: {errors})" if errors > 0 else ""
-            self.symbols_lbl.setText(f" 📊 Scanned: {scanned}/{universe}{err_str} |")
-        else:
-            self.symbols_lbl.setText(f" 📊 Scanned: {scanned} |")
+        self.symbols_lbl.setText(f" 📊 Universe: {universe} | Processed: {processed} | Qualified: {qualified} | WAIT: {wait_cnt} | No Data: {no_data} | Errors: {errors} |")
             
         self.exec_time_lbl.setText(f" ⏱ Exec Time: {exec_t:.1f}s |")
 

@@ -138,16 +138,26 @@ class ConfidenceCalibrationEngine:
         dir_mult = 1 if inputs.signal_direction in ["BUY", "STRONG_BUY"] else -1 if inputs.signal_direction in ["SELL", "STRONG_SELL"] else 0
         
         # 1. Consensus Building (Agreement between core engines)
+        # Normalize incoming raw scores using their respective engine maximums
+        def normalize(raw_val: float, max_val: float) -> float:
+            if max_val <= 0: return 50.0
+            return max(0.0, min(100.0, (raw_val / max_val) * 100.0))
+
+        norm_trend = normalize(inputs.trend_score, 30.0)
+        norm_momentum = normalize(inputs.momentum_score, 25.0)
+        norm_volume = normalize(inputs.volume_score, 20.0)
+        norm_rs = normalize(inputs.relative_strength_score, 20.0)
+
         # Normalize scores to 0-100 based on direction
-        def get_directional_score(raw_score: float) -> float:
-            if dir_mult == 1: return raw_score
-            elif dir_mult == -1: return 100 - raw_score
+        def get_directional_score(normalized_score: float) -> float:
+            if dir_mult == 1: return normalized_score
+            elif dir_mult == -1: return 100.0 - normalized_score
             return 50.0
             
-        t_conf = get_directional_score(inputs.trend_score)
-        m_conf = get_directional_score(inputs.momentum_score)
-        v_conf = get_directional_score(inputs.volume_score)
-        rs_conf = get_directional_score(inputs.relative_strength_score)
+        t_conf = get_directional_score(norm_trend)
+        m_conf = get_directional_score(norm_momentum)
+        v_conf = get_directional_score(norm_volume)
+        rs_conf = get_directional_score(norm_rs)
         
         avg_consensus = (t_conf + m_conf + v_conf + rs_conf) / 4.0
         base_confidence = max(40.0, avg_consensus)

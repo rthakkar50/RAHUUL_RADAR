@@ -1,22 +1,16 @@
-from core.trend_engine import TrendResult
-from core.momentum_engine import MomentumResult
-from core.structure_engine import StructureResult
-from core.decision_engine import DecisionEngine, MarketState
+from core.decision_explanation_engine import DecisionExplanationEngine
+import json
 
-# GodrejProp values
-trend_result = TrendResult(score=30.0, direction="BULLISH", reasons=["Trend Bullish"])
-momentum_result = MomentumResult(score=25.0, direction="BULLISH", reasons=["Mom Bullish"])
-structure_result = StructureResult(score=24.0, direction="BULLISH", reasons=["Struct Bullish"])
-market_state = MarketState(trend="BULLISH", strength=0.0, volatility=0.0, market_bias="BULLISH", confidence=100.0)
+dee = DecisionExplanationEngine()
 
-dee = DecisionEngine()
-res = dee.calculate(
-    trend_result=trend_result,
-    momentum_result=momentum_result,
-    structure_result=structure_result,
-    market_state=market_state,
-    mode="SWING"
-)
+raw_reasons = [
+    "Trend Weight (Max 30) Score: 24.50",
+    "Momentum Weight (Max 25) Score: 18.00",
+    "Structure Weight (Max 25) Score: 20.00",
+    "ADX Adjusted Confidence: 85.0%",
+    "MTCE: Perfect Alignment! Boosting Elite Score (+10).",
+    "Excellent R/R"
+]
 
-print(f"adjusted_score: {res.adjusted_score}")
-print(f"decision: {res.decision}")
+res = dee.explain(signal="BUY", confidence=85.0, elite_score=80.0, raw_reasons=raw_reasons)
+print(json.dumps(res, indent=2))

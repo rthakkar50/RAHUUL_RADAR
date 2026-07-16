@@ -23,8 +23,8 @@ def main():
             res = engine.evaluate(sym, o_5m, o_1d)
             if res and res.get("status") == "RANKED":
                 all_results.append(res)
-        except Exception as e:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in diagnostic.py:26: %s", _e)
             
     all_results.sort(key=lambda x: x["score"], reverse=True)
     

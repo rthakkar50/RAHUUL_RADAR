@@ -6,6 +6,7 @@ import subprocess
 import os
 from ui.styles import CARD_BG, TEXT_PRIMARY, BTN_BLUE, BG_COLOR
 from utils.logger import get_logger
+from data.stocks import TOP_50_STOCKS
 
 logger = get_logger(__name__)
 
@@ -176,7 +177,7 @@ class BacktestWindow(QWidget):
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(True)
         
-        symbols = ["HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "RELIANCE.NS", "INFY.NS", "TCS.NS", "ITC.NS", "LNT.NS", "AXISBANK.NS", "KOTAKBANK.NS"] if self.chk_top50.isChecked() else ["RELIANCE.NS", "TCS.NS"]
+        symbols = [f"{s.symbol}.NS" for s in TOP_50_STOCKS] if self.chk_top50.isChecked() else ["RELIANCE.NS", "TCS.NS"]
         
         hold_days = self.spin_holding.value()
         start = self.dt_start.date().toString("yyyy-MM-dd")

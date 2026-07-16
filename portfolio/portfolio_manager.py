@@ -1,8 +1,8 @@
 import logging
 from typing import List, Dict
-from ..broker.broker_manager import BrokerManager
-from ..broker.models.order import Position
-from .models import PortfolioStats, SectorAllocation
+from broker.broker_manager import BrokerManager
+from broker.models.order import Position
+from portfolio.models import PortfolioStats, SectorAllocation
 
 logger = logging.getLogger("PortfolioManager")
 

@@ -223,22 +223,15 @@ class SwingScannerService:
                 else:
                     confidence = -1  # Genuinely unavailable
                 
-                entry = safe_float(pipeline_res.get("recommended_entry", price), price)
-                if entry == 0.0:
-                    entry = price
+                entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
                 sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
-                if sl == 0.0:
-                    sl = entry * 1.02 if decision_str in ["SELL", "STRONG_SELL"] else entry * 0.98
-                
-                risk_amt = abs(entry - sl)
-                
                 t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
-                if t1 == 0.0:
-                    t1 = entry - (risk_amt * 2.0) if decision_str in ["SELL", "STRONG_SELL"] else entry + (risk_amt * 2.0)
-                
                 t2 = safe_float(pipeline_res.get("target_2", 0.0), 0.0)
-                if t2 == 0.0:
-                    t2 = entry - (risk_amt * 3.0) if decision_str in ["SELL", "STRONG_SELL"] else entry + (risk_amt * 3.0)
+
+                if entry == 0.0 or sl == 0.0 or t1 == 0.0:
+                    return None
+
+                risk_amt = abs(entry - sl)
                     
                 # Ensure RR dynamically matches displayed levels
                 reward_amt = abs(t1 - entry)
@@ -248,9 +241,20 @@ class SwingScannerService:
                     rr = pipeline_res.get("risk_reward", 2.0)
                 
                 # SPRINT-73 Validation Check
+                print("=" * 60)
+                print("Symbol      :", r.symbol)
+                print("Signal      :", decision_str)
+                print("Score       :", score)
+                print("Confidence  :", r.confidence)
+                print("Entry       :", entry)
+                print("SL          :", sl)
+                print("Target1     :", t1)
+                print("RR          :", rr)
+                print("=" * 60)
                 is_valid, valid_reason = validate_trade_levels(decision_str, entry, sl, t1)
                 if not is_valid:
                     decision_str = "WATCH"
+                    print("Downgraded because:", valid_reason)
                     if "reasons" not in pipeline_res:
                         pipeline_res["reasons"] = []
                     pipeline_res["reasons"].append(f"Downgraded to WATCH: {valid_reason}")
@@ -343,7 +347,9 @@ class SwingScannerService:
                         if res:
                             processed_results.append(res)
                     except Exception as e:
-                        logger.error(f"Error processing post-scan for a symbol: {e}")
+                        import traceback
+                        logger.exception("process_post_scan failed")
+                        traceback.print_exc()
                 
             # --- QUALITY GATE & FILTER ENGINE ---
             qualified_results = []
@@ -393,8 +399,13 @@ class SwingScannerService:
                         downgrade_reasons.append("RR below minimum threshold")
                         
                     if downgrade_reasons:
-                        signal = "WATCH"
-                        item["Signal"] = "WATCH"
+                        # signal = "WATCH"
+                        print("Threshold Downgrade")
+                        print("Score:", score)
+                        print("Confidence:", conf)
+                        print("RR:", rr)
+                        print("Reasons:", downgrade_reasons)
+                        # item["Signal"] = "WATCH"
                         if "_reasons" not in item:
                             item["_reasons"] = []
                         item["_reasons"].extend(downgrade_reasons)
@@ -508,11 +519,18 @@ class SwingScannerService:
                 for x in qualified_results
             ))
 
+            scan_stats = getattr(scanner, "last_scan_stats", {})
+            no_data_count = scan_stats.get("no_data", 0)
+            error_count = scan_stats.get("errors", 0)
+            wait_count = len(processed_results) - num_qualified
+
             return {
                 "total_scanned": len(processed_results),
                 "total_universe": len(stock_list),
                 "qualified_results": qualified_results,
-                "rejected_count": len(processed_results) - num_qualified,
+                "wait_count": wait_count,
+                "no_data_count": no_data_count,
+                "error_count": error_count,
                 "best_trades": best_trades,
                 "market_quality": market_quality,
                 "exec_time": exec_time

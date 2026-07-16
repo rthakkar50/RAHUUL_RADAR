@@ -82,8 +82,8 @@ class RiskManager:
                 open_count = len(pt.active_positions)
                 if open_count >= max_open:
                     rejections.append(f"Max Open Positions Limit Reached ({open_count})")
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.warning(f"Could not verify open-positions limit; skipping this risk check: {e}")
                 
         # 5. Risk / Reward check (if available in size_data, usually passed from SetupEngine, 
         # but MasterAI handles RR rejections separately).
@@ -131,8 +131,8 @@ class RiskManager:
             today_date = datetime.now().strftime("%Y-%m-%d")
             today_pnl = sum(p.get('net_pnl', 0) for p in pt.closed_positions.values() if p['exit_time'].startswith(today_date))
             
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.warning(f"Risk-budget calc fell back to defaults (open positions/PnL unavailable): {e}")
             
         remaining_risk = max_daily_loss - abs(min(0, today_pnl))
         if remaining_risk < 0: remaining_risk = 0

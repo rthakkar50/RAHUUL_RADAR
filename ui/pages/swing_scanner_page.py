@@ -294,6 +294,10 @@ class SwingScannerPage(QWidget):
             market_quality = payload.get("market_quality", "N/A")
             total_scanned = payload.get("total_scanned", 0)
             total_universe = payload.get("total_universe", total_scanned)
+            wait_count = payload.get("wait_count", 0)
+            no_data_count = payload.get("no_data_count", 0)
+            error_count = payload.get("error_count", 0)
+            qualified_count = len(self.scan_results)
             rejected_count = payload.get("rejected_count", 0)
             best_trades = payload.get("best_trades", [])
         else:
@@ -301,6 +305,10 @@ class SwingScannerPage(QWidget):
             market_quality = "N/A"
             total_scanned = len(self.scan_results)
             total_universe = total_scanned
+            wait_count = 0
+            no_data_count = 0
+            error_count = 0
+            qualified_count = len(self.scan_results)
             rejected_count = 0
             best_trades = []
             
@@ -328,8 +336,11 @@ class SwingScannerPage(QWidget):
             stats_payload = {
                 "scanned": total_scanned,
                 "universe": total_universe,
+                "qualified": qualified_count,
+                "wait_count": wait_count,
+                "no_data_count": no_data_count,
                 "exec_time": exec_t,
-                "errors": max(0, total_universe - total_scanned)
+                "errors": error_count
             }
             self.scan_completed_stats.emit(stats_payload)
             self.toolbar.update_status(time.strftime("%H:%M:%S"), exec_t, market_quality)
@@ -350,9 +361,12 @@ class SwingScannerPage(QWidget):
         # Emit stats to main window footer
         stats_payload = {
             "scanned": total_scanned,
-            "universe": payload.get("total_universe", total_scanned) if isinstance(payload, dict) else total_scanned,
+            "universe": total_universe,
+            "qualified": qualified_count,
+            "wait_count": wait_count,
+            "no_data_count": no_data_count,
             "exec_time": exec_t,
-            "errors": max(0, payload.get("total_universe", total_scanned) - total_scanned) if isinstance(payload, dict) else 0
+            "errors": error_count
         }
         self.scan_completed_stats.emit(stats_payload)
         

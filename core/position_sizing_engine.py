@@ -38,10 +38,10 @@ class PositionSizingEngine:
         # High ATR -> Reduce Quantity. Low ATR -> Normal Quantity.
         vol_penalty_factor = 1.0
         atr_pct = (volatility_atr / entry) * 100 if entry > 0 else 0
-        if atr_pct > 3.0: # Highly volatile (High ATR)
-            vol_penalty_factor = 0.75 # Reduce qty by 25%
-        elif atr_pct > 5.0:
+        if atr_pct > 5.0: # Extremely volatile (very high ATR) - check first
             vol_penalty_factor = 0.50 # Reduce qty by 50%
+        elif atr_pct > 3.0: # Highly volatile (High ATR)
+            vol_penalty_factor = 0.75 # Reduce qty by 25%
             
         adjusted_max_risk = max_risk_amt * vol_penalty_factor
 

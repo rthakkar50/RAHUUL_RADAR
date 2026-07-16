@@ -1,3 +1,4 @@
+import logging
 from PySide6.QtWidgets import QMenu
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
@@ -20,8 +21,8 @@ class ContextMenuBuilder:
                 user_data = it.data(Qt.UserRole)
                 if isinstance(user_data, dict) and "Symbol" in user_data:
                     symbol = user_data["Symbol"]
-        except:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in context_menu.py:23: %s", _e)
             
         # 2. Heuristic fallback (find .NS explicitly)
         if not symbol:
@@ -75,8 +76,8 @@ class ContextMenuBuilder:
                 act_paper = QAction(f"💼 Paper Trade {opt_sym}", parent)
                 menu.addAction(act_paper)
                 
-            except:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in context_menu.py:78: %s", _e)
         else:
             # Standard Table Logic
             act_chart = QAction(f"📈 Open Chart for {symbol}", parent)

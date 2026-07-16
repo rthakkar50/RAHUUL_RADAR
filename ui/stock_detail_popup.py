@@ -2,6 +2,7 @@
 Stock Detail Popup — shows full trade setup (Entry, SL, Targets, RR)
 with option to add to Watchlist and open chart.
 """
+import logging
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QGridLayout, QMessageBox, QTabWidget, QWidget
@@ -232,8 +233,8 @@ class StockDetailPopup(QDialog):
                 row(risk_grid, 3, "Risk Classification", classification, class_color)
                 
                 right_col.addWidget(risk_card)
-        except Exception as e:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in stock_detail_popup.py:235: %s", _e)
 
         tip = QLabel("💡 Tip: Buy ATM Call option. Use 30-40% premium drop as SL.")
         tip.setStyleSheet("color: #888; font-size: 11px; font-style: italic;")

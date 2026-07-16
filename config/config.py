@@ -38,6 +38,12 @@ class AppConfig:
         self.capital: float = 100000.0
         self.risk_pct: float = 1.0
         
+        # Paper Trading Settings
+        self.paper_trading_starting_capital: float = 1000000.0
+        self.paper_trading_max_open_positions: int = 5
+        self.paper_trading_max_exposure_pct: float = 80.0
+        self.paper_trading_max_risk_per_trade_pct: float = 1.0
+        
         # Quality Gate Thresholds
         self.min_confidence: float = 60.0
         self.min_overall_score: float = 50.0
@@ -80,6 +86,12 @@ class AppConfig:
                 if "telegram_chat_id" in data: self.telegram_chat_id = data["telegram_chat_id"]
                 if "capital" in data: self.capital = float(data["capital"])
                 if "risk_pct" in data: self.risk_pct = float(data["risk_pct"])
+                
+                # Paper Trading
+                if "paper_trading_starting_capital" in data: self.paper_trading_starting_capital = float(data["paper_trading_starting_capital"])
+                if "paper_trading_max_open_positions" in data: self.paper_trading_max_open_positions = int(data["paper_trading_max_open_positions"])
+                if "paper_trading_max_exposure_pct" in data: self.paper_trading_max_exposure_pct = float(data["paper_trading_max_exposure_pct"])
+                if "paper_trading_max_risk_per_trade_pct" in data: self.paper_trading_max_risk_per_trade_pct = float(data["paper_trading_max_risk_per_trade_pct"])
                 
                 # Quality Gate Overrides
                 if "min_confidence" in data: self.min_confidence = float(data["min_confidence"])

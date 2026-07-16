@@ -1,3 +1,4 @@
+import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
     QHeaderView, QPushButton, QGroupBox, QGridLayout, QMessageBox, QSystemTrayIcon, QTabWidget
@@ -128,7 +129,7 @@ class PortfolioPage(QWidget):
         self.engine.signals.order_executed.connect(self.refresh_ui)
 
     def update_live_prices(self):
-        for pid, p in self.engine.active_positions.items():
+        for pid, p in self.engine.engine.open_positions.items():
             sym = p['symbol']
             df = self.data_manager.get_stock_data(sym)
             if df is not None and not df.empty:
@@ -152,7 +153,7 @@ class PortfolioPage(QWidget):
 
     def refresh_ui(self):
         # Update Table
-        positions = list(self.engine.active_positions.values())
+        positions = list(self.engine.engine.open_positions.values())
         self.table_pos.setRowCount(len(positions))
         
         for i, p in enumerate(positions):
@@ -208,10 +209,11 @@ class PortfolioPage(QWidget):
                 self.lbl_risk_remain.setStyleSheet("color: #4CAF50;")
                 
             self.lbl_risk_expo.setText(f"₹ {risk_summary.get('open_exposure', 0):,.0f}")
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in portfolio.py:211: %s", _e)
 
     def close_all_positions(self):
-        for pid, p in list(self.engine.active_positions.items()):
-            self.engine.close_position(pid, p['cmp'], "Manual Exit")
+        for pid, p in list(self.engine.engine.open_positions.items()):
+            self.engine.close_position(pid, p.current_price, "Manual Close")
+        self.refresh_ui()
         QMessageBox.information(self, "Success", "All open positions have been closed.")

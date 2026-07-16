@@ -20,8 +20,8 @@ class PortfolioService:
             try:
                 with open(PORTFOLIO_FILE, "w") as f:
                     json.dump(default, f, indent=4)
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in portfolio_service.py:23: %s", _e)
             return default
             
         try:

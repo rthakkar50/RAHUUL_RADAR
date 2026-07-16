@@ -1,3 +1,4 @@
+import logging
 """
 SmartTradeSetupPanel — Commercial Detail Panel
 Reads directly from the SwingScannerService result dict.
@@ -350,7 +351,8 @@ class SmartTradeSetupPanel(QWidget):
         vwap = scrub(raw.get("vwap", raw.get("VWAP", "")), "--")
         if vwap != "--":
             try: vwap = f"₹{float(vwap):.2f}"
-            except Exception: pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in trade_setup_panel.py:353: %s", _e)
         self._row(bl, "VWAP", vwap)
         
         # ICT
@@ -389,8 +391,8 @@ class SmartTradeSetupPanel(QWidget):
                 valid = True
             if not valid:
                 entry_str += " ⚠"
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in trade_setup_panel.py:392: %s", _e)
 
         self._row(bl, "Entry",    entry_str, color="#2962FF")
         self._row(bl, "Stop Loss", sl_str,   color="#F9322C")
@@ -403,8 +405,8 @@ class SmartTradeSetupPanel(QWidget):
             try:
                 v = float(str(rr_raw).split(":")[-1])
                 rr_color = "#00B69B" if v >= 3 else "#2962FF" if v >= 2 else "#F1C40F" if v >= 1.5 else TEXT_PRIMARY
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.getLogger(__name__).debug("Suppressed exception in trade_setup_panel.py:406: %s", _e)
             self._row(bl, "Risk Reward", rr_raw, color=rr_color)
         else:
             self._row(bl, "Risk Reward", "--")

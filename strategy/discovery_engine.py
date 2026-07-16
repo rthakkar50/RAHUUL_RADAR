@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Any
@@ -96,8 +97,8 @@ class DiscoveryEngine:
             latest_time = pd.to_datetime(df.iloc[-1]['Datetime'])
             if latest_time.hour == 9 and latest_time.minute < 30:
                 return self._reject(symbol, "Pre-Market / Early Open Volatility (Wait until 9:30 AM)")
-        except:
-            pass
+        except Exception as _e:
+            logging.getLogger(__name__).debug("Suppressed exception in discovery_engine.py:99: %s", _e)
 
         df['Vol_MA'] = df['Volume'].rolling(20).mean()
         df['EMA9'] = df['Close'].ewm(span=9, adjust=False).mean()

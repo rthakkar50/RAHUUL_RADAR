@@ -4,6 +4,7 @@ Aggregates technical scores from individual engines to generate a final weighted
 """
 from dataclasses import dataclass
 from typing import List, Optional
+from config.config import AppConfig
 
 @dataclass
 class ScoreBreakdown:
@@ -204,11 +205,19 @@ def _calibrated_decision_calculate(
             reasons.append("Decision: [SELL] - Conditions failed to meet WATCH/BUY thresholds.")
         
     # 5.5 ADX Confirmation Engine (MASTER-21)
+    cfg = AppConfig()
+    cfg.load()
+    strictness_mode = getattr(cfg, 'swing_signal_mode', 'Balanced')
+
     if adx_result:
         reasons.extend(adx_result.reasons)
         
         # Sideways filter
-        if adx_result.adx < 20:
+        adx_downgrade_condition = (adx_result.adx < 20)
+        if strictness_mode != 'Conservative':
+            adx_downgrade_condition = (adx_result.adx < 20 and adjusted_score < 80)
+            
+        if adx_downgrade_condition:
             if decision in ["BUY", "SELL"]:
                 reasons.append(f"ADX < 20 Sideways Filter: Downgrading {decision} to WATCH.")
                 decision = "WATCH"
@@ -234,8 +243,11 @@ def _calibrated_decision_calculate(
                 decision = "WAIT"
         elif mtf_result.alignment_status == "Partial Alignment":
             if decision in ["BUY", "SELL"]:
-                reasons.append(f"MTCE: Wait for confirmation. Downgrading {decision} to WAIT.")
-                decision = "WAIT"
+                if strictness_mode == 'Conservative':
+                    reasons.append(f"MTCE: Wait for confirmation. Downgrading {decision} to WAIT.")
+                    decision = "WAIT"
+                else:
+                    reasons.append(f"MTCE: Partial Alignment. Keeping {decision} in {strictness_mode} mode.")
         elif mtf_result.alignment_status == "No Alignment":
             adjusted_score = max(0.0, adjusted_score - 10.0)
             if decision in ["BUY", "SELL"]:
@@ -243,7 +255,10 @@ def _calibrated_decision_calculate(
                 decision = "WAIT"
 
     # 6. Confidence & Quality Grade (Stage 7)
-    base_confidence = ((t_norm + m_norm + s_norm) / 3.0) * 100.0
+    if bullish_count <= 1:
+        base_confidence = (((1.0 - t_norm) + (1.0 - m_norm) + (1.0 - s_norm)) / 3.0) * 100.0
+    else:
+        base_confidence = ((t_norm + m_norm + s_norm) / 3.0) * 100.0
     
     # Apply AVWAP and ADX adjustments to confidence
     confidence_adjustments = []

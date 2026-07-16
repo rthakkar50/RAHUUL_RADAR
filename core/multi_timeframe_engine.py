@@ -91,9 +91,9 @@ class MultiTimeframeEngine:
 
         for s in signals:
             trend_val = str(s.trend).upper()
-            if trend_val in ("BULL", "BULLISH"):
+            if trend_val in ("BULL", "BULLISH", "STRONG_BULL"):
                 bull_count += 1
-            elif trend_val in ("BEAR", "BEARISH"):
+            elif trend_val in ("BEAR", "BEARISH", "STRONG_BEAR"):
                 bear_count += 1
             else:
                 neutral_count += 1
