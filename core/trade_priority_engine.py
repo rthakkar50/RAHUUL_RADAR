@@ -2,9 +2,11 @@
 MASTER-28: Trade Priority Engine (TPE)
 Ranks and prioritizes all approved trades from highest quality to lowest quality.
 Ensures that the best setups (Quality + Confidence + RR) bubble to the top.
-Capped at maximum 10 trades.
+Capped at MAX_PER_CATEGORY per category (BUY, SELL, WATCH).
 """
 from typing import List, Dict
+
+MAX_PER_CATEGORY = 10
 
 class TradePriorityEngine:
     def __init__(self):
@@ -45,7 +47,7 @@ class TradePriorityEngine:
     def rank_trades(self, trades: List[Dict]) -> List[Dict]:
         """
         Takes a list of Elite-approved trades and ranks them.
-        Limits the output to the Top 10 trades.
+        Limits the output to MAX_PER_CATEGORY per category.
         """
         if not trades:
             return []
@@ -76,20 +78,41 @@ class TradePriorityEngine:
                 trade["_Priority_Score"] = float(trade.get("Score", 0.0))
                 ranked_trades.append(trade)
                 
-        # 3. Sort by True Priority Score descending
-        ranked_trades.sort(key=lambda x: x.get("_Priority_Score", 0.0), reverse=True)
-        
-        # 4. Enforce Maximum 10 limitation
-        ranked_trades = ranked_trades[:10]
-        
-        # 5. Inject display fields
-        for i, trade in enumerate(ranked_trades):
-            rank = i + 1
-            score = trade.get("_Priority_Score", 0.0)
+        # 3. Group by Category
+        grouped_trades = {}
+        for trade in ranked_trades:
+            sig = str(trade.get("Signal", "UNKNOWN")).upper()
+            # Normalize signals to robust standard names
+            if "BUY" in sig: sig_key = "BUY"
+            elif "SELL" in sig: sig_key = "SELL"
+            elif "READY" in sig or "SETUP" in sig: sig_key = "READY"
+            elif "WATCH" in sig: sig_key = "WATCH"
+            else: sig_key = "OTHER"
             
-            trade["Priority Rank"] = f"#{rank}"
-            trade["Priority Score"] = f"{score:.1f}"
-            trade["Priority Grade"] = self._get_grade(score)
-            trade["Priority Reason"] = self._get_reason(rank, score)
+            if sig_key not in grouped_trades:
+                grouped_trades[sig_key] = []
+            grouped_trades[sig_key].append(trade)
             
-        return ranked_trades
+        final_ranked_trades = []
+        
+        # 4. Sort, Limit, and Format per category
+        for sig_key, group in grouped_trades.items():
+            # Sort by True Priority Score descending
+            group.sort(key=lambda x: x.get("_Priority_Score", 0.0), reverse=True)
+            
+            # Enforce Maximum limitation per category
+            group = group[:MAX_PER_CATEGORY]
+            
+            # Inject display fields
+            for i, trade in enumerate(group):
+                rank = i + 1
+                score = trade.get("_Priority_Score", 0.0)
+                
+                trade["Priority Rank"] = f"#{rank}"
+                trade["Priority Score"] = f"{score:.1f}"
+                trade["Priority Grade"] = self._get_grade(score)
+                trade["Priority Reason"] = self._get_reason(rank, score)
+                
+                final_ranked_trades.append(trade)
+                
+        return final_ranked_trades

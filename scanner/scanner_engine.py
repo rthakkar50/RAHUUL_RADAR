@@ -16,11 +16,12 @@ from core.momentum_engine import MomentumEngine
 from core.structure_engine import StructureEngine
 from ranking.score_engine import ScoreEngine
 from data.stocks import Stock
+from config.config import AppConfig
 
 from market.market_engine import MarketEngine
 from core.decision_engine import DecisionEngine
 from ranking.ranking_engine import RankingEngine
-from core.models import ScanResult
+from core.models import ScanResult, CompositeRelativeStrength
 from ranking.scoring_rules import SignalStrength
 
 logger = get_logger(__name__)
@@ -273,7 +274,7 @@ class ScannerEngine:
         momentum_engine: MomentumEngine,
         structure_engine: StructureEngine,
         score_engine: ScoreEngine,
-        sector_engine = None
+        sector_engine = None, relative_strength_engine = None
     ) -> None:
         """
         Initializes the ScannerEngine with its required dependencies.
@@ -284,6 +285,7 @@ class ScannerEngine:
         self.momentum_engine = momentum_engine
         self.structure_engine = structure_engine
         self.score_engine = score_engine
+        self.rs_engine = relative_strength_engine
         self.sector_engine = sector_engine
         
         # Instantiate internally to protect legacy main.py bindings
@@ -295,9 +297,11 @@ class ScannerEngine:
         from core.adx_engine import AdxEngine
         from core.avwap_engine import AvwapEngine
         from core.mtf_engine import MtfEngine
+        from core.volume_engine import VolumeEngine
         self.adx_engine = AdxEngine()
         self.avwap_engine = AvwapEngine()
         self.mtf_engine = MtfEngine()
+        self.volume_engine = VolumeEngine()
         
         logger.info("ScannerEngine initialized securely with all core sub-engines.")
 
@@ -405,6 +409,9 @@ class ScannerEngine:
                 # 1. Download OHLCV Data
                 if mode == "OPTIONS":
                     ohlcv_list = self.data_provider.get_ohlcv(stock.symbol, interval="5m", period="5d")
+                elif mode == "INTRADAY":
+                    # Dedicated INTRADAY branch (Sprint 81C.1 Integration)
+                    ohlcv_list = self.data_provider.get_ohlcv(stock.symbol)
                 else:
                     ohlcv_list = self.data_provider.get_ohlcv(stock.symbol)
                 if not ohlcv_list:
@@ -535,6 +542,32 @@ class ScannerEngine:
                 
                 mtf_result = self.mtf_engine.evaluate(df_weekly=df_weekly, df_daily=df, df_4h=df_4h)
 
+                rs_score = 0.0
+                rs_momentum = 50.0
+                rs_persistence = 50.0
+                composite_rs = None
+                if getattr(self, 'rs_engine', None):
+                    rs_data = self.rs_engine.get_rs_data(stock.symbol)
+                    if rs_data:
+                        rs_score = float(rs_data.get("score", 0.0))
+                        rs_momentum = float(rs_data.get("momentum", 50.0))
+                        rs_persistence = float(rs_data.get("trend_persistence", 50.0))
+                        sector_alpha = float(rs_data.get("sector_alpha", 0.0))
+                        
+                        composite_rs = CompositeRelativeStrength(
+                            market_alpha=rs_score,
+                            sector_alpha=sector_alpha,
+                            sector_benchmark=stock.sector if stock.sector else "NIFTY50",
+                            relative_momentum=rs_momentum,
+                            trend_persistence=rs_persistence
+                        )
+                
+                # Check config for Composite Feature Flag
+                app_config = AppConfig()
+                app_config.load()
+                composite_enabled = app_config.composite_decision_enabled
+                composite_activation = app_config.composite_activation_enabled
+
                 # 6. Run DecisionEngine
                 decision_result = self.decision_engine.calculate(
                 trend_result=trend_result,
@@ -546,8 +579,20 @@ class ScannerEngine:
                 oi_activity=oi_activity if mode == "OPTIONS" else None,
                 adx_result=adx_result,
                 avwap_result=avwap_result,
-                mtf_result=mtf_result
+                mtf_result=mtf_result,
+                composite_rs=composite_rs,
+                composite_enabled=composite_enabled,
+                composite_activation=composite_activation
                 )
+                
+                # Sprint 91: Shadow Logging
+                if getattr(decision_result, 'legacy_decision', None) and decision_result.legacy_decision != decision_result.decision:
+                    reason_diff = [r for r in decision_result.reasons if "[VETO]" in r]
+                    self.logger.warning(
+                        f"SHADOW MODE DIVERGENCE: {stock.symbol} | "
+                        f"Legacy: {decision_result.legacy_decision} -> Composite: {decision_result.decision} | "
+                        f"Reason: {reason_diff[0] if reason_diff else 'Unknown'}"
+                    )
 
                 print("=" * 60)
                 print("ENGINE SYMBOL  :", stock.symbol)
@@ -604,6 +649,7 @@ class ScannerEngine:
                 breakdown_detail["atr"] = atr_value
                 breakdown_detail["structure"] = getattr(structure_result, "details", {})
                 
+                # composite_rs already calculated above
                 # Map complete data flow into the final ScanResult wrapper so ranking logic doesn't drop anything
                 scan_result = ScanResult(
                     symbol=stock.symbol,
@@ -613,9 +659,9 @@ class ScannerEngine:
                     trend_score=float(trend_result.score),
                     momentum_score=float(momentum_result.score),
                     structure_score=float(structure_result.score),
-                    volume_score=0.0,
+                    volume_score=float(self.volume_engine.evaluate(df, decision_result.decision).score) if not df.empty else 0.0,
                     volatility_score=0.0,
-                    relative_strength_score=0.0,
+                    relative_strength_score=rs_score,
                     risk_score=0.0,
                     mtf_score=mtf_score,
                     total_score=decision_result.total_score,
@@ -623,8 +669,16 @@ class ScannerEngine:
                     volume=float(df['Volume'].iloc[-1]) if not df.empty else 0.0,
                     signal=mapped_signal,
                     timestamp=datetime.now(),
+                    composite_relative_strength=composite_rs,
+                    composite_evaluation=getattr(decision_result, "composite_evaluation", None),
+                    legacy_decision=getattr(decision_result, "legacy_decision", None),
+                    relative_momentum=rs_momentum,
+                    trend_persistence=rs_persistence,
                     breakdown_detail=breakdown_detail,
-                    quality_grade=getattr(decision_result, "quality_grade", "N/A")
+                    quality_grade=getattr(decision_result, "quality_grade", "N/A"),
+                    adx_value=getattr(decision_result, "adx_value", 0.0),
+                    avwap_status=getattr(decision_result, "avwap_status", "Neutral"),
+                    mtf_data=getattr(decision_result, "mtf_data", None)
                 )
                 
                 # Append upstream reasons safely inside ScanResult instance dynamically if needed
@@ -632,6 +686,8 @@ class ScannerEngine:
                 setattr(scan_result, "raw_score", getattr(decision_result, "raw_score", 0))
                 setattr(scan_result, "adjusted_score", getattr(decision_result, "adjusted_score", decision_result.total_score))
                 setattr(scan_result, "confidence", decision_result.confidence)
+                setattr(scan_result, "relative_momentum", rs_momentum)
+                setattr(scan_result, "trend_persistence", rs_persistence)
                 
                 return scan_result
                 

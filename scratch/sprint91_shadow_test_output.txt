@@ -1,0 +1,90 @@
+2026-07-17 22:34:58,989 - market.yahoo_provider - INFO - Disk cache expired. Starting fresh.
+2026-07-17 22:34:58,989 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-17 22:34:58,989 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-07-17 22:34:58,989 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+2026-07-17 22:34:58,990 - market.market_engine - INFO - MarketEngine initialized securely.
+2026-07-17 22:34:58,990 - ranking.ranking_engine - INFO - RankingEngine initialized securely.
+2026-07-17 22:34:58,992 - scanner.scanner_engine - INFO - ScannerEngine initialized securely with all core sub-engines.
+
+--- SPRINT 91: SHADOW MODE TEST (ACTIVATION: ON) ---
+2026-07-17 22:34:58,997 - scanner.scanner_engine - INFO - Starting batch market scan | Target Count: 8
+2026-07-17 22:35:00,648 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=18.47
+2026-07-17 22:35:00,663 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=76.35
+2026-07-17 22:35:00,674 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=27.51
+2026-07-17 22:35:00,688 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=28.52
+2026-07-17 22:35:00,699 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=59.07
+2026-07-17 22:35:00,710 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=14.31
+2026-07-17 22:35:00,820 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,822 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,822 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PAYTM.NS
+ENGINE SCORE   : 72.64
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 22:35:00,823 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HDFCBANK.NS
+ENGINE SCORE   : 40.6
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 22:35:00,846 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,846 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TCS.NS
+ENGINE SCORE   : 42.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 22:35:00,869 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,869 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ITC.NS
+ENGINE SCORE   : 25.34
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 22:35:00,880 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,880 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INFY.NS
+ENGINE SCORE   : 31.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 22:35:00,890 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 22:35:00,890 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: TATAMOTORS.NS"}}}
+$ZOMATO.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+============================================================
+ENGINE SYMBOL  : RELIANCE.NS
+ENGINE SCORE   : 46.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 22:35:01,975 - market.yahoo_provider - WARNING - No OHLCV data returned for ZOMATO.NS on attempt 1.
+$TATAMOTORS.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+2026-07-17 22:35:02,584 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 1.
+$ZOMATO.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+2026-07-17 22:35:03,812 - market.yahoo_provider - WARNING - No OHLCV data returned for ZOMATO.NS on attempt 2.
+$TATAMOTORS.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+2026-07-17 22:35:04,266 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 2.
+$^CNXCOMM: possibly delisted; no price data found  (period=6mo) (Yahoo error = "No data found, symbol may be delisted")
+$ZOMATO.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+2026-07-17 22:35:05,467 - market.yahoo_provider - WARNING - No OHLCV data returned for ZOMATO.NS on attempt 3.
+$TATAMOTORS.NS: possibly delisted; no price data found  (period=3mo) (Yahoo error = "No data found, symbol may be delisted")
+2026-07-17 22:35:05,792 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 3.
+2026-07-17 22:35:06,469 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for ZOMATO.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 22:35:06,469 - scanner.scanner_engine - WARNING - Skipping ZOMATO.NS: No OHLCV data retrieved.
+2026-07-17 22:35:06,794 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for TATAMOTORS.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 22:35:06,795 - scanner.scanner_engine - WARNING - Skipping TATAMOTORS.NS: No OHLCV data retrieved.
+2026-07-17 22:35:06,800 - scanner.scanner_engine - INFO - --- SCANNER METRICS ---
+Start Time: 22:34:58 | End Time: 22:35:06 | Elapsed: 7.80s
+Universe: 8 | Ranked: 6 | Excluded: 0 | No Data: 2 | Errors: 0
+Memory: 154.8 MB | CPU: 9.6%
+-----------------------
+2026-07-17 22:35:06,801 - scanner.scanner_engine - INFO - Market scan completed successfully. Processed 6 assets.
+[PAYTM.NS] Legacy: BUY | New: BUY | Quality: Standard
+[RELIANCE.NS] Legacy: WATCH | New: WATCH | Quality: Standard
+[TCS.NS] Legacy: WATCH | New: WATCH | Quality: Standard
+[HDFCBANK.NS] Legacy: WAIT | New: WATCH | Quality: Standard
+[INFY.NS] Legacy: WATCH | New: WATCH | Quality: Standard
+[ITC.NS] Legacy: SELL | New: SELL | Quality: Standard
+
+Total Divergences: 1

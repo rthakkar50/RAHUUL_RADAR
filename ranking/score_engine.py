@@ -78,7 +78,10 @@ def _calibrated_decision_calculate(
     oi_activity=None,
     adx_result=None,
     avwap_result=None,
-    mtf_result=None
+    mtf_result=None,
+    composite_rs=None,
+    composite_enabled=False,
+    composite_activation=False
 ) -> de.DecisionResult:
     import core.scoring_weights as weights
     
@@ -319,18 +322,43 @@ def _calibrated_decision_calculate(
     radar_analysis["Market"] = f"🟢 Bullish" if mkt_status == "✅" else f"🔴 Bearish" if mkt_status == "❌" else f"🟡 Neutral"
     breakdown["Radar_Analysis"] = radar_analysis
     
+    # 8. Sprint 87B/91: Composite Layer Pass-Through Evaluation & Veto
+    composite_evaluation = None
+    legacy_decision = decision
+    if composite_enabled and composite_rs:
+        from core.composite_layer import CompositeLayer
+        composite_layer = getattr(self, "composite_layer", CompositeLayer())
+        composite_evaluation = composite_layer.evaluate(
+            composite_rs, decision
+        )
+        if composite_evaluation:
+            all_reasons.append("--- Institutional Quality Overlay ---")
+            all_reasons.extend(composite_evaluation.reasons)
+            all_reasons.append(f"Institutional Quality: {composite_evaluation.quality_category}")
+            
+            # Sprint 91: Veto Logic (Model A)
+            if composite_activation:
+                if legacy_decision in ["BUY", "STRONG_BUY"] and composite_evaluation.quality_category == "Poor":
+                    decision = "WATCH"
+                    all_reasons.append("[VETO] Trade downgraded to WATCH due to Poor Institutional Quality")
+    
     res = de.DecisionResult(
         raw_score=round(raw_score, 2),
         market_adjustment=round(mkt_adj, 2),
         adjusted_score=round(adjusted_score, 2),
         confidence=round(confidence, 2),
         decision=decision,
-        reasons=all_reasons
+        reasons=all_reasons,
+        adx_value=adx_result.adx if adx_result else 0.0,
+        avwap_status=avwap_result.position if avwap_result else "Neutral",
+        mtf_data=mtf_result
     )
     
     # Dynamically attach Breakdown & Grade to result object
     res.breakdown_detail = breakdown
     res.quality_grade = grade
+    res.composite_evaluation = composite_evaluation
+    res.legacy_decision = legacy_decision
     
     return res
 

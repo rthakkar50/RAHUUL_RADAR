@@ -28,6 +28,9 @@ class AppConfig:
         self.data_provider: str = "yahoo" # 'yahoo' or 'dhan'
         self.dhan_client_id: str = ""
         self.dhan_access_token: str = ""
+        
+        self.composite_decision_enabled: bool = False
+        self.composite_activation_enabled: bool = False
         self.timeframe: str = "1d"
         self.scan_interval: int = 60
         self.max_symbols: int = 50
@@ -73,6 +76,8 @@ class AppConfig:
                 if "timeframe" in data: self.timeframe = data["timeframe"]
                 if "scan_interval" in data: self.scan_interval = data["scan_interval"]
                 if "max_symbols" in data: self.max_symbols = data["max_symbols"]
+                if "composite_decision_enabled" in data: self.composite_decision_enabled = data["composite_decision_enabled"]
+                if "composite_activation_enabled" in data: self.composite_activation_enabled = data["composite_activation_enabled"]
                 if "debug_mode" in data: self.debug_mode = data["debug_mode"]
                 if "log_level" in data: self.log_level = data["log_level"]
                 if "export_csv" in data: self.export_csv = data["export_csv"]

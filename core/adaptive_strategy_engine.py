@@ -101,7 +101,8 @@ class AdaptiveStrategyEngine:
                 return snapshot.get(key, default)
             return getattr(snapshot, key, default)
 
-        adx: float = float(get_val("adx", 0.0))
+        adx_val = get_val("adx", 0.0)
+        adx: float = float(adx_val.get("score", 0.0) if isinstance(adx_val, dict) else adx_val)
         atr: float = float(get_val("atr", 0.0))
         price_above_vwap: bool = bool(get_val("price_above_vwap", False))
         

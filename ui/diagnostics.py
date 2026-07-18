@@ -68,7 +68,7 @@ class DiagnosticsWorker(QThread):
             
         # 5. Backtest Engine
         try:
-            from backtest.backtest_engine import BacktestEngine
+            from backtest.backtest_orchestrator import BacktestOrchestrator
             self.progress.emit("Backtest Engine", "PASS", "Modules loaded.")
         except Exception as e:
             self.progress.emit("Backtest Engine", "FAIL", str(e))

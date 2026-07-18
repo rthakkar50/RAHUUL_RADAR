@@ -3,12 +3,13 @@ Decision Engine module for RAHUUL_RADAR.
 Aggregates technical scores and market state to generate final trading decisions.
 """
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from utils.logger import get_logger
 from core.trend_engine import TrendResult
 from core.momentum_engine import MomentumResult
 from core.structure_engine import StructureResult
+from core.composite_layer import CompositeLayer, CompositeEvaluation
 
 logger = get_logger(__name__)
 
@@ -37,6 +38,11 @@ class DecisionResult:
     confidence: float
     decision: str
     reasons: List[str] = field(default_factory=list)
+    adx_value: float = 0.0
+    avwap_status: str = "Neutral"
+    mtf_data: Optional[Any] = None
+    composite_evaluation: Optional[CompositeEvaluation] = None
+    legacy_decision: Optional[str] = None
     
     @property
     def total_score(self) -> float:
@@ -53,6 +59,7 @@ class DecisionEngine:
     def __init__(self) -> None:
         """Initializes the DecisionEngine."""
         logger.debug("DecisionEngine instantiated securely.")
+        self.composite_layer = CompositeLayer()
         
     def calculate(
         self,
@@ -65,7 +72,9 @@ class DecisionEngine:
         oi_activity = None,
         adx_result = None,
         avwap_result = None,
-        mtf_result = None
+        mtf_result = None,
+        composite_rs = None,
+        composite_enabled: bool = False
     ) -> DecisionResult:
         """
         Calculates the final trading decision by mathematically aggregating sub-engine results.
@@ -132,6 +141,17 @@ class DecisionEngine:
             else:
                 decision = "WATCH"
                 reasons.append(f"Score ({adjusted_score:.2f}) between 20-70 (OPTIONS mode) -> [WATCH]")
+        elif mode == "INTRADAY":
+            # Dedicated INTRADAY branch (Sprint 81C.1 Integration)
+            if adjusted_score >= 50.0:
+                decision = "BUY"
+                reasons.append(f"Score ({adjusted_score:.2f}) >= 50 threshold (INTRADAY mode) -> [BUY]")
+            elif adjusted_score >= 40.0:
+                decision = "WATCH"
+                reasons.append(f"Score ({adjusted_score:.2f}) in 40-49 threshold (INTRADAY mode) -> [WATCH]")
+            else:
+                decision = "SELL"
+                reasons.append(f"Score ({adjusted_score:.2f}) below 40 threshold (INTRADAY mode) -> [SELL]")
         else:
             if adjusted_score >= 50.0:
                 decision = "BUY"
@@ -160,6 +180,14 @@ class DecisionEngine:
         # Combine all upstream reasons for a complete audit trail
         upstream_reasons = trend_result.reasons + momentum_result.reasons + structure_result.reasons
         all_reasons = upstream_reasons + ["--- Decision Math ---"] + reasons
+
+        # 6. Sprint 87B: Composite Layer Evaluation (Post-Scoring)
+        composite_evaluation = None
+        if composite_enabled:
+            composite_evaluation = self.composite_layer.evaluate(composite_rs, decision)
+            all_reasons.append("--- Institutional Quality Overlay ---")
+            all_reasons.extend(composite_evaluation.reasons)
+            # In Phase 1/2, signal_modifier remains NEUTRAL, no decision modification occurs here.
         
         return DecisionResult(
             raw_score=round(raw_score, 2),
@@ -167,5 +195,9 @@ class DecisionEngine:
             adjusted_score=round(adjusted_score, 2),
             confidence=round(confidence, 2),
             decision=decision,
-            reasons=all_reasons
+            reasons=all_reasons,
+            adx_value=adx_result.adx if adx_result else 0.0,
+            avwap_status=avwap_result.position if avwap_result else "Neutral",
+            mtf_data=mtf_result,
+            composite_evaluation=composite_evaluation
         )

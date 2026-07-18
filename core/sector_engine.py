@@ -47,7 +47,7 @@ class SectorEngine:
         try:
             # Fetch recent data for ETF
             ohlcv = self.data_provider.get_ohlcv(etf_symbol, interval="1d", period="5d")
-            if ohlcv is None or ohlcv.empty or len(ohlcv) < 2:
+            if ohlcv is None or len(ohlcv) < 2:
                 return (2.5, f"{etf_symbol} data unavailable")
 
             # Simple momentum check (Last close vs previous close)

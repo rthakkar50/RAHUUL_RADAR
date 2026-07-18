@@ -400,7 +400,7 @@ class ScalpingScannerPage(QWidget):
         elif sort_by == "Alphabetical":
             self.scan_results.sort(key=lambda x: x.get("Symbol", ""))
             
-        self.populate_table()
+        self._populate_table()
 
     def on_refresh_interval_changed(self, text):
         self.refresh_timer.stop()

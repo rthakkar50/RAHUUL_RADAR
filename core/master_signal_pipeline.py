@@ -101,55 +101,30 @@ class MasterSignalPipeline:
         self.false_signal_report = None
 
         # 5.5. Run MultiTimeframeEngine with Error Handling and Report Generation
-        from core.multi_timeframe_engine import MultiTimeframeEngine, TimeframeSignal
-        
-        mtf_engine = MultiTimeframeEngine()
+        mtf_data = kwargs.get("mtf_data")
+        print(f"DEBUG PIPELINE kwargs keys: {kwargs.keys()}")
+        print(f"DEBUG PIPELINE mtf_data value: {mtf_data} | type: {type(mtf_data)}")
         alignment_status = "CONFIRMED"
         alignment_score = 100.0
         alignment_report = None
         
-        try:
-            # Call collect_timeframes()
-            signals = kwargs.get("timeframe_signals")
-            if not signals:
-                signals = mtf_engine.collect_timeframes()
-                
-            if not signals:
-                # If collect_timeframes returns None/empty (placeholder),
-                # construct mock signals to keep the engine functional and testable
-                current_trend_obj = collected_results.get("trend")
-                if isinstance(current_trend_obj, dict):
-                    current_trend = current_trend_obj.get("direction", "BULL")
-                else:
-                    current_trend = current_trend_obj or "BULL"
-                print(f"DEBUG: current_trend is {current_trend} | type: {type(current_trend)}")
-                signals = [
-                    TimeframeSignal("1m", current_trend, 80.0, 80.0),
-                    TimeframeSignal("5m", current_trend, 80.0, 80.0),
-                    TimeframeSignal("15m", current_trend, 80.0, 80.0),
-                    TimeframeSignal("1h", current_trend, 80.0, 80.0),
-                    TimeframeSignal("4h", current_trend, 80.0, 80.0)
-                ]
-                
-            # Call validate_alignment()
-            alignment_status, confirmed_count, total_count = mtf_engine.validate_alignment(signals)
+        if mtf_data is not None:
+            real_status = getattr(mtf_data, "alignment_status", "No Alignment")
             
-            # Call calculate_alignment_score()
-            alignment_score = mtf_engine.calculate_alignment_score(signals, alignment_status)
-            
-            # Call build_alignment_report()
-            alignment_report = mtf_engine.build_alignment_report()
-            if alignment_report is None:
-                alignment_report = [f"Alignment Status: {alignment_status} | Score: {alignment_score:.1f} | Confirmed: {confirmed_count}/{total_count}"]
-            elif isinstance(alignment_report, str):
-                alignment_report = [alignment_report]
+            if "Perfect Alignment" in real_status:
+                alignment_status = "CONFIRMED"
+            elif "Major Conflict" in real_status or "No Alignment" in real_status:
+                alignment_status = "REJECTED"
+            else:
+                alignment_status = "PARTIAL"
                 
-        except Exception as e:
-            logger.exception("MultiTimeframeEngine failed. Continuing pipeline using previous behavior.")
-            # Fallback values
+            alignment_score = float(getattr(mtf_data, "confluence_score", 0.0))
+            alignment_report = getattr(mtf_data, "reasons", ["Real MTF Alignment Used"])
+        else:
+            logger.warning("mtf_data was missing or None in MasterSignalPipeline. Applying graceful degradation.")
             alignment_status = "CONFIRMED"
-            alignment_score = 100.0
-            alignment_report = ["MTF Evaluation Error (Bypassed)"]
+            alignment_score = 50.0
+            alignment_report = ["Warning: Missing MTF Data"]
 
         if alignment_status == "REJECTED":
             # Store the report in a pipeline attribute
@@ -484,7 +459,9 @@ class MasterSignalPipeline:
             "relative_strength": None,
             "sector_rotation": None,
             "adaptive_strategy": None,
-            "master_ai": None
+            "master_ai": None,
+            "adx": None,
+            "avwap": None
         }
         
         for key in results.keys():

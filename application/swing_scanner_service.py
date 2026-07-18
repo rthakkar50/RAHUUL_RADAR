@@ -141,7 +141,8 @@ class SwingScannerService:
                 momentum_engine=self.engines["momentum"],
                 structure_engine=self.engines["structure"],
                 score_engine=score_engine,
-                sector_engine=sector_rotation_service
+                sector_engine=sector_rotation_service,
+                relative_strength_engine=self.engines["relative_strength"]
             )
             
             if progress_callback:
@@ -198,7 +199,10 @@ class SwingScannerService:
                     volume={"score": getattr(r, 'volume_score', 50.0)},
                     risk={"score": getattr(r, 'risk_score', 50.0)},
                     relative_strength={"score": getattr(r, 'relative_strength_score', 50.0)},
-                    atr=atr_val
+                    adx={"score": getattr(r, 'adx_value', 0.0)},
+                    avwap={"position": getattr(r, 'avwap_status', "Neutral")},
+                    atr=atr_val,
+                    mtf_data=getattr(r, 'mtf_data', None)
                 )
                 
                 data_dict = pipeline_res

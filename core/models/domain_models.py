@@ -2,10 +2,22 @@
 Core domain models for RAHUUL_RADAR.
 Contains the primary data structures that flow through the scanner pipeline.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any, Optional
 from ranking.scoring_rules import SignalStrength
 
+@dataclass
+class CompositeRelativeStrength:
+    """
+    Encapsulates all relative strength dimensions into a unified framework.
+    """
+    market_alpha: float = 0.0
+    sector_alpha: float = 0.0
+    sector_benchmark: str = "NIFTY50"
+    relative_momentum: float = 50.0
+    trend_persistence: float = 50.0
+    
 @dataclass
 class ScanResult:
     """
@@ -32,10 +44,17 @@ class ScanResult:
     
     signal: SignalStrength
     timestamp: datetime
-    
+    composite_relative_strength: Optional[CompositeRelativeStrength] = None
+    composite_evaluation: Optional[Any] = None
+    relative_momentum: float = 50.0
+    trend_persistence: float = 50.0
     breakdown_detail: dict = None
     quality_grade: str = "N/A"
     status: str = "RANKED"
+    adx_value: float = 0.0
+    avwap_status: str = "Neutral"
+    mtf_data: Any = None
+    legacy_decision: Optional[str] = None
 
     def is_strong_buy(self) -> bool:
         """

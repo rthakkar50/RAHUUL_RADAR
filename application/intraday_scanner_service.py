@@ -11,7 +11,7 @@ from market.yahoo_provider import YahooFinanceProvider
 from market.dhan_provider import DhanProvider
 from strategy.intraday_engine import IntradayEngine
 from core.trade_lock_engine import TradeLockEngine
-from market.universe import get_all_symbols
+from market.universe import get_all_symbols, get_fno_symbols
 from data.stocks import Stock
 from scanner.scanner_engine import ScannerEngine
 from ranking.score_engine import ScoreEngine
@@ -134,6 +134,7 @@ class IntradayScannerService:
             # 2. Get Universe (Standard Architecture)
             logger.info("Fetching Symbol Universe...")
             fno_data = get_all_symbols()
+            fno_symbols_set = {item["symbol"] for item in get_fno_symbols()}
             if not fno_data:
                 raise ValueError("Empty universe returned from get_all_symbols()")
                 
@@ -141,7 +142,8 @@ class IntradayScannerService:
             for item in fno_data:
                 sym = item["symbol"]
                 sector = item.get("sector", "N/A")
-                stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=False, is_nifty50=False))
+                is_fno = sym in fno_symbols_set
+                stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=is_fno, is_nifty50=False))
                 
             score_engine = ScoreEngine()
             sector_rotation_service = SectorEngine(data_provider)
@@ -151,7 +153,8 @@ class IntradayScannerService:
                 momentum_engine=self.engines["momentum"],
                 structure_engine=self.engines["structure"],
                 score_engine=score_engine,
-                sector_engine=sector_rotation_service
+                sector_engine=sector_rotation_service,
+                relative_strength_engine=self.engines["relative_strength"]
             )
             
             if progress_callback:
@@ -180,6 +183,32 @@ class IntradayScannerService:
                 decision_str = getattr(r.signal, 'value', str(r.signal))
                 
                 try:
+                    # 3.5. Evaluate with IntradayEngine (Sprint 81A Integration)
+                    if decision_str not in ["WAIT", "NO_DATA", "EXCLUDED"]:
+                        try:
+                            ohlcv_intra = data_provider.get_ohlcv(symbol, interval="5m", period="5d")
+                            ohlcv_15m = data_provider.get_ohlcv(symbol, interval="15m", period="5d")
+                            ohlcv_1h = data_provider.get_ohlcv(symbol, interval="1h", period="1mo")
+                            ohlcv_1d = data_provider.get_ohlcv(symbol, interval="1d", period="1mo")
+                            
+                            trend_result = getattr(r, 'trend_direction', "NEUTRAL")
+                            
+                            ie_res = self.intraday_engine.evaluate(
+                                symbol=symbol,
+                                ohlcv_intra=ohlcv_intra or [],
+                                ohlcv_15m=ohlcv_15m or [],
+                                ohlcv_1h=ohlcv_1h or [],
+                                ohlcv_1d=ohlcv_1d or [],
+                                market_trend=trend_result
+                            )
+                            
+                            if ie_res.get("status") == "WAIT" or ie_res.get("signal") == "WAIT":
+                                decision_str = "WAIT"
+                            elif "signal" in ie_res:
+                                decision_str = ie_res["signal"]
+                        except Exception as e:
+                            logger.error(f"IntradayEngine evaluation failed for {symbol}: {e}")
+
                     # 4. Refine with Master Signal Pipeline
                     pipeline_res = self.pipeline.run(
                         symbol=symbol,
@@ -191,7 +220,10 @@ class IntradayScannerService:
                         structure={"score": getattr(r, 'structure_score', 50.0)},
                         volume={"score": getattr(r, 'volume_score', 50.0)},
                         risk={"score": getattr(r, 'risk_score', 50.0)},
-                        relative_strength={"score": getattr(r, 'relative_strength_score', 50.0)}
+                        relative_strength={"score": getattr(r, 'relative_strength_score', 50.0)},
+                        adx={"score": getattr(r, 'adx_value', 0.0)},
+                        avwap={"position": getattr(r, 'avwap_status', "Neutral")},
+                        mtf_data=getattr(r, 'mtf_data', None)
                     )
                     
                     engine_score = getattr(r, "adjusted_score", getattr(r, "total_score", 50))

@@ -142,7 +142,8 @@ class ScalpingScannerService:
                 momentum_engine=self.engines["momentum"],
                 structure_engine=self.engines["structure"],
                 score_engine=score_engine,
-                sector_engine=sector_rotation_service
+                sector_engine=sector_rotation_service,
+                relative_strength_engine=self.engines["relative_strength"]
             )
             
             if progress_callback:

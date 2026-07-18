@@ -1,0 +1,1328 @@
+2026-07-17 20:17:52,308 - market.yahoo_provider - INFO - Disk cache expired. Starting fresh.
+2026-07-17 20:17:52,309 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-17 20:17:52,309 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-07-17 20:17:52,309 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+Initializing Relative Strength Engine and populating cache...
+Cache Refresh Time: 120.67 seconds
+2026-07-17 20:19:52,983 - market.market_engine - INFO - MarketEngine initialized securely.
+2026-07-17 20:19:52,983 - ranking.ranking_engine - INFO - RankingEngine initialized securely.
+2026-07-17 20:19:52,988 - scanner.scanner_engine - INFO - ScannerEngine initialized securely with all core sub-engines.
+Starting F&O scan for 178 stocks...
+2026-07-17 20:19:52,996 - scanner.scanner_engine - INFO - Starting batch market scan | Target Count: 178
+2026-07-17 20:19:53,854 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=29.26
+2026-07-17 20:19:53,883 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=3.40
+2026-07-17 20:19:53,917 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=8.75
+2026-07-17 20:19:53,949 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=24.95
+2026-07-17 20:19:53,960 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=72.48
+2026-07-17 20:19:53,978 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=41.30
+2026-07-17 20:19:53,984 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=11.33
+2026-07-17 20:19:53,989 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=7.60
+2026-07-17 20:19:53,998 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=16.03
+2026-07-17 20:19:54,008 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=15.31
+2026-07-17 20:19:54,018 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=2.67
+2026-07-17 20:19:54,040 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=16.57
+2026-07-17 20:19:54,049 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=39.72
+2026-07-17 20:19:54,062 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,071 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=5.26
+============================================================
+ENGINE SYMBOL  : ABFRL.NS
+ENGINE SCORE   : 28.41
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,072 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ABCAPITAL.NS
+ENGINE SCORE   : 40.88
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:54,107 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ABBOTINDIA.NS
+ENGINE SCORE   : 46.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,128 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,128 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ADANIENT.NS
+ENGINE SCORE   : 54.99
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : ADANIPORTS.NS
+ENGINE SCORE   : 49.18
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,155 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ALKEM.NS
+ENGINE SCORE   : 59.88
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:54,180 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ABB.NS
+ENGINE SCORE   : 75.38
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,207 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,207 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,212 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : AMBUJACEM.NS
+ENGINE SCORE   : 29.5
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : ASHOKLEY.NS
+ENGINE SCORE   : 29.73
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : ACC.NS
+ENGINE SCORE   : 29.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,226 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : AARTIIND.NS
+ENGINE SCORE   : 68.97
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,250 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : APOLLOHOSP.NS
+ENGINE SCORE   : 60.41
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:54,272 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,272 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : APOLLOTYRE.NS
+ENGINE SCORE   : 14.28
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : ASIANPAINT.NS
+ENGINE SCORE   : 47.01
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,534 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=19.48
+2026-07-17 20:19:54,556 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=10.75
+2026-07-17 20:19:54,569 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=27.16
+2026-07-17 20:19:54,580 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=3.81
+2026-07-17 20:19:54,619 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=76.16
+2026-07-17 20:19:54,632 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=17.33
+2026-07-17 20:19:54,662 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=45.55
+2026-07-17 20:19:54,675 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=18.14
+2026-07-17 20:19:54,689 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ASTRAL.NS
+ENGINE SCORE   : 35.55
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,704 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=79.27
+2026-07-17 20:19:54,727 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : AUROPHARMA.NS
+ENGINE SCORE   : 46.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,739 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : AXISBANK.NS
+ENGINE SCORE   : 34.72
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,755 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=28.63
+2026-07-17 20:19:54,762 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=3.60
+2026-07-17 20:19:54,776 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=1.55
+2026-07-17 20:19:54,800 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:54,800 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BAJAJFINSV.NS
+ENGINE SCORE   : 37.98
+ENGINE DECISION: WAIT
+============================================================
+============================================================
+ENGINE SYMBOL  : ATUL.NS
+ENGINE SCORE   : 23.63
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:54,813 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=27.66
+2026-07-17 20:19:54,825 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : AUBANK.NS
+ENGINE SCORE   : 39.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,837 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BAJFINANCE.NS
+ENGINE SCORE   : 74.56
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:54,859 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BALKRISIND.NS
+ENGINE SCORE   : 19.44
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,889 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=62.05
+2026-07-17 20:19:54,892 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BAJAJ-AUTO.NS
+ENGINE SCORE   : 80.43
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,914 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BANDHANBNK.NS
+ENGINE SCORE   : 61.61
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,926 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BATAINDIA.NS
+ENGINE SCORE   : 30.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,940 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BEL.NS
+ENGINE SCORE   : 27.34
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:54,991 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BERGEPAINT.NS
+ENGINE SCORE   : 39.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,072 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BANKBARODA.NS
+ENGINE SCORE   : 25.05
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:55,146 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=3.18
+2026-07-17 20:19:55,199 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=48.40
+2026-07-17 20:19:55,229 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=33.09
+2026-07-17 20:19:55,273 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=24.74
+2026-07-17 20:19:55,304 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=26.09
+2026-07-17 20:19:55,315 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=35.43
+2026-07-17 20:19:55,333 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=9.11
+2026-07-17 20:19:55,344 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BHARTIARTL.NS
+ENGINE SCORE   : 31.09
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,394 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=47.26
+2026-07-17 20:19:55,404 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=33.12
+2026-07-17 20:19:55,414 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=6.68
+2026-07-17 20:19:55,424 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BHARATFORG.NS
+ENGINE SCORE   : 62.82
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,437 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=17.01
+2026-07-17 20:19:55,447 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BHEL.NS
+ENGINE SCORE   : 73.86
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:55,469 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BIOCON.NS
+ENGINE SCORE   : 62.29
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,482 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=46.62
+2026-07-17 20:19:55,508 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CANBK.NS
+ENGINE SCORE   : 17.84
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,509 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BOSCHLTD.NS
+ENGINE SCORE   : 46.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,519 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.24
+2026-07-17 20:19:55,530 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=26.03
+2026-07-17 20:19:55,551 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BRITANNIA.NS
+ENGINE SCORE   : 47.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,561 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CHAMBLFERT.NS
+ENGINE SCORE   : 31.52
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,571 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BPCL.NS
+ENGINE SCORE   : 45.81
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,580 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CHOLAFIN.NS
+ENGINE SCORE   : 59.42
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:55,615 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : BSOFT.NS
+ENGINE SCORE   : 34.55
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,655 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CIPLA.NS
+ENGINE SCORE   : 37.5
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:55,689 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CANFINHOME.NS
+ENGINE SCORE   : 37.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,822 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : COALINDIA.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:55,856 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.04
+2026-07-17 20:19:55,890 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=19.65
+2026-07-17 20:19:56,023 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : COLPAL.NS
+ENGINE SCORE   : 33.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,034 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=3.79
+2026-07-17 20:19:56,044 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=28.98
+2026-07-17 20:19:56,055 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=17.54
+2026-07-17 20:19:56,074 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:56,085 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=60.08
+============================================================
+ENGINE SYMBOL  : COFORGE.NS
+ENGINE SCORE   : 48.22
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,122 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=39.55
+2026-07-17 20:19:56,135 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=74.20
+2026-07-17 20:19:56,142 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=9.69
+2026-07-17 20:19:56,153 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=19.19
+2026-07-17 20:19:56,172 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=40.32
+2026-07-17 20:19:56,190 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=13.47
+2026-07-17 20:19:56,202 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DABUR.NS
+ENGINE SCORE   : 27.12
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,229 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CUB.NS
+ENGINE SCORE   : 55.4
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,263 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : COROMANDEL.NS
+ENGINE SCORE   : 28.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,275 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CROMPTON.NS
+ENGINE SCORE   : 16.49
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,285 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=76.02
+2026-07-17 20:19:56,305 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DALBHARAT.NS
+ENGINE SCORE   : 42.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,337 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=72.37
+2026-07-17 20:19:56,337 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DIVISLAB.NS
+ENGINE SCORE   : 79.92
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:56,346 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CUMMINSIND.NS
+ENGINE SCORE   : 9.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,376 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DEEPAKNTR.NS
+ENGINE SCORE   : 62.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,377 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : CONCOR.NS
+ENGINE SCORE   : 35.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,427 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DLF.NS
+ENGINE SCORE   : 54.42
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:56,480 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=5.14
+2026-07-17 20:19:56,564 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:19:56,564 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : DRREDDY.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WAIT
+============================================================
+============================================================
+ENGINE SYMBOL  : DIXON.NS
+ENGINE SCORE   : 80.1
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:57,325 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 1.
+2026-07-17 20:19:57,362 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=49.77
+2026-07-17 20:19:57,444 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=32.14
+2026-07-17 20:19:57,459 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : EICHERMOT.NS
+ENGINE SCORE   : 59.26
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,475 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=62.22
+2026-07-17 20:19:57,555 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : FEDERALBNK.NS
+ENGINE SCORE   : 77.48
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:57,580 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=65.94
+2026-07-17 20:19:57,593 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=64.87
+2026-07-17 20:19:57,595 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 1.
+2026-07-17 20:19:57,605 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=0.86
+2026-07-17 20:19:57,616 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=4.17
+2026-07-17 20:19:57,625 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=56.05
+2026-07-17 20:19:57,640 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ESCORTS.NS
+ENGINE SCORE   : 35.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,664 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : EXIDEIND.NS
+ENGINE SCORE   : 78.72
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:57,704 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=16.00
+2026-07-17 20:19:57,714 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GODREJPROP.NS
+ENGINE SCORE   : 71.59
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:57,747 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GRANULES.NS
+ENGINE SCORE   : 71.49
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:57,775 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GAIL.NS
+ENGINE SCORE   : 36.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,800 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GNFC.NS
+ENGINE SCORE   : 9.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,812 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=8.07
+2026-07-17 20:19:57,827 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GLENMARK.NS
+ENGINE SCORE   : 37.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,837 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=23.62
+2026-07-17 20:19:57,875 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GODREJCP.NS
+ENGINE SCORE   : 27.85
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:57,973 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.21
+2026-07-17 20:19:58,041 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GRASIM.NS
+ENGINE SCORE   : 33.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,051 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HAL.NS
+ENGINE SCORE   : 61.11
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,130 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=18.47
+2026-07-17 20:19:58,151 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=3.92
+2026-07-17 20:19:58,153 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HAVELLS.NS
+ENGINE SCORE   : 45.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,163 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=12.37
+2026-07-17 20:19:58,182 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=3.14
+2026-07-17 20:19:58,208 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=42.87
+2026-07-17 20:19:58,233 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=5.21
+2026-07-17 20:19:58,293 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HDFCAMC.NS
+ENGINE SCORE   : 4.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,303 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HEROMOTOCO.NS
+ENGINE SCORE   : 18.36
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,314 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=5.70
+2026-07-17 20:19:58,334 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HDFCLIFE.NS
+ENGINE SCORE   : 27.19
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,336 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HDFCBANK.NS
+ENGINE SCORE   : 40.6
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:19:58,353 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HCLTECH.NS
+ENGINE SCORE   : 35.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,375 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=9.72
+2026-07-17 20:19:58,385 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=10.62
+2026-07-17 20:19:58,419 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HINDALCO.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,474 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HINDUNILVR.NS
+ENGINE SCORE   : 29.43
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,508 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=29.94
+2026-07-17 20:19:58,540 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HINDCOPPER.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,549 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : HINDPETRO.NS
+ENGINE SCORE   : 37.22
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:58,591 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=50.03
+2026-07-17 20:19:59,090 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 2.
+2026-07-17 20:19:59,141 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 2.
+2026-07-17 20:19:59,169 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=30.43
+2026-07-17 20:19:59,255 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=18.22
+2026-07-17 20:19:59,257 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ICICIGI.NS
+ENGINE SCORE   : 11.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,267 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ICICIBANK.NS
+ENGINE SCORE   : 72.99
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:59,276 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=17.83
+2026-07-17 20:19:59,294 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IDEA.NS
+ENGINE SCORE   : 31.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,381 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=7.89
+2026-07-17 20:19:59,411 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=21.87
+2026-07-17 20:19:59,411 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ICICIPRULI.NS
+ENGINE SCORE   : 42.43
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,428 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IDFCFIRSTB.NS
+ENGINE SCORE   : 58.03
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,438 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=43.35
+2026-07-17 20:19:59,455 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=30.74
+2026-07-17 20:19:59,484 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=64.19
+2026-07-17 20:19:59,499 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=1.23
+2026-07-17 20:19:59,527 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IEX.NS
+ENGINE SCORE   : 32.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,552 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=15.19
+2026-07-17 20:19:59,575 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDHOTEL.NS
+ENGINE SCORE   : 52.19
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,599 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDIACEM.NS
+ENGINE SCORE   : 55.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,609 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IGL.NS
+ENGINE SCORE   : 18.18
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:59,635 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDUSINDBK.NS
+ENGINE SCORE   : 65.17
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,705 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDIGO.NS
+ENGINE SCORE   : 60.27
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:19:59,732 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDIAMART.NS
+ENGINE SCORE   : 24.88
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:19:59,742 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=25.52
+2026-07-17 20:19:59,762 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=27.51
+2026-07-17 20:19:59,840 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=12.48
+2026-07-17 20:19:59,851 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=20.77
+2026-07-17 20:19:59,885 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=75.22
+2026-07-17 20:19:59,896 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INDUSTOWER.NS
+ENGINE SCORE   : 34.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:19:59,997 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : INFY.NS
+ENGINE SCORE   : 31.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:00,026 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=34.15
+2026-07-17 20:20:00,026 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IRCTC.NS
+ENGINE SCORE   : 36.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:00,049 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IOC.NS
+ENGINE SCORE   : 41.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:00,066 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : IPCALAB.NS
+ENGINE SCORE   : 80.02
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:00,077 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=25.38
+2026-07-17 20:20:00,088 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=20.57
+2026-07-17 20:20:00,151 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 3.
+2026-07-17 20:20:00,172 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=6.30
+2026-07-17 20:20:00,203 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : JINDALSTEL.NS
+ENGINE SCORE   : 27.84
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:00,243 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:00,243 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : JSWSTEEL.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : JUBLFOOD.NS
+ENGINE SCORE   : 25.44
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:00,253 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=59.07
+2026-07-17 20:20:00,314 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=11.21
+2026-07-17 20:20:00,325 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : JKCEMENT.NS
+ENGINE SCORE   : 26.88
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:00,986 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 1.
+2026-07-17 20:20:01,000 - market.yahoo_provider - WARNING - No OHLCV data returned for GMRINFRA.NS on attempt 3.
+2026-07-17 20:20:01,034 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=23.31
+2026-07-17 20:20:01,100 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=3.56
+2026-07-17 20:20:01,115 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:01,115 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : KOTAKBANK.NS
+ENGINE SCORE   : 50.25
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : ITC.NS
+ENGINE SCORE   : 25.34
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:01,154 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GUJGASLTD.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:01,181 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LALPATHLAB.NS
+ENGINE SCORE   : 48.58
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,206 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=85.88
+2026-07-17 20:20:01,227 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=10.80
+2026-07-17 20:20:01,239 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=37.86
+2026-07-17 20:20:01,263 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LAURUSLABS.NS
+ENGINE SCORE   : 52.86
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,283 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 1.
+2026-07-17 20:20:01,356 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LT.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:20:01,391 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=27.64
+2026-07-17 20:20:01,403 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LICHSGFIN.NS
+ENGINE SCORE   : 34.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,414 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=37.45
+2026-07-17 20:20:01,423 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=8.46
+2026-07-17 20:20:01,464 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=18.63
+2026-07-17 20:20:01,475 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LTTS.NS
+ENGINE SCORE   : 64.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,566 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : M&M.NS
+ENGINE SCORE   : 51.51
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,577 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=19.29
+2026-07-17 20:20:01,587 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=0.32
+2026-07-17 20:20:01,598 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=44.24
+2026-07-17 20:20:01,623 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MANAPPURAM.NS
+ENGINE SCORE   : 37.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,677 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : M&MFIN.NS
+ENGINE SCORE   : 56.24
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,696 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : LUPIN.NS
+ENGINE SCORE   : 57.1
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,713 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MCX.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,743 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=12.92
+2026-07-17 20:20:01,759 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MARUTI.NS
+ENGINE SCORE   : 22.28
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,769 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MARICO.NS
+ENGINE SCORE   : 54.42
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,814 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=1.28
+2026-07-17 20:20:01,850 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=43.20
+2026-07-17 20:20:01,888 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MFSL.NS
+ENGINE SCORE   : 17.46
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:01,981 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : METROPOLIS.NS
+ENGINE SCORE   : 37.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,001 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=49.10
+2026-07-17 20:20:02,003 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GMRINFRA.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:02,003 - scanner.scanner_engine - WARNING - Skipping GMRINFRA.NS: No OHLCV data retrieved.
+2026-07-17 20:20:02,074 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=23.46
+2026-07-17 20:20:02,116 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=40.29
+2026-07-17 20:20:02,116 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MGL.NS
+ENGINE SCORE   : 30.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,136 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=14.75
+2026-07-17 20:20:02,169 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MOTHERSON.NS
+ENGINE SCORE   : 47.41
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:02,229 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=65.58
+2026-07-17 20:20:02,250 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=12.37
+2026-07-17 20:20:02,250 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MRF.NS
+ENGINE SCORE   : 23.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,262 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=11.14
+2026-07-17 20:20:02,294 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MPHASIS.NS
+ENGINE SCORE   : 42.78
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,335 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=4.93
+2026-07-17 20:20:02,462 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 2.
+2026-07-17 20:20:02,507 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 2.
+2026-07-17 20:20:02,598 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NATIONALUM.NS
+ENGINE SCORE   : 17.64
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,599 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : MUTHOOTFIN.NS
+ENGINE SCORE   : 32.27
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,610 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NAUKRI.NS
+ENGINE SCORE   : 71.56
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:02,615 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NESTLEIND.NS
+ENGINE SCORE   : 37.99
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,644 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NAVINFLUOR.NS
+ENGINE SCORE   : 38.74
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:02,654 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=12.33
+2026-07-17 20:20:03,095 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=16.31
+2026-07-17 20:20:03,137 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=24.55
+2026-07-17 20:20:03,155 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=39.48
+2026-07-17 20:20:03,175 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NMDC.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:20:03,183 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 1.
+2026-07-17 20:20:03,288 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=51.06
+2026-07-17 20:20:03,309 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : OFSS.NS
+ENGINE SCORE   : 67.45
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:03,343 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : NTPC.NS
+ENGINE SCORE   : 24.8
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:03,353 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : OBEROIRLTY.NS
+ENGINE SCORE   : 54.13
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:03,384 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=17.03
+2026-07-17 20:20:03,401 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=41.28
+2026-07-17 20:20:03,432 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=2.47
+2026-07-17 20:20:03,443 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=74.46
+2026-07-17 20:20:03,454 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ONGC.NS
+ENGINE SCORE   : 35.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:03,876 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 3.
+2026-07-17 20:20:03,998 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:04,008 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=22.77
+============================================================
+ENGINE SYMBOL  : PFC.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:04,020 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PERSISTENT.NS
+ENGINE SCORE   : 35.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:04,021 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PIIND.NS
+ENGINE SCORE   : 37.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:04,059 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=3.87
+2026-07-17 20:20:04,071 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PAGEIND.NS
+ENGINE SCORE   : 31.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:04,365 - market.yahoo_provider - WARNING - No OHLCV data returned for LTIM.NS on attempt 3.
+2026-07-17 20:20:04,439 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=44.48
+2026-07-17 20:20:04,481 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=6.39
+2026-07-17 20:20:04,493 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:04,500 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PETRONET.NS
+ENGINE SCORE   : 32.0
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : PIDILITIND.NS
+ENGINE SCORE   : 48.5
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:04,837 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 2.
+2026-07-17 20:20:04,879 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=NEUTRAL, ADX=38.29
+2026-07-17 20:20:04,883 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GUJGASLTD.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:04,905 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=5.09
+2026-07-17 20:20:04,925 - market.market_engine - WARNING - Insufficient data for reliable market evaluation. Defaulting to NEUTRAL.
+2026-07-17 20:20:04,930 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=30.35
+2026-07-17 20:20:04,943 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PNB.NS
+ENGINE SCORE   : 40.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:04,954 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : POLYCAB.NS
+ENGINE SCORE   : 0.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,074 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=14.31
+2026-07-17 20:20:05,096 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=48.89
+2026-07-17 20:20:05,124 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=33.10
+2026-07-17 20:20:05,134 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:05,134 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : PVRINOX.NS
+ENGINE SCORE   : 26.25
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : POWERGRID.NS
+ENGINE SCORE   : 11.96
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,161 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=6.04
+2026-07-17 20:20:05,167 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=30.63
+2026-07-17 20:20:05,200 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 1.
+2026-07-17 20:20:05,214 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : RAMCOCEM.NS
+ENGINE SCORE   : 19.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,245 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : RECLTD.NS
+ENGINE SCORE   : 21.36
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,256 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : RELIANCE.NS
+ENGINE SCORE   : 46.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,300 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SBICARD.NS
+ENGINE SCORE   : 48.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,312 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SAIL.NS
+ENGINE SCORE   : 1.69
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:20:05,322 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : RBLBANK.NS
+ENGINE SCORE   : 40.6
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,355 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=62.87
+2026-07-17 20:20:05,373 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for LTIM.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:05,373 - scanner.scanner_engine - WARNING - Skipping LTIM.NS: No OHLCV data retrieved.
+2026-07-17 20:20:05,501 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SBILIFE.NS
+ENGINE SCORE   : 35.75
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:20:05,526 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=4.82
+2026-07-17 20:20:05,536 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=33.69
+2026-07-17 20:20:05,616 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=14.45
+2026-07-17 20:20:05,654 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=26.32
+2026-07-17 20:20:05,680 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=32.53
+2026-07-17 20:20:05,690 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SBIN.NS
+ENGINE SCORE   : 55.48
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,700 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SHREECEM.NS
+ENGINE SCORE   : 38.37
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:05,751 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=34.12
+2026-07-17 20:20:05,780 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SHRIRAMFIN.NS
+ENGINE SCORE   : 47.7
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:06,123 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=32.59
+2026-07-17 20:20:06,157 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=71.71
+2026-07-17 20:20:06,175 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=40.40
+2026-07-17 20:20:06,191 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=29.45
+2026-07-17 20:20:06,193 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:06,197 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-17 20:20:06,207 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=17.99
+============================================================
+ENGINE SYMBOL  : SRF.NS
+ENGINE SCORE   : 55.91
+ENGINE DECISION: WATCH
+============================================================
+============================================================
+ENGINE SYMBOL  : SUNTV.NS
+ENGINE SCORE   : 21.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:06,223 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SIEMENS.NS
+ENGINE SCORE   : 29.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:06,231 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 1.
+2026-07-17 20:20:06,261 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TATACONSUM.NS
+ENGINE SCORE   : 19.24
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:06,480 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TATACOMM.NS
+ENGINE SCORE   : 5.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:06,873 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 2.
+2026-07-17 20:20:06,929 - market.yahoo_provider - WARNING - No OHLCV data returned for PEL.NS on attempt 3.
+2026-07-17 20:20:07,013 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TATACHEM.NS
+ENGINE SCORE   : 23.2
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,051 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SYNGENE.NS
+ENGINE SCORE   : 20.96
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,098 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=11.68
+2026-07-17 20:20:07,155 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=19.44
+2026-07-17 20:20:07,187 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : SUNPHARMA.NS
+ENGINE SCORE   : 67.94
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:07,204 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=28.52
+2026-07-17 20:20:07,268 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=83.64
+2026-07-17 20:20:07,296 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=20.04
+2026-07-17 20:20:07,307 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TATAPOWER.NS
+ENGINE SCORE   : 30.08
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:07,336 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TATASTEEL.NS
+ENGINE SCORE   : 0.0
+ENGINE DECISION: WAIT
+============================================================
+2026-07-17 20:20:07,371 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TCS.NS
+ENGINE SCORE   : 42.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,380 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=14.35
+2026-07-17 20:20:07,419 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=63.08
+2026-07-17 20:20:07,431 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TITAN.NS
+ENGINE SCORE   : 73.36
+ENGINE DECISION: BUY
+============================================================
+2026-07-17 20:20:07,452 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=19.15
+2026-07-17 20:20:07,474 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=38.02
+2026-07-17 20:20:07,475 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TVSMOTOR.NS
+ENGINE SCORE   : 52.0
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,510 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=8.19
+2026-07-17 20:20:07,565 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TORNTPHARM.NS
+ENGINE SCORE   : 56.25
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,577 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TRENT.NS
+ENGINE SCORE   : 33.0
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:07,609 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : UBL.NS
+ENGINE SCORE   : 39.59
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,633 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : TECHM.NS
+ENGINE SCORE   : 76.3
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:07,932 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for PEL.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:07,933 - scanner.scanner_engine - WARNING - Skipping PEL.NS: No OHLCV data retrieved.
+2026-07-17 20:20:08,011 - market.yahoo_provider - WARNING - No OHLCV data returned for GUJGASLTD.NS on attempt 3.
+2026-07-17 20:20:08,100 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 2.
+2026-07-17 20:20:08,130 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ULTRACEMCO.NS
+ENGINE SCORE   : 43.32
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:08,142 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=47.41
+2026-07-17 20:20:08,227 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=8.73
+2026-07-17 20:20:08,269 - market.market_engine - INFO - Market Evaluation Complete: Trend=BULLISH, Bias=STRONG_BULL, ADX=32.78
+2026-07-17 20:20:08,317 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=73.95
+2026-07-17 20:20:08,329 - market.market_engine - INFO - Market Evaluation Complete: Trend=SIDEWAYS, Bias=NEUTRAL, ADX=31.36
+2026-07-17 20:20:08,341 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : UPL.NS
+ENGINE SCORE   : 51.75
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:08,384 - market.market_engine - INFO - Market Evaluation Complete: Trend=BEARISH, Bias=STRONG_BEAR, ADX=4.70
+2026-07-17 20:20:08,450 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ZYDUSLIFE.NS
+ENGINE SCORE   : 62.03
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:08,509 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : VEDL.NS
+ENGINE SCORE   : 15.11
+ENGINE DECISION: SELL
+============================================================
+2026-07-17 20:20:08,522 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : ZEEL.NS
+ENGINE SCORE   : 59.62
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:08,558 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : WIPRO.NS
+ENGINE SCORE   : 24.53
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:08,617 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : VOLTAS.NS
+ENGINE SCORE   : 39.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:09,013 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for GUJGASLTD.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:09,014 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+============================================================
+ENGINE SYMBOL  : GUJGASLTD.NS
+ENGINE SCORE   : 2.5
+ENGINE DECISION: WATCH
+============================================================
+2026-07-17 20:20:09,014 - core.volume_engine - WARNING - Not enough data for VolumeEngine. Defaulting to 0.
+2026-07-17 20:20:09,819 - market.yahoo_provider - WARNING - No OHLCV data returned for TATAMOTORS.NS on attempt 3.
+2026-07-17 20:20:10,823 - market.yahoo_provider - ERROR - Failed to fetch OHLCV for TATAMOTORS.NS after 3 attempts. Invalid symbol or network error.
+2026-07-17 20:20:10,824 - scanner.scanner_engine - WARNING - Skipping TATAMOTORS.NS: No OHLCV data retrieved.
+2026-07-17 20:20:10,832 - scanner.scanner_engine - INFO - --- SCANNER METRICS ---
+Start Time: 20:19:52 | End Time: 20:20:10 | Elapsed: 17.84s
+Universe: 178 | Ranked: 174 | Excluded: 0 | No Data: 4 | Errors: 0
+Memory: 192.6 MB | CPU: 11.3%
+-----------------------
+2026-07-17 20:20:10,832 - scanner.scanner_engine - INFO - Market scan completed successfully. Processed 174 assets.
+Scanner Runtime: 17.84 seconds
+--- SCAN SUMMARY ---
+Total Stocks Scanned: 178
+Total Valid Stocks: 174
+Total BUY: 19
+Total SELL: 14
+Total WATCH: 141
+
+--- RS STATISTICS ---
+Average RS Score: 52.66
+Highest RS Score: 100.00
+Lowest RS Score: 0.00
+Standard Deviation: 15.56
+Number of stocks with RS = 0: 1
+Number of stocks with RS > 80: 8
+Number of stocks with RS < 20: 1
+
+--- TOP 20 RS STOCKS ---
+OFSS.NS: RS=100.00, Decision=BUY, Conf=80.98
+ADANIENT.NS: RS=97.80, Decision=WATCH, Conf=66.92
+DIXON.NS: RS=96.80, Decision=BUY, Conf=90.53
+BHEL.NS: RS=95.80, Decision=BUY, Conf=85.17
+LAURUSLABS.NS: RS=95.30, Decision=WATCH, Conf=67.22
+GRANULES.NS: RS=90.10, Decision=BUY, Conf=83.83
+EXIDEIND.NS: RS=89.20, Decision=BUY, Conf=88.13
+IPCALAB.NS: RS=89.00, Decision=BUY, Conf=93.98
+NAUKRI.NS: RS=80.00, Decision=BUY, Conf=83.53
+ZYDUSLIFE.NS: RS=79.20, Decision=WATCH, Conf=79.50
+FEDERALBNK.NS: RS=79.20, Decision=BUY, Conf=92.63
+BHARATFORG.NS: RS=76.60, Decision=WATCH, Conf=79.85
+IDEA.NS: RS=75.80, Decision=WATCH, Conf=34.25
+ABB.NS: RS=75.30, Decision=WATCH, Conf=76.02
+TECHM.NS: RS=74.20, Decision=WATCH, Conf=83.78
+OBEROIRLTY.NS: RS=73.40, Decision=WATCH, Conf=67.37
+ABCAPITAL.NS: RS=71.40, Decision=SELL, Conf=52.85
+PAGEIND.NS: RS=70.60, Decision=WATCH, Conf=39.20
+CUB.NS: RS=70.00, Decision=WATCH, Conf=71.42
+BANDHANBNK.NS: RS=69.50, Decision=WATCH, Conf=71.70
+
+--- BOTTOM 20 RS STOCKS ---
+VEDL.NS: RS=0.00, Decision=SELL, Conf=86.87
+BSOFT.NS: RS=23.60, Decision=WATCH, Conf=67.13
+ICICIGI.NS: RS=27.90, Decision=WATCH, Conf=88.35
+JINDALSTEL.NS: RS=28.50, Decision=SELL, Conf=78.40
+ICICIPRULI.NS: RS=30.10, Decision=WATCH, Conf=45.63
+BALKRISIND.NS: RS=30.10, Decision=WATCH, Conf=76.48
+HDFCLIFE.NS: RS=31.60, Decision=WATCH, Conf=70.95
+JUBLFOOD.NS: RS=31.60, Decision=WATCH, Conf=73.50
+ABFRL.NS: RS=31.80, Decision=WATCH, Conf=70.08
+SUNTV.NS: RS=32.00, Decision=WATCH, Conf=76.13
+MFSL.NS: RS=32.00, Decision=WATCH, Conf=80.62
+ASTRAL.NS: RS=32.20, Decision=WATCH, Conf=51.78
+PIIND.NS: RS=32.50, Decision=WATCH, Conf=45.78
+ASHOKLEY.NS: RS=32.60, Decision=WATCH, Conf=74.17
+IRCTC.NS: RS=33.10, Decision=WATCH, Conf=63.38
+MUTHOOTFIN.NS: RS=33.10, Decision=WATCH, Conf=67.07
+HINDCOPPER.NS: RS=33.30, Decision=WATCH, Conf=42.48
+BANKBARODA.NS: RS=33.60, Decision=SELL, Conf=79.15
+NTPC.NS: RS=34.50, Decision=SELL, Conf=77.28
+WIPRO.NS: RS=35.80, Decision=WATCH, Conf=77.48

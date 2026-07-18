@@ -181,10 +181,11 @@ class ConfidenceCalibrationEngine:
             neg_factors.append("Weak ADX (<20)")
             
         # 3. AVWAP Engine Integration
-        if dir_mult == 1 and "Above AVWAP" in inputs.avwap_status:
+        avwap_status_lower = inputs.avwap_status.lower()
+        if dir_mult == 1 and "above avwap" in avwap_status_lower:
             bonuses += 5
             pos_factors.append("Above Anchored VWAP")
-        elif dir_mult == -1 and "Below AVWAP" in inputs.avwap_status:
+        elif dir_mult == -1 and "below avwap" in avwap_status_lower:
             bonuses += 5
             pos_factors.append("Below Anchored VWAP")
             

@@ -23,6 +23,13 @@ class RelativeStrengthEngine:
     """
     _instance = None
     _lock = threading.Lock()
+    MARKET_ALPHA_WEIGHT = 0.70
+    SECTOR_ALPHA_WEIGHT = 0.30
+    SHORT_TERM_WEIGHT_5D = 0.60
+    SHORT_TERM_WEIGHT_20D = 0.40
+    LONG_TERM_WEIGHT_50D = 0.60
+    LONG_TERM_WEIGHT_100D = 0.40
+    MOMENTUM_MAX_SPREAD = 10.0
     
     def __new__(cls):
         with cls._lock:
@@ -58,6 +65,8 @@ class RelativeStrengthEngine:
     def _default_rs_data(self):
         return {
             "score": 50,
+            "momentum": 50,
+            "trend_persistence": 50.0,
             "classification": "Neutral",
             "rs_rank": "--",
             "market_rank": "--",
@@ -71,16 +80,19 @@ class RelativeStrengthEngine:
             rs_logger.info("Starting background Relative Strength cache update...")
             
             # 1. Fetch baselines
-            nifty_df = self.data_manager.get_historical_data("^NSEI", period="6mo", interval="1d")
-            bank_df = self.data_manager.get_historical_data("^NSEBANK", period="6mo", interval="1d")
+            nifty_df = self.data_manager.get_stock_data("^NSEI", period="6mo", interval="1d")
+            bank_df = self.data_manager.get_stock_data("^NSEBANK", period="6mo", interval="1d")
             
-            if nifty_df.empty:
+            if nifty_df is None or nifty_df.empty:
                 rs_logger.warning("Failed to fetch NIFTY baseline. Aborting RS update.")
                 self.is_updating = False
                 return
                 
+            # Precompute NIFTY daily returns for persistence
+            nifty_daily_returns = nifty_df['Close'].pct_change()
+                
             def calc_returns(df):
-                if df.empty or len(df) < 100: return {}
+                if df is None or df.empty or len(df) < 100: return {}
                 return {
                     "1d": df['Close'].pct_change(1).iloc[-1],
                     "5d": df['Close'].pct_change(5).iloc[-1],
@@ -91,6 +103,13 @@ class RelativeStrengthEngine:
                 
             nifty_ret = calc_returns(nifty_df)
             
+            # 1.5 Precompute Sector Returns
+            sector_returns = {}
+            for sec_name, sec_symbol in self.sector_engine.SECTORS.items():
+                sec_df = self.data_manager.get_stock_data(sec_symbol, period="6mo", interval="1d")
+                if sec_df is not None and not sec_df.empty and len(sec_df) >= 100:
+                    sector_returns[sec_name] = calc_returns(sec_df)
+            
             # 2. Iterate through F&O universe
             universe = get_fno_symbols()
             if not universe:
@@ -100,19 +119,36 @@ class RelativeStrengthEngine:
             for item in universe:
                 sym = item["symbol"]
                 try:
-                    df = self.data_manager.get_historical_data(sym, period="6mo", interval="1d")
-                    if df.empty or len(df) < 100:
+                    df = self.data_manager.get_stock_data(sym, period="6mo", interval="1d")
+                    if df is None or df.empty or len(df) < 100:
                         continue
                         
                     stock_ret = calc_returns(df)
                     
-                    # Calculate comparative alpha (difference in returns)
-                    # We heavily weight shorter term momentum for breakout detection, but need long term for structural RS
-                    rs_1d = (stock_ret["1d"] - nifty_ret.get("1d", 0)) * 100
-                    rs_5d = (stock_ret["5d"] - nifty_ret.get("5d", 0)) * 100
-                    rs_20d = (stock_ret["20d"] - nifty_ret.get("20d", 0)) * 100
-                    rs_50d = (stock_ret["50d"] - nifty_ret.get("50d", 0)) * 100
-                    rs_100d = (stock_ret["100d"] - nifty_ret.get("100d", 0)) * 100
+                    # Determine Sector Return
+                    stock_sector = self.sector_engine.get_stock_sector(sym)
+                    sec_ret = sector_returns.get(stock_sector, nifty_ret) # Fallback to Nifty if unknown/missing
+                    
+                    # Calculate Market Alpha
+                    market_rs_1d = (stock_ret["1d"] - nifty_ret.get("1d", 0)) * 100
+                    market_rs_5d = (stock_ret["5d"] - nifty_ret.get("5d", 0)) * 100
+                    market_rs_20d = (stock_ret["20d"] - nifty_ret.get("20d", 0)) * 100
+                    market_rs_50d = (stock_ret["50d"] - nifty_ret.get("50d", 0)) * 100
+                    market_rs_100d = (stock_ret["100d"] - nifty_ret.get("100d", 0)) * 100
+                    
+                    # Calculate Sector Alpha
+                    sector_rs_1d = (stock_ret["1d"] - sec_ret.get("1d", 0)) * 100
+                    sector_rs_5d = (stock_ret["5d"] - sec_ret.get("5d", 0)) * 100
+                    sector_rs_20d = (stock_ret["20d"] - sec_ret.get("20d", 0)) * 100
+                    sector_rs_50d = (stock_ret["50d"] - sec_ret.get("50d", 0)) * 100
+                    sector_rs_100d = (stock_ret["100d"] - sec_ret.get("100d", 0)) * 100
+                    
+                    # Blend Market and Sector Alpha
+                    rs_1d = (market_rs_1d * self.MARKET_ALPHA_WEIGHT) + (sector_rs_1d * self.SECTOR_ALPHA_WEIGHT)
+                    rs_5d = (market_rs_5d * self.MARKET_ALPHA_WEIGHT) + (sector_rs_5d * self.SECTOR_ALPHA_WEIGHT)
+                    rs_20d = (market_rs_20d * self.MARKET_ALPHA_WEIGHT) + (sector_rs_20d * self.SECTOR_ALPHA_WEIGHT)
+                    rs_50d = (market_rs_50d * self.MARKET_ALPHA_WEIGHT) + (sector_rs_50d * self.SECTOR_ALPHA_WEIGHT)
+                    rs_100d = (market_rs_100d * self.MARKET_ALPHA_WEIGHT) + (sector_rs_100d * self.SECTOR_ALPHA_WEIGHT)
                     
                     # Composite RS Score (0-100 scale)
                     # Weights: 100D (30%), 50D (30%), 20D (20%), 5D (10%), 1D (10%)
@@ -121,6 +157,28 @@ class RelativeStrengthEngine:
                     # Normalize raw composite roughly into 0-100
                     # Assuming a +/- 50% relative outperformance is the absolute extreme limit
                     normalized_score = max(0, min(100, (composite + 25) * 2))
+                    
+                    # Calculate Relative Momentum
+                    short_term_rs = (rs_5d * self.SHORT_TERM_WEIGHT_5D) + (rs_20d * self.SHORT_TERM_WEIGHT_20D)
+                    long_term_rs = (rs_50d * self.LONG_TERM_WEIGHT_50D) + (rs_100d * self.LONG_TERM_WEIGHT_100D)
+                    
+                    raw_momentum = short_term_rs - long_term_rs
+                    
+                    # Normalize raw momentum to 0-100 scale using MOMENTUM_MAX_SPREAD (10.0 => 50% swing per 10 spread)
+                    momentum_score = max(0, min(100, (raw_momentum + self.MOMENTUM_MAX_SPREAD) * (100 / (2 * self.MOMENTUM_MAX_SPREAD))))
+                    
+                    # Calculate Trend Persistence (50 days lookback)
+                    stock_daily_returns = df['Close'].pct_change()
+                    aligned_df = pd.concat([stock_daily_returns, nifty_daily_returns], axis=1).dropna()
+                    aligned_df.columns = ['Stock', 'Nifty']
+                    
+                    # Lookback of 50 days
+                    lookback_df = aligned_df.tail(50)
+                    if len(lookback_df) < 10:
+                        persistence_score = 50.0
+                    else:
+                        hits = (lookback_df['Stock'] > lookback_df['Nifty']).sum()
+                        persistence_score = (hits / len(lookback_df)) * 100.0
                     
                     classification = "Neutral"
                     if normalized_score >= 95: classification = "Market Leader"
@@ -132,6 +190,9 @@ class RelativeStrengthEngine:
                     
                     temp_rs_data[sym] = {
                         "score": round(normalized_score, 1),
+                        "momentum": round(momentum_score, 1),
+                        "trend_persistence": round(persistence_score, 1),
+                        "sector_alpha": round(sector_rs_50d, 2), # Export 50d sector alpha as the representative sector alpha
                         "classification": classification,
                         "1d": round(rs_1d, 2),
                         "5d": round(rs_5d, 2),

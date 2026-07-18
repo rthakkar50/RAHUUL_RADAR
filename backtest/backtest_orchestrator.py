@@ -61,7 +61,8 @@ class BacktestOrchestrator:
             momentum_engine=engines["momentum"],
             structure_engine=engines["structure"],
             score_engine=score_engine,
-            sector_engine=sector_rotation_service
+            sector_engine=sector_rotation_service,
+            relative_strength_engine=engines["relative_strength"]
         )
         
         all_signals = []
