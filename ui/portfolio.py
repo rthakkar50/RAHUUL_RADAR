@@ -130,7 +130,7 @@ class PortfolioPage(QWidget):
 
     def update_live_prices(self):
         for pid, p in self.engine.engine.open_positions.items():
-            sym = p['symbol']
+            sym = p.symbol
             df = self.data_manager.get_stock_data(sym)
             if df is not None and not df.empty:
                 cmp = df.iloc[-1]['Close']
@@ -164,20 +164,20 @@ class PortfolioPage(QWidget):
                 if color: it.setForeground(QColor(color))
                 return it
                 
-            dir_col = "#4CAF50" if p['direction']=="BUY" else "#F44336"
-            pnl_col = "#4CAF50" if p['net_pnl'] > 0 else "#F44336"
+            dir_col = "#4CAF50" if p.direction=="BUY" else "#F44336"
+            pnl_col = "#4CAF50" if p.unrealized_pnl > 0 else "#F44336"
             
-            self.table_pos.setItem(i, 0, c(p['symbol']))
-            self.table_pos.setItem(i, 1, c(p['direction'], dir_col))
-            self.table_pos.setItem(i, 2, c(p['qty']))
-            self.table_pos.setItem(i, 3, c(p['entry_price']))
-            self.table_pos.setItem(i, 4, c(p.get('cmp', 0.0)))
-            self.table_pos.setItem(i, 5, c(p['target'], "#4CAF50"))
-            self.table_pos.setItem(i, 6, c(p['sl'], "#F44336"))
-            self.table_pos.setItem(i, 7, c(p.get('pnl', 0.0), pnl_col))
-            self.table_pos.setItem(i, 8, c(p.get('charges', 0.0), "#FF9800"))
-            self.table_pos.setItem(i, 9, c(p.get('net_pnl', 0.0), pnl_col))
-            self.table_pos.setItem(i, 10, c(p['status'], "#2196F3"))
+            self.table_pos.setItem(i, 0, c(p.symbol))
+            self.table_pos.setItem(i, 1, c(p.direction, dir_col))
+            self.table_pos.setItem(i, 2, c(p.qty))
+            self.table_pos.setItem(i, 3, c(p.entry_price))
+            self.table_pos.setItem(i, 4, c(p.current_price))
+            self.table_pos.setItem(i, 5, c(p.target, "#4CAF50"))
+            self.table_pos.setItem(i, 6, c(p.sl, "#F44336"))
+            self.table_pos.setItem(i, 7, c(p.unrealized_pnl, pnl_col))
+            self.table_pos.setItem(i, 8, c(0.0, "#FF9800"))
+            self.table_pos.setItem(i, 9, c(p.unrealized_pnl, pnl_col))
+            self.table_pos.setItem(i, 10, c(p.status, "#2196F3"))
             
         # Update Stats
         stats = self.engine.get_statistics()

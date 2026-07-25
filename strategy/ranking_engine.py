@@ -408,5 +408,14 @@ class RankingEngine:
             "engine_breakdown": engines,
             "entry": round(entry_price, 2),
             "sl": round(sl_price, 2),
-            "target1": round(target_price, 2)
+            "target1": round(target_price, 2),
+            "debug_metrics": {
+                "Last Price": round(latest_close, 2),
+                "VWAP": round(latest.get('VWAP', 0), 2),
+                "EMA20": round(latest.get('EMA20', 0), 2),
+                "ADX": round(latest.get('ADX_14', 0), 2),
+                "ATR": round(latest.get('ATR_14', 0), 2),
+                "Volume": int(latest.get('Volume', 0)),
+                "Vol_MA20": int(df['Volume'].rolling(20).mean().iloc[-1]) if len(df) >= 20 else 0
+            }
         }

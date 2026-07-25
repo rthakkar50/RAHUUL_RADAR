@@ -7,9 +7,14 @@ from PySide6.QtGui import QColor
 import time
 from datetime import datetime
 from typing import List, Dict
+import logging
+
+logger = logging.getLogger("IntradayScannerUI")
 
 from strategy.ranking_engine import RankingEngine
 from market.yahoo_provider import YahooFinanceProvider
+from application.intraday_quality_gate import IntradayQualityGate
+from application.market_intelligence import MarketIntelligenceEngine
 
 class IntradayScanThread(QThread):
     progress = Signal(int)
@@ -31,13 +36,18 @@ class IntradayScanThread(QThread):
         yf_interval_map = {"1m": "1m", "3m": "1m", "5m": "5m", "15m": "15m"}
         
         all_results = []
-        stats = {"Total": total, "Processed": 0, "Rejected": 0}
+        stats = {"Total": total, "Processed": 0, "Rejected": 0, "Rejected_Gate": 0, "Rejected_NoData": 0}
         
         import time
         from concurrent.futures import ThreadPoolExecutor, as_completed
         start_time = time.time()
         
-        self.status.emit("Downloading Market Data...")
+        self.status.emit("Evaluating Market Intelligence Layer...")
+        mi_engine = MarketIntelligenceEngine(self.yf_provider)
+        market_context = mi_engine.evaluate_market_context()
+        stats["Market_Regime"] = market_context.get("regime", "Sideways")
+        
+        self.status.emit(f"Market Regime: {stats['Market_Regime']} | Downloading Market Data...")
         self.yf_provider.pre_cache(symbols, yf_interval_map[self.timeframe], "5d")
         self.yf_provider.pre_cache(symbols, "1d", "90d")
         
@@ -46,7 +56,7 @@ class IntradayScanThread(QThread):
             try:
                 o_5m = self.yf_provider.get_ohlcv(sym, yf_interval_map[self.timeframe], "5d")
                 o_1d = self.yf_provider.get_ohlcv(sym, "1d", "90d")
-                if not o_5m or not o_1d: return (sym, None, "REJECTED_NO_DATA")
+                if o_5m is None or o_1d is None: return (sym, None, "REJECTED_NO_DATA")
                 res = self.ranking_engine.evaluate(sym, o_5m, o_1d)
                 return (sym, res, "SUCCESS")
             except Exception as e:
@@ -61,7 +71,8 @@ class IntradayScanThread(QThread):
                     all_results.append(res)
                     stats["Processed"] += 1
                 else:
-                    stats["Rejected"] += 1
+                    stats["Rejected_NoData"] += 1
+                    logger.warning(f"[{sym}] NO DATA: {status_msg}")
                 
                 percent = int(((idx + 1) / total) * 100)
                 elapsed = time.time() - start_time
@@ -71,22 +82,63 @@ class IntradayScanThread(QThread):
                 self.status.emit(f"Scanning... {idx+1} / {total} | {percent}% | ETA: {eta}s")
                 self.progress.emit(percent)
             
-        self.status.emit("Ranking and Sorting...")
+        self.status.emit("Applying Institutional Quality Gate...")
         
-        # Sort all results by score descending
-        all_results.sort(key=lambda x: x["score"], reverse=True)
+        top_buys = []
+        top_sells = []
+        top_watch = []
         
-        # Split into Top BUY, Top SELL, Top WATCH
-        top_buys = [r for r in all_results if r["direction"] == "BULLISH"][:10]
-        top_sells = [r for r in all_results if r["direction"] == "BEARISH"][:10]
+        rejections = {}
+        for r in all_results:
+            # DEBUG LOGGING
+            sym = r.get("symbol", "UNKNOWN")
+            metrics = r.get("debug_metrics", {})
+            vol_val = metrics.get('Volume', 0)
+            vol_ma = metrics.get('Vol_MA20', 1)
+            rel_vol = round(vol_val / vol_ma, 2) if vol_ma > 0 else 0
+            
+            logger.info(
+                f"[{sym}] EVALUATION PIPELINE: "
+                f"Price={metrics.get('Last Price')}, VWAP={metrics.get('VWAP')}, "
+                f"EMA20={metrics.get('EMA20')}, ADX={metrics.get('ADX')}, "
+                f"ATR={metrics.get('ATR')}, RelVol={rel_vol}x, "
+                f"Momentum Score={r.get('engine_breakdown', {}).get('Momentum', {}).get('Score Contribution')}, "
+                f"Confidence={r.get('confidence')}, Signal={r.get('direction')}"
+            )
+            
+            passed, signal, custom_score, custom_reasons, rejection_reason = IntradayQualityGate.evaluate(r, market_context)
+            if passed:
+                r["score"] = custom_score
+                r["reason"] = " | ".join(custom_reasons)
+                r["_quality_reason"] = "Passed"
+                if signal == "BUY":
+                    top_buys.append(r)
+                elif signal == "SELL":
+                    top_sells.append(r)
+                elif signal == "WATCH":
+                    top_watch.append(r)
+            else:
+                stats["Rejected_Gate"] += 1
+                rejections[rejection_reason] = rejections.get(rejection_reason, 0) + 1
         
-        assigned = {r["symbol"] for r in top_buys + top_sells}
-        top_watch = [r for r in all_results if r["symbol"] not in assigned][:10]
+        # Log rejection stats for diagnostics
+        ui_logger = logging.getLogger("IntradayScannerUI")
+        ui_logger.info(f"--- SPRINT-92 Rejection Log ---")
+        ui_logger.info(f"Scanned  : {total}")
+        ui_logger.info(f"Qualified: {len(top_buys) + len(top_sells) + len(top_watch)}")
+        ui_logger.info(f"Rejected (No Data): {stats['Rejected_NoData']}")
+        ui_logger.info(f"Rejected (Gate)   : {stats['Rejected_Gate']}")
+        ui_logger.info("Rejected Reasons:")
+        for reason, count in sorted(rejections.items(), key=lambda x: x[1], reverse=True):
+            ui_logger.info(f"  - {reason}: {count}")
+        ui_logger.info("-------------------------------")
         
-        print("\n" + "="*50)
-        print(f"[LIVE DEBUG] 1. BUY candidates generated by Ranking Engine: {len([r for r in all_results if r['direction'] == 'BULLISH'])}")
-        print(f"[LIVE DEBUG]    BUY candidates queued for GUI (top 10): {len(top_buys)}")
-        print("="*50 + "\n")
+        # Sort each by score descending
+        top_buys.sort(key=lambda x: x["score"], reverse=True)
+        top_sells.sort(key=lambda x: x["score"], reverse=True)
+        top_watch.sort(key=lambda x: x["score"], reverse=True)
+        
+        stats["Qualified"] = len(top_buys) + len(top_sells) + len(top_watch)
         
         self.status.emit("Scan Complete")
         self.finished_scan.emit(top_buys, top_sells, top_watch, stats)
@@ -165,6 +217,13 @@ class IntradayScannerPage(QWidget):
         self.progress.hide()
         layout.addWidget(self.progress)
         
+        # Zero Results Message Label
+        self.lbl_no_results = QLabel("🔍 No high-quality intraday opportunity found today.")
+        self.lbl_no_results.setStyleSheet("color: #8B949E; font-size: 16px; font-weight: bold;")
+        self.lbl_no_results.setAlignment(Qt.AlignCenter)
+        self.lbl_no_results.hide()
+        layout.addWidget(self.lbl_no_results)
+        
         # ── Main Splitter ─────────────────────────────────────────────────────
         from PySide6.QtWidgets import QSplitter, QTabWidget, QFormLayout
         splitter = QSplitter(Qt.Horizontal)
@@ -225,6 +284,7 @@ class IntradayScannerPage(QWidget):
         min_score_filter = self.min_score_combo.currentText()
         
         min_score = 0
+        visible_rows = 0
         if "80" in min_score_filter: min_score = 80
         elif "70" in min_score_filter: min_score = 70
         
@@ -245,6 +305,11 @@ class IntradayScannerPage(QWidget):
                     match = False
                         
                 table.setRowHidden(row, not match)
+                if match:
+                    visible_rows += 1
+                    
+        ui_logger = logging.getLogger("IntradayScannerUI")
+        ui_logger.info(f"Rows visible after filter: {visible_rows}")
 
     def on_row_selected(self, table):
         items = table.selectedItems()
@@ -258,11 +323,10 @@ class IntradayScannerPage(QWidget):
         if not res: return
         
         score = float(res.get("score", 0))
-        if score >= 90: grade = "★★★★★"
-        elif score >= 80: grade = "★★★★☆"
-        elif score >= 70: grade = "★★★☆☆"
-        elif score >= 60: grade = "★★☆☆☆"
-        else: grade = "★☆☆☆☆"
+        if score >= 90: grade = "★★★★★ A+"
+        elif score >= 80: grade = "★★★★☆ A"
+        elif score >= 70: grade = "★★★☆☆ B"
+        else: grade = "★☆☆☆☆ Reject"
         
         reasons_list = []
         reason_str = str(res.get("reason", ""))
@@ -333,11 +397,6 @@ class IntradayScannerPage(QWidget):
         self.scan_thread.start()
             
     def scan_finished(self, top_buys, top_sells, top_watch, stats):
-        print("\n" + "="*50, flush=True)
-        print(f"[LIVE DEBUG] 2. BUY candidates received by GUI: {len(top_buys)}", flush=True)
-        if not top_buys:
-            print("[LIVE DEBUG] 4. Exact Reason BUY table is empty: The Thread passed an empty array to the GUI because no candidates met the BULLISH classification in the Engine.", flush=True)
-        print("="*50 + "\n", flush=True)
         
         self.all_results = top_buys + top_sells + top_watch 
         
@@ -349,37 +408,44 @@ class IntradayScannerPage(QWidget):
         self.populate_table(self.sell_table, top_sells, "#FF3D00")
         self.populate_table(self.watch_table, top_watch, "#FFC107")
         self.progress.hide()
+        
+        # Add debug logging for population
+        ui_logger = logging.getLogger("IntradayScannerUI")
+        ui_logger.info(f"--- SPRINT-94 Table Population ---")
+        ui_logger.info(f"Qualified Count: {len(top_buys) + len(top_sells) + len(top_watch)}")
+        ui_logger.info(f"BUY Count: {len(top_buys)}")
+        ui_logger.info(f"SELL Count: {len(top_sells)}")
+        ui_logger.info(f"WATCH Count: {len(top_watch)}")
+        ui_logger.info(f"Rows inserted into BUY table: {self.buy_table.rowCount()}")
+        ui_logger.info(f"Rows inserted into SELL table: {self.sell_table.rowCount()}")
+        ui_logger.info(f"Rows inserted into WATCH table: {self.watch_table.rowCount()}")
         self.btn_scan.setEnabled(not self.is_auto_scan_active)
         self.btn_scan.setText("⚡ Scan Now")
         
         processed = stats.get("Processed", 0)
-        rejected = stats.get("Rejected", 0)
+        rejected_nodata = stats.get("Rejected_NoData", 0)
+        rejected_gate = stats.get("Rejected_Gate", 0)
         total = stats.get("Total", 0)
-        self.lbl_status.setText(f"Scan Complete | Scanned: {total} | Ranked: {processed} | Excluded (No Data): {rejected}")
+        qualified = stats.get("Qualified", 0)
+        regime = stats.get("Market_Regime", "Unknown")
+        self.lbl_status.setText(f"Regime: {regime} | Scanned: {total} | Ranked: {processed} | Qualified: {qualified} | Rejected (No Data): {rejected_nodata} | Rejected (Gate): {rejected_gate}")
+        
+        if qualified == 0:
+            self.lbl_no_results.show()
+            self.tabs.hide()
+            self.side_panel.hide()
+        else:
+            self.lbl_no_results.hide()
+            self.tabs.show()
+            self.side_panel.show()
         
     def _clean_reasons(self, raw_reason: str) -> str:
         if not raw_reason: return ""
-        reasons = []
-        raw_reason = raw_reason.lower()
-        if "trend aligned" in raw_reason or "bullish" in raw_reason or "bearish" in raw_reason:
-            reasons.append("Trend: Bullish" if "bullish" in raw_reason else "Trend: Bearish" if "bearish" in raw_reason else "Trend: Aligned")
-        if "momentum aligned" in raw_reason or "strong" in raw_reason:
-            reasons.append("Momentum: Strong")
-        if "high" in raw_reason and "volume" in raw_reason:
-            reasons.append("Volume: High")
-        if "vwap" in raw_reason and "respect" in raw_reason:
-            reasons.append("VWAP: Above" if "bullish" in raw_reason else "VWAP: Below")
-        if "fvg" in raw_reason or "liquidity sweep" in raw_reason:
-            reasons.append("ICT: Sweep/FVG")
-        
-        if len(reasons) < 3 and "volume expansion" in raw_reason:
-            reasons.append("Volume: Medium")
-        if len(reasons) == 0:
-            reasons = ["Trend: Neutral", "Momentum: Medium", "Volume: Low"]
-            
+        reasons = [r.strip() for r in raw_reason.split("|")]
         return " | ".join(reasons[:2])
 
     def populate_table(self, table, data_list, action_color):
+        table.setSortingEnabled(False)
         table.setColumnCount(11)
         for row, res in enumerate(data_list):
             table.insertRow(row)
@@ -397,11 +463,10 @@ class IntradayScannerPage(QWidget):
             t_str = f"{tgt_val:.2f}" if tgt_val > 0 else "--"
             rr_str = "1:2.0+" if entry_val > 0 else "--"
             
-            if score >= 90: grade = "★★★★★ Elite"
-            elif score >= 80: grade = "★★★★ Strong"
-            elif score >= 70: grade = "★★★ Good"
-            elif score >= 60: grade = "★★ Watch"
-            else: grade = "★ Weak"
+            if score >= 90: grade = "★★★★★ A+"
+            elif score >= 80: grade = "★★★★☆ A"
+            elif score >= 70: grade = "★★★☆☆ B"
+            else: grade = "★☆☆☆☆ Reject"
             
             items = [
                 f"#{row+1}",
@@ -442,6 +507,8 @@ class IntradayScannerPage(QWidget):
                     else: item.setForeground(QColor("#FF3D00"))
                     
                 table.setItem(row, col, item)
+        
+        table.setSortingEnabled(True)
 
     def export_csv(self):
         import csv

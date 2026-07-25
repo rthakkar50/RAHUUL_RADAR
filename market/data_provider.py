@@ -4,7 +4,7 @@ Defines the architectural contract for fetching real-time and historical market 
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict, Any
 from datetime import datetime
 
 @dataclass
@@ -114,6 +114,20 @@ class MarketDataProvider(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
+        """
+        Retrieves the option chain for a given symbol and optional expiry.
+        
+        Args:
+            symbol: The underlying symbol.
+            expiry: Optional expiry date string.
+            
+        Returns:
+            Dict containing option chain data.
+        """
+        pass
+
 
 class MockMarketDataProvider(MarketDataProvider):
     """
@@ -158,3 +172,6 @@ class MockMarketDataProvider(MarketDataProvider):
             is_open=False,
             status_message="MARKET CLOSED (Placeholder)"
         )
+
+    def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
+        return {}

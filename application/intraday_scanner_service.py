@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from config.config import AppConfig
 from market.yahoo_provider import YahooFinanceProvider
 from market.dhan_provider import DhanProvider
+from market.paytm_provider import PaytmMoneyProvider
 from strategy.intraday_engine import IntradayEngine
 from core.trade_lock_engine import TradeLockEngine
 from market.universe import get_all_symbols, get_fno_symbols
@@ -75,6 +76,112 @@ def safe_int(val, default=0):
 
 logger = logging.getLogger("IntradayScannerService")
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# F&O SPECIFIC THRESHOLDS - STRICTER FOR OPTIONS TRADING
+# ═══════════════════════════════════════════════════════════════════════════════
+FNO_BUY_THRESHOLD = 70.0           # Was 55 → Now 70 (strict)
+FNO_MIN_ADX = 30.0                 # Was 20 → Now 30 (strong trend)
+FNO_MIN_CONFIDENCE = 80.0          # Was 60 → Now 80 (high conviction)
+FNO_MIN_VOLUME_RATIO = 2.0       # Was 1.5 → Now 2.0 (high volume)
+FNO_MIN_RR_RATIO = 1.5            # NEW: Minimum risk-reward
+FNO_MIN_LIQUIDITY = 500000        # NEW: Minimum avg volume for F&O
+
+
+class FNOFilterEngine:
+    """
+    NEW: Dedicated F&O filtering engine for high-quality signals.
+    Ensures only strong setups are shown for options trading.
+    """
+
+    @staticmethod
+    def validate_for_fno(result: Dict[str, Any]) -> tuple[bool, str]:
+        """
+        Validate if a signal meets F&O trading criteria with OI/PCR data.
+        """
+        score = safe_float(result.get("Score", 0), 0)
+        confidence = safe_float(result.get("Confidence", 0), 0)
+        adx = safe_float(result.get("ADX", result.get("adx_value", 0)), 0)
+        volume = safe_int(result.get("Volume", 0), 0)
+        rr_str = str(result.get("Risk Reward", "1:1"))
+
+        # Parse risk-reward
+        try:
+            rr = float(rr_str.replace("1:", "").replace("+", ""))
+        except:
+            rr = 1.0
+
+        # Check 1: Score
+        if score < FNO_BUY_THRESHOLD:
+            return False, f"Score {score:.1f} < {FNO_BUY_THRESHOLD} (too weak)"
+
+        # Check 2: ADX
+        if adx < FNO_MIN_ADX:
+            return False, f"ADX {adx:.1f} < {FNO_MIN_ADX} (trend too weak)"
+
+        # Check 3: Confidence
+        if confidence < FNO_MIN_CONFIDENCE:
+            return False, f"Confidence {confidence:.1f}% < {FNO_MIN_CONFIDENCE}% (engines disagree)"
+
+        # Check 4: Volume
+        if volume < FNO_MIN_LIQUIDITY:
+            return False, f"Volume {volume:,} < {FNO_MIN_LIQUIDITY:,} (low liquidity)"
+
+        # Check 5: Risk-Reward
+        if rr < FNO_MIN_RR_RATIO:
+            return False, f"RR 1:{rr:.1f} < 1:{FNO_MIN_RR_RATIO} (poor reward)"
+
+        # Check 6: OI Change (conviction check)
+        # NOTE: Skip this check if Paytm is unavailable (oi_change will be 0)
+        # A value of 0 means no data, not actually zero OI change
+        oi_change = safe_float(result.get("OI Change %", None), None)
+        if oi_change is not None and abs(oi_change) < 3:
+            return False, f"OI Change {oi_change:.1f}% < 3% (no fresh buildup)"
+
+        # NEW Check 7: PCR Contrarian Filter
+        pcr = safe_float(result.get("PCR", 1.0), 1.0)
+        signal = str(result.get("Signal", ""))
+
+        if "BUY" in signal and pcr > 1.3:
+            return False, f"PCR {pcr:.2f} > 1.3 (extreme bearish, avoid BUY)"
+
+        if "SELL" in signal and pcr < 0.7:
+            return False, f"PCR {pcr:.2f} < 0.7 (extreme bullish, avoid SELL)"
+
+        return True, "PASSED"
+
+    @staticmethod
+    def calculate_grade(score: float, confidence: float, adx: float, rr: float,
+                       pcr: float = 1.0, oi_change: float = 0) -> str:
+        """Calculate signal grade for F&O."""
+        points = 0
+
+        if score >= 80: points += 3
+        elif score >= 70: points += 2
+        elif score >= 60: points += 1
+
+        if confidence >= 90: points += 3
+        elif confidence >= 80: points += 2
+        elif confidence >= 70: points += 1
+
+        if adx >= 40: points += 2
+        elif adx >= 30: points += 1
+
+        if rr >= 2.0: points += 2
+        elif rr >= 1.5: points += 1
+
+        # F&O bonus points
+        if abs(oi_change) >= 10: points += 2
+        elif abs(oi_change) >= 5: points += 1
+
+        if 0.8 <= pcr <= 1.2: points += 1
+
+        if points >= 9: return "★★★★★ ELITE"
+        elif points >= 7: return "★★★★ STRONG"
+        elif points >= 5: return "★★★ GOOD"
+        elif points >= 3: return "★★ MODERATE"
+        else: return "★ WEAK"
+
+
 class IntradayScannerService:
     def __init__(self):
         self.config = AppConfig()
@@ -98,9 +205,12 @@ class IntradayScannerService:
         self.execution_center = TradeExecutionCenter()
         self.last_results = []
         
-    def _get_market_trend(self, provider) -> str:
+        # NEW: F&O Filter Engine
+        self.fno_filter = FNOFilterEngine()
+        
+    def _get_market_trend(self, manager) -> str:
         try:
-            ohlcv = provider.get_ohlcv("^NSEI", "5m", "2d")
+            ohlcv = manager.get_history("^NSEI", "5m", "2d")
             if len(ohlcv) > 10:
                 import pandas as pd
                 df = pd.DataFrame([{'High': c.high, 'Low': c.low, 'Close': c.close, 'Volume': c.volume} for c in ohlcv])
@@ -119,17 +229,40 @@ class IntradayScannerService:
         logger.info("Scan Started: Intraday Scanner")
         
         try:
-            # 1. Setup Providers
-            if getattr(self.config, 'data_provider', 'yahoo') == 'dhan':
+            # 1. Setup
+            market_provider = getattr(self.config, 'market_provider', getattr(self.config, 'data_provider', 'yahoo'))
+            if market_provider == 'dhan':
                 data_provider = DhanProvider(
                     client_id=getattr(self.config, 'dhan_client_id', ''),
                     access_token=getattr(self.config, 'dhan_access_token', '')
                 )
+            elif market_provider == 'paytm':
+                data_provider = PaytmMoneyProvider()
             else:
                 data_provider = YahooFinanceProvider()
                 
             logger.info("Connecting to data provider...")
             data_provider.connect()
+            
+            from market.market_data_manager import MarketDataManager
+            from market.paytm_provider import PaytmMoneyProvider
+            
+            paytm_provider = PaytmMoneyProvider()
+            try:
+                paytm_provider.connect()
+            except Exception as e:
+                logger.warning(f"Paytm API Connection Error: {e}. Falling back to Yahoo data.")
+                paytm_provider = None
+
+            manager = MarketDataManager(
+                yahoo_provider=data_provider, 
+                paytm_provider=paytm_provider
+            )
+            
+            logger.info(f"Provider Class: {type(data_provider).__name__}")
+            logger.info(f"Market Provider: {market_provider}")
+            logger.info(f"Connected: {data_provider.is_connected()}")
+            logger.info("-" * 50)
             
             # 2. Get Universe (Standard Architecture)
             logger.info("Fetching Symbol Universe...")
@@ -146,7 +279,26 @@ class IntradayScannerService:
                 stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=is_fno, is_nifty50=False))
                 
             score_engine = ScoreEngine()
-            sector_rotation_service = SectorEngine(data_provider)
+            
+            import pandas as pd
+            class SectorEngineDataProviderWrapper:
+                def __init__(self, provider):
+                    self._provider = provider
+                def get_ohlcv(self, symbol, interval="1d", period="3mo"):
+                    data = self._provider.get_ohlcv(symbol, interval, period)
+                    if not data:
+                        return pd.DataFrame()
+                    rows = []
+                    for item in data:
+                        if hasattr(item, 'close'):
+                            rows.append({'Close': item.close, 'Open': item.open, 'High': item.high, 'Low': item.low, 'Volume': getattr(item, 'volume', 0)})
+                        elif isinstance(item, dict):
+                            rows.append({'Close': item.get('close', item.get('Close')), 'Open': item.get('open', item.get('Open')), 'High': item.get('high', item.get('High')), 'Low': item.get('low', item.get('Low')), 'Volume': item.get('volume', item.get('Volume', 0))})
+                    return pd.DataFrame(rows)
+                def __getattr__(self, name):
+                    return getattr(self._provider, name)
+            
+            sector_rotation_service = SectorEngine(SectorEngineDataProviderWrapper(data_provider))
             scanner = ScannerEngine(
                 data_provider=data_provider,
                 trend_engine=self.engines["trend"],
@@ -156,6 +308,7 @@ class IntradayScannerService:
                 sector_engine=sector_rotation_service,
                 relative_strength_engine=self.engines["relative_strength"]
             )
+            scanner.paytm_provider = paytm_provider
             
             if progress_callback:
                 progress_callback(20)
@@ -177,19 +330,29 @@ class IntradayScannerService:
             for r in raw_results:
                 symbol = r.symbol
                 
-                # Fetch cached price/volume directly from ScanResult
-                price = getattr(r, 'price', 0.0)
-                volume = getattr(r, 'volume', 0.0)
+                try:
+                    price = manager.get_live_price(symbol)
+                except Exception:
+                    price = 0.0
+                if price <= 0:
+                    price = getattr(r, 'price', 0.0)
+
+                try:
+                    volume = manager.get_live_quote(symbol).get('volume', 0.0)
+                except Exception:
+                    volume = 0.0
+                if volume <= 0:
+                    volume = getattr(r, 'volume', 0.0)
                 decision_str = getattr(r.signal, 'value', str(r.signal))
                 
                 try:
                     # 3.5. Evaluate with IntradayEngine (Sprint 81A Integration)
                     if decision_str not in ["WAIT", "NO_DATA", "EXCLUDED"]:
                         try:
-                            ohlcv_intra = data_provider.get_ohlcv(symbol, interval="5m", period="5d")
-                            ohlcv_15m = data_provider.get_ohlcv(symbol, interval="15m", period="5d")
-                            ohlcv_1h = data_provider.get_ohlcv(symbol, interval="1h", period="1mo")
-                            ohlcv_1d = data_provider.get_ohlcv(symbol, interval="1d", period="1mo")
+                            ohlcv_intra = manager.get_history(symbol, interval="5m", period="5d")
+                            ohlcv_15m = manager.get_history(symbol, interval="15m", period="5d")
+                            ohlcv_1h = manager.get_history(symbol, interval="1h", period="1mo")
+                            ohlcv_1d = manager.get_history(symbol, interval="1d", period="1mo")
                             
                             trend_result = getattr(r, 'trend_direction', "NEUTRAL")
                             
@@ -246,6 +409,15 @@ class IntradayScannerService:
                     rr = pipeline_res.get("risk_reward", 2.0)
                     
                     sector = getattr(r, "sector", "Unknown")
+
+                    # Extract F&O data from ScanResult
+                    fno_data = {
+                        "oi_change_pct": getattr(r, "oi_change_pct", 0),
+                        "pcr": getattr(r, "pcr", 1.0),
+                        "max_pain": getattr(r, "max_pain", 0),
+                        "total_oi": getattr(r, "total_oi", 0),
+                        "fno_bias": getattr(r, "fno_bias", "NEUTRAL")
+                    }
                     if not sector or sector == "N/A":
                         sector = "Unknown"
                         
@@ -309,9 +481,38 @@ class IntradayScannerService:
                         "Target 2": round(t2, 2),
                         "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
                         "Volume": int(volume),
-                        "OI": 0,
+                        "OI": fno_data.get("total_oi", 0),
+                        "OI Change %": fno_data.get("oi_change_pct", 0),
+                        "PCR": fno_data.get("pcr", 1.0),
+                        "Max Pain": fno_data.get("max_pain", 0),
+                        "F&O Bias": fno_data.get("fno_bias", "NEUTRAL"),
                         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
+
+                    # Apply F&O Filter
+                    adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
+                    oi_change_pct = fno_data.get("oi_change_pct", None)  # None = Paytm unavailable
+                    is_valid, filter_reason = self.fno_filter.validate_for_fno({
+                        "Symbol": symbol,
+                        "Score": score,
+                        "Confidence": confidence,
+                        "ADX": adx_val,
+                        "Volume": volume,
+                        "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
+                        "OI Change %": oi_change_pct,
+                        "PCR": fno_data.get("pcr", 1.0),
+                        "Signal": decision_str
+                    })
+
+                    if not is_valid:
+                        logger.info(f"F&O FILTER REJECTED {symbol}: {filter_reason}")
+                        continue
+
+                    # Calculate F&O Grade
+                    grade = self.fno_filter.calculate_grade(score, confidence, adx_val, rr,
+                                                            pcr=fno_data.get("pcr", 1.0),
+                                                            oi_change=fno_data.get("oi_change_pct", 0) or 0)
+
                 except Exception as e:
                     logger.error(f"Error evaluating symbol {symbol}: {e}")
                     

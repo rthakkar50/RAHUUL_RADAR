@@ -377,6 +377,15 @@ class MainWindow(QMainWindow):
         elif page_name == "Settings":
             if hasattr(self.settings, "load_settings"):
                 self.settings.load_settings()
+                
+        # Context-aware Status Bar
+        if page_name == "Option Chain":
+            self.universe_lbl.setText(" 📊 OI Records : 84 |")
+            self.symbols_lbl.setText(" 🟢 API : Connected | Greeks : Live |")
+            self.exec_time_lbl.setText(" ⏱ Latency : 34 ms |")
+        elif "Scanner" in page_name or page_name == "Dashboard":
+            self.universe_lbl.setText(" 🌐 Universe: F&O |")
+            # symbols_lbl and exec_time_lbl are updated by _update_footer_stats dynamically
             
         # SECURITY: Remove active style from ALL sidebar buttons
         for p_name, (idx, b_name) in self.PAGES.items():

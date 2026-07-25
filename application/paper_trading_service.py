@@ -231,6 +231,22 @@ class PaperTradingEngine:
             self._emit_portfolio_update()
             self.signals.notification.emit("Position Closed", f"{pos.symbol} closed: {reason} PNL: {pos.realized_pnl:.2f}")
 
+    def has_open_position(self, symbol: str) -> bool:
+        """
+        Returns True if an OPEN position already exists for the given symbol.
+        Prevents duplicate paper trades.
+        """
+        symbol = symbol.upper().strip()
+
+        for pos in self.engine.open_positions.values():
+            if (
+                pos.symbol.upper().strip() == symbol
+                and getattr(pos, "status", "OPEN") == "OPEN"
+            ):
+                return True
+
+        return False
+
     def _save_position(self, p: PaperPosition):
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
@@ -254,12 +270,18 @@ class PaperTradingEngine:
 
     def get_statistics(self):
         conn = sqlite3.connect(self.db_path)
-        df = pd.read_sql("SELECT * FROM positions WHERE status='CLOSED'", conn)
+        df_closed = pd.read_sql("SELECT * FROM positions WHERE status='CLOSED'", conn)
         conn.close()
         
-        if df.empty:
+        open_pos = list(self.engine.open_positions.values())
+        open_data = [{'net_pnl': p.unrealized_pnl - p.charges} for p in open_pos]
+        df_open = pd.DataFrame(open_data)
+        
+        if df_open.empty and df_closed.empty:
             return {}
             
+        df = pd.concat([df_closed, df_open], ignore_index=True) if not df_open.empty else df_closed
+        
         wins = df[df['net_pnl'] > 0]
         losses = df[df['net_pnl'] <= 0]
         
@@ -269,11 +291,16 @@ class PaperTradingEngine:
         avg_loss = abs(losses['net_pnl'].mean()) if not losses.empty else 0
         profit_factor = (wins['net_pnl'].sum() / abs(losses['net_pnl'].sum())) if not losses.empty and losses['net_pnl'].sum() != 0 else 0
         
-        equity = self.engine.starting_capital + df['net_pnl'].cumsum()
-        peak = equity.cummax()
-        drawdown = (equity - peak) / peak * 100
-        max_dd = drawdown.min()
-        
+        # Accurate Drawdown using portfolio history
+        history_df = self.get_portfolio_history()
+        max_dd = 0.0
+        if not history_df.empty and 'capital' in history_df.columns:
+            equity = history_df['capital']
+            peak = equity.cummax()
+            drawdown = (equity - peak) / peak * 100
+            max_dd = drawdown.min()
+            if str(max_dd) == 'nan': max_dd = 0.0
+            
         return {
             "win_rate": round(win_rate, 2),
             "loss_rate": round(loss_rate, 2),

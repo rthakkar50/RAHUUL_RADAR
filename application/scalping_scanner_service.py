@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from config.config import AppConfig
 from market.yahoo_provider import YahooFinanceProvider
 from market.dhan_provider import DhanProvider
+from market.paytm_provider import PaytmMoneyProvider
 from core.trend_engine import TrendEngine
 from core.momentum_engine import MomentumEngine
 from core.structure_engine import StructureEngine
@@ -99,11 +100,15 @@ class ScalpingScannerService:
         logger.info("Scan Started: Scalping Scanner")
         
         try:
-            if getattr(self.config, 'data_provider', 'yahoo') == 'dhan':
+            market_provider = getattr(self.config, 'market_provider', getattr(self.config, 'data_provider', 'yahoo'))
+            if market_provider == 'dhan':
                 data_provider = DhanProvider(
                     client_id=getattr(self.config, 'dhan_client_id', ''),
                     access_token=getattr(self.config, 'dhan_access_token', '')
                 )
+            elif market_provider == 'paytm':
+                data_provider = PaytmMoneyProvider()
+                data_provider.connect()
             else:
                 data_provider = YahooFinanceProvider()
             data_provider.connect()
@@ -135,7 +140,26 @@ class ScalpingScannerService:
             data_provider.get_ohlcv = patched_get_ohlcv
             
             score_engine = ScoreEngine()
-            sector_rotation_service = SectorEngine(data_provider)
+            
+            import pandas as pd
+            class SectorEngineDataProviderWrapper:
+                def __init__(self, provider):
+                    self._provider = provider
+                def get_ohlcv(self, symbol, interval="1d", period="3mo"):
+                    data = self._provider.get_ohlcv(symbol, interval, period)
+                    if not data:
+                        return pd.DataFrame()
+                    rows = []
+                    for item in data:
+                        if hasattr(item, 'close'):
+                            rows.append({'Close': item.close, 'Open': item.open, 'High': item.high, 'Low': item.low, 'Volume': getattr(item, 'volume', 0)})
+                        elif isinstance(item, dict):
+                            rows.append({'Close': item.get('close', item.get('Close')), 'Open': item.get('open', item.get('Open')), 'High': item.get('high', item.get('High')), 'Low': item.get('low', item.get('Low')), 'Volume': item.get('volume', item.get('Volume', 0))})
+                    return pd.DataFrame(rows)
+                def __getattr__(self, name):
+                    return getattr(self._provider, name)
+            
+            sector_rotation_service = SectorEngine(SectorEngineDataProviderWrapper(data_provider))
             scanner = ScannerEngine(
                 data_provider=data_provider,
                 trend_engine=self.engines["trend"],

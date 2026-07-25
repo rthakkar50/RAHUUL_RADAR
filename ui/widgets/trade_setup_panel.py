@@ -372,9 +372,9 @@ class SmartTradeSetupPanel(QWidget):
             except Exception:
                 return sv
 
-        entry_val = data.get("Entry", 0)
-        sl_val    = data.get("Stop Loss", 0)     # ← correct key from service
-        t1_val    = data.get("Target 1", 0)       # ← correct key from service
+        entry_val = data.get("Entry", data.get("entry", 0))
+        sl_val    = data.get("Stop Loss", data.get("sl", 0))     # ← correct key from service
+        t1_val    = data.get("Target 1", data.get("target1", 0))       # ← correct key from service
 
         entry_str = fmt(entry_val)
         sl_str    = fmt(sl_val)
@@ -413,30 +413,68 @@ class SmartTradeSetupPanel(QWidget):
 
         self._sep(bl)
 
-        # ── Reasons — read "_why_selected" (service key) ───────
-        reasons_source = data.get("_why_selected",
-                         data.get("Reasons",
-                         data.get("reasons",
-                         data.get("_reasons", []))))
-        reasons_formatted = _format_reasons(reasons_source)
-
-        r_frame = QFrame()
-        r_frame.setObjectName("ReasonsFrame")
-        rl = QVBoxLayout(r_frame)
-        rl.setContentsMargins(10, 10, 10, 10)
-        rl.setSpacing(4)
-
-        title_lbl = QLabel("WHY SELECTED")
-        title_lbl.setStyleSheet("color: #787B86; font-size: 12px; font-weight: bold; margin-bottom: 4px;")
-        rl.addWidget(title_lbl)
-
-        for reason in reasons_formatted:
-            lbl_r = QLabel(reason)
-            lbl_r.setStyleSheet("color: #D1D4DC; font-size: 14px;")
-            lbl_r.setWordWrap(True)
-            rl.addWidget(lbl_r)
-
-        bl.addWidget(r_frame)
+        # ── Explanation & Trigger (SPRINT-95) / Fallback Reasons ──
+        if "explanation" in data or "next_trigger" in data:
+            if "explanation" in data:
+                e_frame = QFrame()
+                e_frame.setObjectName("ReasonsFrame")
+                el = QVBoxLayout(e_frame)
+                el.setContentsMargins(10, 10, 10, 10)
+                el.setSpacing(4)
+                
+                title_lbl = QLabel("EXPLANATION")
+                title_lbl.setStyleSheet("color: #787B86; font-size: 12px; font-weight: bold; margin-bottom: 4px;")
+                el.addWidget(title_lbl)
+                
+                exp_text = data.get("explanation", "")
+                lbl_e = QLabel(exp_text)
+                lbl_e.setStyleSheet("color: #D1D4DC; font-size: 14px;")
+                lbl_e.setWordWrap(True)
+                el.addWidget(lbl_e)
+                bl.addWidget(e_frame)
+                
+            if "next_trigger" in data:
+                t_frame = QFrame()
+                t_frame.setObjectName("ReasonsFrame")
+                tl = QVBoxLayout(t_frame)
+                tl.setContentsMargins(10, 10, 10, 10)
+                tl.setSpacing(4)
+                
+                title_lbl2 = QLabel("NEXT TRIGGER")
+                title_lbl2.setStyleSheet("color: #787B86; font-size: 12px; font-weight: bold; margin-bottom: 4px;")
+                tl.addWidget(title_lbl2)
+                
+                trig_text = data.get("next_trigger", "")
+                lbl_t = QLabel(trig_text)
+                lbl_t.setStyleSheet("color: #FFC107; font-size: 14px; font-style: italic;")
+                lbl_t.setWordWrap(True)
+                tl.addWidget(lbl_t)
+                bl.addWidget(t_frame)
+        else:
+            # Fallback for Swing Scanner
+            reasons_source = data.get("_why_selected",
+                             data.get("Reasons",
+                             data.get("reasons",
+                             data.get("_reasons", []))))
+            reasons_formatted = _format_reasons(reasons_source)
+    
+            r_frame = QFrame()
+            r_frame.setObjectName("ReasonsFrame")
+            rl = QVBoxLayout(r_frame)
+            rl.setContentsMargins(10, 10, 10, 10)
+            rl.setSpacing(4)
+    
+            title_lbl = QLabel("WHY SELECTED")
+            title_lbl.setStyleSheet("color: #787B86; font-size: 12px; font-weight: bold; margin-bottom: 4px;")
+            rl.addWidget(title_lbl)
+    
+            for reason in reasons_formatted:
+                lbl_r = QLabel(reason)
+                lbl_r.setStyleSheet("color: #D1D4DC; font-size: 14px;")
+                lbl_r.setWordWrap(True)
+                rl.addWidget(lbl_r)
+    
+            bl.addWidget(r_frame)
 
         card_l.addWidget(body)
         card_l.addStretch()

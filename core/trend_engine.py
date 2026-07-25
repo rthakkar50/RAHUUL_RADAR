@@ -103,7 +103,7 @@ class TrendEngine:
         st_bullish = False
 
         # If real OHLCV DataFrame is provided, calculate everything dynamically.
-        if df is not None and not df.empty and len(df) >= 50:
+        if df is not None and not df.empty and len(df) >= 20:
             close_series = df['Close']
             close = float(close_series.iloc[-1])
             

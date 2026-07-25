@@ -1,0 +1,426 @@
+--- REST API VERIFICATION ---
+2026-07-20 16:49:52,587 - market.yahoo_provider - INFO - Disk cache expired. Starting fresh.
+2026-07-20 16:49:52,587 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+4. Print the exact symbol requested:
+   NIFTY.NS
+
+5. Print how NIFTY.NS was mapped internally:
+   security_id: NIFTY
+   exchange: NSE
+   instrument: EQUITY
+   Mapped pref string: NSE:NIFTY:EQUITY
+
+1. Print the exact REST endpoint called:
+   https://developer.paytmmoney.com/data/v1/price/live
+
+2. Print the HTTP status code:
+   401
+
+3. Print the raw JSON response (mask tokens):
+   "Invalid JSON"
+
+--- WEBSOCKET VERIFICATION ---
+6. Subscribe to 5 live symbols:
+   - RELIANCE.NS
+   - HDFCBANK.NS
+   - INFY.NS
+   - SBIN.NS
+   - ICICIBANK.NS
+
+Waiting 5 seconds for live ticks...
+
+7. Print whether live ticks are received:
+   No live ticks received.
+
+8. Print the timestamp and LTP of the first tick for each symbol:
+   RELIANCE.NS: No tick received.
+   HDFCBANK.NS: No tick received.
+   INFY.NS: No tick received.
+   SBIN.NS: No tick received.
+   ICICIBANK.NS: No tick received.
+
+--- SCANNER VERIFICATION ---
+9. Run Swing Scanner.
+2026-07-20 16:50:00,112 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-07-20 16:50:00,114 - market.yahoo_provider - INFO - Disk cache expired. Starting fresh.
+2026-07-20 16:50:00,114 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-07-20 16:50:00,115 - market.market_engine - INFO - MarketEngine initialized securely.
+2026-07-20 16:50:00,115 - ranking.ranking_engine - INFO - RankingEngine initialized securely.
+2026-07-20 16:50:00,122 - scanner.scanner_engine - INFO - ScannerEngine initialized securely with all core sub-engines.
+2026-07-20 16:50:00,140 - scanner.scanner_engine - INFO - Starting batch market scan | Target Count: 178
+2026-07-20 16:50:00,140 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,140 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,141 - scanner.scanner_engine - WARNING - Skipping AARTIIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,141 - scanner.scanner_engine - WARNING - Skipping ABB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,141 - scanner.scanner_engine - WARNING - Skipping ABBOTINDIA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,141 - scanner.scanner_engine - WARNING - Skipping ABCAPITAL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,142 - scanner.scanner_engine - WARNING - Skipping ADANIPORTS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,142 - scanner.scanner_engine - WARNING - Skipping ABFRL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,142 - scanner.scanner_engine - WARNING - Skipping ADANIENT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,143 - scanner.scanner_engine - WARNING - Skipping ACC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,143 - scanner.scanner_engine - WARNING - Skipping AXISBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,143 - scanner.scanner_engine - WARNING - Skipping APOLLOHOSP.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,143 - scanner.scanner_engine - WARNING - Skipping AMBUJACEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping APOLLOTYRE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping ASIANPAINT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping ASTRAL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping ASHOKLEY.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping AUBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping ATUL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,142 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping AUROPHARMA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,141 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping BAJAJ-AUTO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,143 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,144 - scanner.scanner_engine - WARNING - Skipping ALKEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,143 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BAJAJFINSV.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,143 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BAJFINANCE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,143 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BALKRISIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BANDHANBNK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BANKBARODA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BATAINDIA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BERGEPAINT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BHARATFORG.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,145 - scanner.scanner_engine - WARNING - Skipping BHARTIARTL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,144 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BHEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BIOCON.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BOSCHLTD.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BPCL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BRITANNIA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping BSOFT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping CANBK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping CANFINHOME.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,146 - scanner.scanner_engine - WARNING - Skipping CHAMBLFERT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CHOLAFIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,145 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CIPLA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping COALINDIA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping COFORGE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping COLPAL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CONCOR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping COROMANDEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CROMPTON.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CUB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping CUMMINSIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,146 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,147 - scanner.scanner_engine - WARNING - Skipping DABUR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DALBHARAT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DEEPAKNTR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DIVISLAB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DIXON.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DLF.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping DRREDDY.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping EICHERMOT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping ESCORTS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping EXIDEIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping FEDERALBNK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,147 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - scanner.scanner_engine - WARNING - Skipping GAIL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GLENMARK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GMRINFRA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GNFC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GODREJCP.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GODREJPROP.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GRANULES.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GRASIM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping GUJGASLTD.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping HAL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - scanner.scanner_engine - WARNING - Skipping HAVELLS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,148 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HCLTECH.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HDFCAMC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HDFCBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HDFCLIFE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,149 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HEROMOTOCO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HINDALCO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping INDIAMART.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HINDCOPPER.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping INDIGO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HINDUNILVR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,150 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,150 - scanner.scanner_engine - WARNING - Skipping HINDPETRO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping ICICIPRULI.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping ICICIGI.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping INDUSTOWER.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping IDEA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping IGL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping IDFCFIRSTB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping IEX.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping INDIACEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping INDUSINDBK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,151 - scanner.scanner_engine - WARNING - Skipping IOC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,153 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,154 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,165 - scanner.scanner_engine - WARNING - Skipping INFY.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping ICICIBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping INDHOTEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping JINDALSTEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping IRCTC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping ITC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping IPCALAB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping JUBLFOOD.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping JSWSTEEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping JKCEMENT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping KOTAKBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping LTTS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,166 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping LAURUSLABS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping LICHSGFIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping MANAPPURAM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MGL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping METROPOLIS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MOTHERSON.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping M&M.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MCX.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MRF.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MUTHOOTFIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping MARICO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,167 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NATIONALUM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,166 - scanner.scanner_engine - WARNING - Skipping LALPATHLAB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MARUTI.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MPHASIS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping LUPIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping M&MFIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping LT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping LTIM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping PEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,167 - scanner.scanner_engine - WARNING - Skipping MFSL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NESTLEIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NAVINFLUOR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NMDC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NTPC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping PNB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping OFSS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping POWERGRID.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping PAGEIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping NAUKRI.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping RBLBANK.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping PETRONET.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping PFC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping PIIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping SBICARD.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping OBEROIRLTY.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping POLYCAB.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping ONGC.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping PVRINOX.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping RAMCOCEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,168 - scanner.scanner_engine - WARNING - Skipping PERSISTENT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping RECLTD.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping RELIANCE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping SAIL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping PIDILITIND.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping SBILIFE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping SBIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,169 - scanner.scanner_engine - WARNING - Skipping SHRIRAMFIN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SHREECEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SIEMENS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SRF.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SUNTV.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATACHEM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SYNGENE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATACOMM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping TORNTPHARM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATACONSUM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping TVSMOTOR.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATAPOWER.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATASTEEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping SUNPHARMA.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TECHM.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping TITAN.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TATAMOTORS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - market.yahoo_provider - WARNING - Provider disconnected. Returning empty list.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping TRENT.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,170 - scanner.scanner_engine - WARNING - Skipping TCS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping UBL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping ULTRACEMCO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping UPL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping VEDL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping ZYDUSLIFE.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping WIPRO.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping ZEEL.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,171 - scanner.scanner_engine - WARNING - Skipping VOLTAS.NS: No OHLCV data retrieved.
+2026-07-20 16:50:00,172 - scanner.scanner_engine - INFO - --- SCANNER METRICS ---
+Start Time: 16:50:00 | End Time: 16:50:00 | Elapsed: 0.03s
+Universe: 178 | Ranked: 0 | Excluded: 0 | No Data: 178 | Errors: 0
+Memory: 134.7 MB | CPU: 18.5%
+-----------------------
+2026-07-20 16:50:00,172 - scanner.scanner_engine - INFO - Market scan completed successfully. Processed 0 assets.
+2026-07-20 16:50:00,173 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+
+========== FIRST RESULT ==========
+==================================
+Counter()
+
+Universe: 180
+Processed: 0
+Qualified: 0
+Errors: 0
+
+10. Print PASS only if all of the above succeed.
+
+FAIL

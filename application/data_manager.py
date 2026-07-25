@@ -95,6 +95,9 @@ class DataManager:
     def get_intraday_data(self, symbol, timeframe="5m"):
         return self.get_stock_data(symbol, period="5d", interval=timeframe)
 
+    def get_historical_data(self, symbol, period="1mo", interval="1d"):
+        return self.get_stock_data(symbol, period, interval)
+
     def get_option_chain(self, index="NIFTY"):
         self.active_indices.add(index)
         

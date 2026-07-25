@@ -25,9 +25,18 @@ class AppConfig:
             "INFY.NS", "TCS.NS", "LT.NS", "AXISBANK.NS", "ONGC.NS", "TATASTEEL.NS"
         ]
         self.is_pro_active: bool = True  # Hardcoded to PRO mode
-        self.data_provider: str = "yahoo" # 'yahoo' or 'dhan'
+        self.data_provider: str = "yahoo" # 'yahoo' or 'dhan' or 'paytm'
+        self.market_provider: str = "yahoo" # Used interchangeably based on user instructions
         self.dhan_client_id: str = ""
         self.dhan_access_token: str = ""
+        self.paytm: dict = {
+            "api_key": "",
+            "api_secret_key": "",
+            "access_token": "",
+            "public_access_token": "",
+            "read_access_token": "",
+            "redirect_uri": "http://127.0.0.1:8000/callback"
+        }
         
         self.composite_decision_enabled: bool = False
         self.composite_activation_enabled: bool = False
@@ -84,8 +93,13 @@ class AppConfig:
                 if "export_excel" in data: self.export_excel = data["export_excel"]
                 if "console_colors" in data: self.console_colors = data["console_colors"]
                 if "data_provider" in data: self.data_provider = data["data_provider"]
+                if "market_provider" in data: self.market_provider = data["market_provider"]
                 if "dhan_client_id" in data: self.dhan_client_id = data["dhan_client_id"]
                 if "dhan_access_token" in data: self.dhan_access_token = data["dhan_access_token"]
+                
+                # Paytm Money settings
+                if "paytm" in data:
+                    self.paytm.update(data["paytm"])
                 if "telegram_alerts_enabled" in data: self.telegram_alerts_enabled = data["telegram_alerts_enabled"]
                 if "telegram_bot_token" in data: self.telegram_bot_token = data["telegram_bot_token"]
                 if "telegram_chat_id" in data: self.telegram_chat_id = data["telegram_chat_id"]

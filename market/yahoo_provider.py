@@ -5,9 +5,10 @@ Implements robust, production-ready market data fetching using the yfinance libr
 import time
 import yfinance as yf
 import pandas as pd
-from typing import List
+from typing import List, Dict, Any
 from datetime import datetime
 import threading
+import requests
 
 from market.data_provider import MarketDataProvider, OHLCV, MarketStatus
 from utils.logger import get_logger
@@ -28,6 +29,10 @@ class YahooFinanceProvider(MarketDataProvider):
         self._cache = {}
         self._cache_lock = threading.Lock()
         self._cache_ttl = 900 # 15 minutes TTL for memory
+        self._session = requests.Session()
+        self._session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        })
         
         # Disk Cache Initialization
         import os
@@ -86,6 +91,7 @@ class YahooFinanceProvider(MarketDataProvider):
         """
         logger.info("Disconnecting from Yahoo Finance API...")
         self._is_connected = False
+        self._session.close()
         logger.info("Disconnected successfully.")
         return True
 
@@ -103,6 +109,8 @@ class YahooFinanceProvider(MarketDataProvider):
         Ensures the symbol is properly formatted for Yahoo Finance NSE mapping.
         """
         clean_symbol = symbol.upper().strip()
+        if clean_symbol.startswith("$"):
+            clean_symbol = clean_symbol[1:]
         if not clean_symbol.startswith("^") and not clean_symbol.endswith(".NS") and not clean_symbol.endswith(".BO"):
             clean_symbol = f"{clean_symbol}.NS"
         return clean_symbol
@@ -124,9 +132,19 @@ class YahooFinanceProvider(MarketDataProvider):
             
         formatted_symbol = self._format_symbol(symbol)
         
+        # Check if we have recent OHLCV data in cache first
+        cache_key = f"{formatted_symbol}_1d_3mo"
+        with self._cache_lock:
+            if cache_key in self._cache and (time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl):
+                cached_data = self._cache[cache_key]['data']
+                if cached_data:
+                    return cached_data[-1].close
+                else:
+                    return 0.0
+        
         for attempt in range(3):
             try:
-                ticker = yf.Ticker(formatted_symbol)
+                ticker = yf.Ticker(formatted_symbol, session=self._session)
                 # Fast retrieval using fast_info if available, else history
                 try:
                     price = ticker.fast_info['lastPrice']
@@ -173,7 +191,7 @@ class YahooFinanceProvider(MarketDataProvider):
             import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=True, progress=False)
+                df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=True, progress=False, session=self._session)
             
             with self._cache_lock:
                 for orig_sym, f_sym in zip(missing_symbols, formatted_symbols):
@@ -195,6 +213,13 @@ class YahooFinanceProvider(MarketDataProvider):
                                 sym_df = df
                             else:
                                 sym_df = pd.DataFrame()
+                    
+                    rows_downloaded = len(sym_df) if not sym_df.empty else 0
+                    if sym_df.empty:
+                        logger.warning(f"Symbol: {f_sym}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe.")
+                    else:
+                        logger.debug(f"Symbol: {f_sym}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
+                        
                     if not sym_df.empty:
                         sym_df = sym_df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'])
                         for index, row in sym_df.iterrows():
@@ -248,13 +273,16 @@ class YahooFinanceProvider(MarketDataProvider):
         
         for attempt in range(3):
             try:
-                ticker = yf.Ticker(formatted_symbol)
+                ticker = yf.Ticker(formatted_symbol, session=self._session)
                 df = ticker.history(period=period, interval=interval)
                 
+                rows_downloaded = len(df) if not df.empty else 0
                 if df.empty:
-                    logger.warning(f"No OHLCV data returned for {formatted_symbol} on attempt {attempt + 1}.")
+                    logger.warning(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe on attempt {attempt + 1}.")
                     time.sleep(1)
                     continue
+                else:
+                    logger.debug(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
                 
                 df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'], inplace=True)
                     
@@ -295,14 +323,19 @@ class YahooFinanceProvider(MarketDataProvider):
     def get_volume(self, symbol: str) -> int:
         """
         Retrieves the current daily volume for a symbol.
-        
-        Args:
-            symbol: The stock symbol to query.
-            
-        Returns:
-            int: The total traded volume.
         """
         logger.debug(f"Fetching volume for {symbol} from Yahoo Finance.")
+        
+        formatted_symbol = self._format_symbol(symbol)
+        cache_key = f"{formatted_symbol}_1d_3mo"
+        with self._cache_lock:
+            if cache_key in self._cache and (time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl):
+                cached_data = self._cache[cache_key]['data']
+                if cached_data:
+                    return cached_data[-1].volume
+                else:
+                    return 0
+                    
         ohlcv = self.get_ohlcv(symbol, interval="1d", period="1d")
         if ohlcv:
             return ohlcv[-1].volume
@@ -315,8 +348,12 @@ class YahooFinanceProvider(MarketDataProvider):
         so this remains structurally functional but statically evaluated based on time if needed in the future.
         """
         logger.debug("Fetching market status from Yahoo Finance.")
-        # Future implementation could map to current UTC/IST time to determine status
         return MarketStatus(
             is_open=True,
-            status_message="MARKET OPEN (Assumed via yfinance)"
+            status_message="Yahoo Finance data is delayed by 15 mins. Status is assumed Open during market hours."
         )
+
+    def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
+        """Fetch Option Chain from Yahoo Finance (Not implemented)"""
+        self.logger.warning("Option Chain not supported for Yahoo Finance in this implementation.")
+        return {}

@@ -1,0 +1,458 @@
+import os
+import json
+import logging
+import requests
+from typing import List, Dict, Any
+from market.data_provider import MarketDataProvider, OHLCV, MarketStatus
+from market.yahoo_provider import YahooFinanceProvider
+from market.paytm_websocket import PaytmLiveBroadcast
+
+class PaytmMoneyProvider(MarketDataProvider):
+    """
+    Paytm Money Data Provider Implementation.
+    Phase 2: Working implementation with OAuth auth and Market Data API.
+    """
+    
+    BASE_URL_ACCOUNTS = "https://developer.paytmmoney.com/accounts"
+    BASE_URL_DATA = "https://developer.paytmmoney.com/data"
+    
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self._connected = False
+        
+        self.api_key = os.environ.get("PAYTM_API_KEY", "4615860acbe14a709cf259a23bdb8c19")
+        self.api_secret = os.environ.get("PAYTM_API_SECRET", "a466b8be3eb8459e8cfe5f24337ad788")
+        self.request_token = os.environ.get("PAYTM_REQUEST_TOKEN", "81a2b33475ab4b31b4aab5950c125875")
+        self.access_token = None
+        self.public_access_token = None
+        self.read_access_token = None
+        
+        self.fallback = YahooFinanceProvider()
+        self.ws_cache = PaytmLiveBroadcast.get_instance()
+        self._rest_cache: Dict[str, Dict[str, float]] = {}
+        
+        if not self.api_key or not self.api_secret or not self.request_token:
+            self._load_credentials_from_config()
+
+    def _load_credentials_from_config(self):
+        try:
+            config_path = os.path.join(os.getcwd(), "config.json")
+            if os.path.exists(config_path):
+                with open(config_path, "r") as f:
+                    config_data = json.load(f)
+                    
+                    paytm_block = config_data.get("paytm", {})
+                    if not self.api_key:
+                        self.api_key = paytm_block.get("api_key", "")
+                    if not self.api_secret:
+                        self.api_secret = paytm_block.get("api_secret_key", "")
+                    if not self.request_token:
+                        # Sometimes it might be in the config or we just rely on OAuth callback to set it dynamically
+                        self.request_token = paytm_block.get("request_token", "")
+                        
+                    if not self.access_token:
+                        self.access_token = paytm_block.get("access_token", "")
+                    if not self.public_access_token:
+                        self.public_access_token = paytm_block.get("public_access_token", "")
+                    if not self.read_access_token:
+                        self.read_access_token = paytm_block.get("read_access_token", "")
+        except Exception as e:
+            self.logger.warning(f"Failed to load Paytm credentials from config.json: {e}")
+
+    def connect(self) -> bool:
+        self.logger.info("Attempting to connect to Paytm Money API...")
+        
+        # If we already loaded valid tokens from config.json, we don't need to re-authenticate with requestToken
+        # Only reuse previously saved REAL tokens.
+        # Ignore placeholder/mock values.
+        real_tokens = (
+            self.access_token
+            and self.public_access_token
+            and self.read_access_token
+            and not str(self.access_token).startswith("MOCK")
+            and not str(self.public_access_token).startswith("MOCK")
+            and not str(self.read_access_token).startswith("MOCK")
+        )
+
+        if real_tokens:
+            self.logger.info("Using stored Paytm tokens.")
+            self._connected = True
+            
+            try:
+                self.fallback.connect()
+            except Exception as e:
+                self.logger.warning(f"Fallback connect failed: {e}")
+                
+            return True
+            
+        if not self.api_key or not self.api_secret or not self.request_token:
+            self.logger.error("Paytm API Key, Secret, or Request Token is missing. Cannot connect.")
+            raise ValueError("Paytm API credentials and request token are required.")
+            
+        url = f"{self.BASE_URL_ACCOUNTS}/v2/gettoken"
+        payload = {
+            "apiKey": self.api_key,
+            "api_key": self.api_key,
+            "apiSecretKey": self.api_secret,
+            "api_secret_key": self.api_secret,
+            "requestToken": self.request_token,
+            "request_token": self.request_token
+        }
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            
+            token_data = data.get('data', data) if isinstance(data, dict) else data
+            
+            self.access_token = token_data.get('access_token')
+            self.public_access_token = token_data.get('public_access_token')
+            self.read_access_token = token_data.get('read_access_token')
+            
+            if not self.access_token:
+                self.logger.error(f"Failed to retrieve access token: {data}")
+                return False
+                
+            self.logger.info("Paytm Money API connection established successfully.")
+            self._connected = True
+            
+            try:
+                self.fallback.connect()
+            except Exception as e:
+                self.logger.warning(f"Fallback connect failed: {e}")
+                
+            if self.public_access_token:
+                self.ws_cache.set_token(self.public_access_token)
+                self.ws_cache.connect()
+                
+            return True
+            
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Failed to authenticate with Paytm Money: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                self.logger.error(f"Response: {e.response.text}")
+            raise ConnectionError(f"Paytm API Connection Error: {str(e)}")
+
+    def _refresh_token(self):
+        """Helper to refresh token when expired"""
+        self.logger.info("Refreshing Paytm Money API token...")
+        self.connect()
+
+    def disconnect(self) -> bool:
+        self.logger.info("Disconnecting from Paytm Money API...")
+        self.access_token = None
+        self.public_access_token = None
+        self.read_access_token = None
+        self._connected = False
+        if self.ws_cache:
+            self.ws_cache.disconnect()
+        self.logger.info("Disconnected successfully.")
+        return True
+
+    def is_connected(self) -> bool:
+        return self._connected
+
+    def _get_security_id(self, symbol: str) -> str:
+        """Helper method to resolve trading symbol to security ID"""
+        # Remove Yahoo .NS suffix if present
+        return symbol.replace('.NS', '')
+
+    def get_last_price(self, symbol: str) -> float:
+        self.logger.debug(f"Requesting LTP for {symbol} via Paytm Money...")
+        if not self.is_connected():
+            self.logger.error(f"Cannot fetch LTP for {symbol}: Provider is not connected.")
+            raise ConnectionError("Not connected to Paytm Money API.")
+            
+        security_id = self._get_security_id(symbol)
+        
+        if self.ws_cache and self.ws_cache.is_connected():
+            cached_ltp = self.ws_cache.get_cached_ltp(security_id)
+            if cached_ltp > 0:
+                return cached_ltp
+                
+        if security_id in self._rest_cache:
+            if self._rest_cache[security_id].get('price', 0.0) > 0:
+                return self._rest_cache[security_id]['price']
+            else:
+                return self.fallback.get_last_price(symbol)
+                
+        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+            pref_string = f"NSE:{security_id}:INDEX"
+        else:
+            pref_string = f"NSE:{security_id}:EQUITY"
+        url = f"{self.BASE_URL_DATA}/v1/price/live"
+        
+        params = {
+            "mode": "LTP",
+            "pref": pref_string
+        }
+        
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        headers = {
+            "x-jwt-token": jwt_token if jwt_token else ""
+        }
+        
+        try:
+            response = requests.get(url, params=params, headers=headers)
+            
+            # Handle token expiry
+            if response.status_code == 401:
+                self.logger.warning("Token expired. Attempting refresh...")
+                self._refresh_token()
+                jwt_token = self.read_access_token if self.read_access_token else self.access_token
+                headers["x-jwt-token"] = jwt_token if jwt_token else ""
+                response = requests.get(url, params=params, headers=headers)
+                
+            response.raise_for_status()
+            data = response.json()
+            
+            items = data.get('data', [])
+            if not items:
+                self.logger.warning(f"No LTP data found for {symbol} in response: {data}")
+                print("RAW PAYTM DATA:", data)
+                return 0.0
+                
+            first_item = items[0]
+            print("RAW PAYTM ITEM:", first_item)
+            # Extract LTP from the payload
+            ltp = first_item.get('last_price', first_item.get('lastPrice', first_item.get('ltp', 0.0)))
+            return float(ltp)
+            
+        except Exception as e:
+            self.logger.error(f"Failed to fetch LTP for {symbol}: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                self.logger.error(f"Response: {e.response.text}")
+            return 0.0
+
+    def test_connection(self) -> str:
+        """Tests API directly and returns the exact error string if it fails"""
+        url = f"{self.BASE_URL_DATA}/v1/price/live"
+        params = {"mode": "LTP", "pref": "NSE:RELIANCE:EQUITY"}
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        headers = {"x-jwt-token": jwt_token if jwt_token else ""}
+        
+        response = requests.get(url, params=params, headers=headers)
+        if response.status_code != 200:
+            return f"HTTP {response.status_code}: {response.text}"
+            
+        data = response.json()
+        if not data.get('data'):
+            return f"Empty data. Response: {data}"
+            
+        return "SUCCESS"
+
+    def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "3mo") -> List[OHLCV]:
+        self.logger.debug(f"Using Yahoo fallback for {symbol} OHLCV as Paytm lacks historical API.")
+        return self.fallback.get_ohlcv(symbol, interval=interval, period=period)
+        
+    def pre_cache(self, symbols: List[str], interval: str, period: str):
+        if hasattr(self.fallback, 'pre_cache'):
+            self.fallback.pre_cache(symbols, interval, period)
+            
+        if not self.is_connected():
+            return
+            
+        security_ids = [self._get_security_id(s) for s in symbols]
+        
+        if self.ws_cache and self.ws_cache.is_connected():
+            self.ws_cache.subscribe(security_ids)
+            
+        # Bulk fetch from REST to populate our internal cache
+        try:
+            self.logger.info(f"Bulk fetching live quotes for {len(security_ids)} symbols from Paytm API")
+            url = f"{self.BASE_URL_DATA}/v1/price/live"
+            jwt_token = self.read_access_token if self.read_access_token else self.access_token
+            headers = {"x-jwt-token": jwt_token if jwt_token else ""}
+            
+            chunk_size = 40
+            for i in range(0, len(security_ids), chunk_size):
+                chunk = security_ids[i:i+chunk_size]
+                prefs = []
+                for sec_id in chunk:
+                    self._rest_cache[sec_id] = {'price': 0.0, 'volume': 0}
+                    if sec_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+                        prefs.append(f"NSE:{sec_id}:INDEX")
+                    else:
+                        prefs.append(f"NSE:{sec_id}:EQUITY")
+                        
+                params = {"mode": "QUOTE", "pref": ",".join(prefs)}
+                response = requests.get(url, params=params, headers=headers)
+                
+                if response.status_code == 401:
+                    self._refresh_token()
+                    jwt_token = self.read_access_token if self.read_access_token else self.access_token
+                    headers["x-jwt-token"] = jwt_token if jwt_token else ""
+                    response = requests.get(url, params=params, headers=headers)
+                    
+                if response.status_code == 200:
+                    data = response.json()
+                    for item in data.get('data', []):
+                        sec = str(item.get('security_id', ''))
+                        if sec:
+                            ltp = item.get('last_price', item.get('lastPrice', item.get('ltp', 0.0)))
+                            vol = item.get('volume', item.get('traded_volume', 0.0))
+                            self._rest_cache[sec] = {'price': float(ltp), 'volume': int(vol)}
+        except Exception as e:
+            self.logger.warning(f"Failed to bulk fetch from Paytm API: {e}")
+
+    def get_volume(self, symbol: str) -> int:
+        self.logger.debug(f"Requesting Volume for {symbol} via Paytm Money...")
+        if not self.is_connected():
+            return self.fallback.get_volume(symbol)
+            
+        security_id = self._get_security_id(symbol)
+        
+        if self.ws_cache and self.ws_cache.is_connected():
+            cached_vol = self.ws_cache.get_cached_vol(security_id)
+            if cached_vol > 0:
+                return cached_vol
+                
+        if security_id in self._rest_cache:
+            if self._rest_cache[security_id].get('volume', 0) > 0:
+                return self._rest_cache[security_id]['volume']
+            else:
+                return self.fallback.get_volume(symbol)
+        
+        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+            pref_string = f"NSE:{security_id}:INDEX"
+        else:
+            pref_string = f"NSE:{security_id}:EQUITY"
+        url = f"{self.BASE_URL_DATA}/v1/price/live"
+        
+        params = {"mode": "QUOTE", "pref": pref_string}
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        headers = {"x-jwt-token": jwt_token if jwt_token else ""}
+        
+        try:
+            response = requests.get(url, params=params, headers=headers)
+            if response.status_code == 401:
+                self._refresh_token()
+                jwt_token = self.read_access_token if self.read_access_token else self.access_token
+                headers["x-jwt-token"] = jwt_token if jwt_token else ""
+                response = requests.get(url, params=params, headers=headers)
+                
+            response.raise_for_status()
+            data = response.json()
+            items = data.get('data', [])
+            if not items: return 0
+            
+            return int(items[0].get('volume', 0))
+        except Exception as e:
+            self.logger.error(f"Failed to fetch volume for {symbol}: {e}")
+            return self.fallback.get_volume(symbol)
+
+    def get_market_status(self) -> MarketStatus:
+        self.logger.debug("Delegating Market Status to Yahoo fallback.")
+        return self.fallback.get_market_status()
+        
+    def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
+        """Fetch Option Chain from Paytm Money Open API"""
+        self.logger.debug(f"Requesting Option Chain for {symbol} (Expiry: {expiry})")
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Paytm Money API.")
+            
+        clean_symbol = symbol.replace('.NS', '')
+        url = f"{self.BASE_URL_DATA}/fno/v1/option-chain"
+        
+        params = {"symbol": clean_symbol}
+        if expiry:
+            params["expiry"] = expiry
+            
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        headers = {"x-jwt-token": jwt_token if jwt_token else ""}
+        
+        try:
+            response = requests.get(url, params=params, headers=headers)
+            if response.status_code == 401:
+                self._refresh_token()
+                jwt_token = self.read_access_token if self.read_access_token else self.access_token
+                headers["x-jwt-token"] = jwt_token if jwt_token else ""
+                response = requests.get(url, params=params, headers=headers)
+                
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            self.logger.error(f"Failed to fetch Option Chain for {symbol}: {e}")
+            return {}
+
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # F&O DATA METHODS - Added for RAHUUL_RADAR F&O Integration
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    def get_fno_summary(self, symbol: str):
+        """Calculate F&O summary metrics from option chain."""
+        self.logger.debug(f"Fetching F&O summary for {symbol}")
+
+        try:
+            chain_data = self.get_option_chain(symbol)
+
+            if not chain_data or 'data' not in chain_data:
+                return self._default_fno_summary()
+
+            data = chain_data['data']
+            call_options = data.get('call_options', [])
+            put_options = data.get('put_options', [])
+            underlying_price = data.get('underlying_price', 0)
+
+            total_call_oi = sum(opt.get('oi', 0) for opt in call_options)
+            total_put_oi = sum(opt.get('oi', 0) for opt in put_options)
+            total_oi = total_call_oi + total_put_oi
+
+            call_oi_change = sum(opt.get('oi_change', 0) for opt in call_options)
+            put_oi_change = sum(opt.get('oi_change', 0) for opt in put_options)
+
+            prev_call_oi = total_call_oi - call_oi_change
+            prev_put_oi = total_put_oi - put_oi_change
+            prev_total = prev_call_oi + prev_put_oi
+
+            oi_change_pct = ((total_oi - prev_total) / prev_total * 100) if prev_total > 0 else 0
+
+            pcr = total_put_oi / total_call_oi if total_call_oi > 0 else 1.0
+
+            # Max Pain
+            strikes = {}
+            for opt in call_options + put_options:
+                strike = opt.get('strike_price', 0)
+                oi = opt.get('oi', 0)
+                if strike > 0:
+                    strikes[strike] = strikes.get(strike, 0) + oi
+
+            max_pain = max(strikes.items(), key=lambda x: x[1])[0] if strikes else 0
+
+            result = {
+                'total_call_oi': total_call_oi,
+                'total_put_oi': total_put_oi,
+                'pcr': round(pcr, 2),
+                'max_pain': max_pain,
+                'oi_change_pct': round(oi_change_pct, 2),
+                'total_oi': total_oi,
+                'underlying_price': underlying_price,
+                'call_oi_change': call_oi_change,
+                'put_oi_change': put_oi_change
+            }
+
+            self.logger.debug(f"F&O Summary for {symbol}: PCR={result['pcr']}, OIΔ={result['oi_change_pct']}%")
+            return result
+
+        except Exception as e:
+            self.logger.error(f"Failed to get F&O summary for {symbol}: {e}")
+            return self._default_fno_summary()
+
+    def _default_fno_summary(self):
+        """Return default F&O values when data unavailable"""
+        return {
+            'total_call_oi': 0,
+            'total_put_oi': 0,
+            'pcr': 1.0,
+            'max_pain': 0,
+            'oi_change_pct': 0,
+            'total_oi': 0,
+            'underlying_price': 0,
+            'call_oi_change': 0,
+            'put_oi_change': 0
+        }

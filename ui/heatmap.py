@@ -27,8 +27,8 @@ class HeatmapWorker(QThread):
 
     def run(self):
         try:
-            from core.market_data_service import MarketDataService
-            svc = MarketDataService()
+            from market.yahoo_provider import YahooFinanceProvider
+            yahoo_fin = YahooFinanceProvider()
             
             # Add .NS to stocks, but sectors are already formatted
             formatted_symbols = []
@@ -40,26 +40,16 @@ class HeatmapWorker(QThread):
                     
             results = {}
             
-            if len(formatted_symbols) == 1:
-                sym = formatted_symbols[0]
-                df = svc.get_historical_data(sym, period="5d", interval="1d")
-                if df is not None and not df.empty and 'Close' in df:
-                    closes = df['Close'].dropna().values
-                    if len(closes) >= 2:
-                        last = closes[-1]
-                        prev = closes[-2]
-                        pct = ((last - prev) / prev) * 100
-                        results[self.symbols[0]] = {"price": last, "change": pct}
-            else:
-                for orig_sym, fetch_sym in zip(self.symbols, formatted_symbols):
-                    df = svc.get_historical_data(fetch_sym, period="5d", interval="1d")
-                    if df is not None and not df.empty and 'Close' in df:
-                        closes = df['Close'].dropna().values
-                        if len(closes) >= 2:
-                            last = closes[-1]
-                            prev = closes[-2]
-                            pct = ((last - prev) / prev) * 100
-                            results[orig_sym] = {"price": last, "change": pct}
+            # Pre-cache all symbols for fast parallel downloading
+            yahoo_fin.pre_cache(formatted_symbols, interval="1d", period="5d")
+            
+            for orig_sym, fetch_sym in zip(self.symbols, formatted_symbols):
+                ohlcv = yahoo_fin.get_ohlcv(fetch_sym, interval="1d", period="5d")
+                if ohlcv and len(ohlcv) >= 2:
+                    last = ohlcv[-1].close
+                    prev = ohlcv[-2].close
+                    pct = ((last - prev) / prev) * 100
+                    results[orig_sym] = {"price": last, "change": pct}
             
             self.finished.emit(results)
             
@@ -160,6 +150,23 @@ class HeatmapScreen(QWidget):
         header.addWidget(self.btn_refresh)
         main_layout.addLayout(header)
         
+        # Summary Row
+        summary_layout = QHBoxLayout()
+        self.lbl_top_sector = QLabel("Top Sector: --")
+        self.lbl_top_sector.setStyleSheet("color: #5BB974; font-weight: bold; font-size: 14px;")
+        
+        self.lbl_weakest_sector = QLabel("Weakest Sector: --")
+        self.lbl_weakest_sector.setStyleSheet("color: #D93025; font-weight: bold; font-size: 14px;")
+        
+        self.lbl_breadth = QLabel("Market Breadth: --")
+        self.lbl_breadth.setStyleSheet("color: #FFF; font-weight: bold; font-size: 14px;")
+        
+        summary_layout.addWidget(self.lbl_top_sector)
+        summary_layout.addWidget(self.lbl_weakest_sector)
+        summary_layout.addWidget(self.lbl_breadth)
+        summary_layout.addStretch()
+        main_layout.addLayout(summary_layout)
+        
         # Stacked Widget
         self.stack = QStackedWidget()
         main_layout.addWidget(self.stack)
@@ -220,14 +227,44 @@ class HeatmapScreen(QWidget):
         self.worker.start()
         
     def on_sector_data_loaded(self, results):
+        top_name = None
+        top_pct = -999.0
+        weak_name = None
+        weak_pct = 999.0
+        bullish = 0
+        bearish = 0
+        
         for name, symbol in SECTORS.items():
             if symbol in results:
                 data = results[symbol]
                 if name in self.blocks:
                     self.blocks[name].update_data(data['price'], data['change'])
+                    
+                    pct = data['change']
+                    if pct is not None:
+                        if pct > top_pct:
+                            top_pct = pct
+                            top_name = name
+                        if pct < weak_pct:
+                            weak_pct = pct
+                            weak_name = name
+                        
+                        if pct >= 0:
+                            bullish += 1
+                        else:
+                            bearish += 1
             else:
                 if name in self.blocks:
                     self.blocks[name].update_data(0.0, None)
+                    
+        if top_name:
+            self.lbl_top_sector.setText(f"Top Sector: {top_name} (+{top_pct:.2f}%)")
+        if weak_name:
+            self.lbl_weakest_sector.setText(f"Weakest Sector: {weak_name} ({weak_pct:.2f}%)")
+            
+        total = bullish + bearish
+        if total > 0:
+            self.lbl_breadth.setText(f"Market Breadth: {bullish} Bullish / {bearish} Bearish")
                     
     def on_sector_clicked(self, sector_name):
         self.current_mode = sector_name

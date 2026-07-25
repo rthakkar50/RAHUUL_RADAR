@@ -107,6 +107,21 @@ class SwingScannerService:
             logger.info("Connecting to data provider...")
             data_provider.connect()
             
+            from market.market_data_manager import MarketDataManager
+            from market.paytm_provider import PaytmMoneyProvider
+            
+            paytm_provider = PaytmMoneyProvider()
+            try:
+                paytm_provider.connect()
+            except Exception as e:
+                logger.warning(f"Paytm API Connection Error: {e}. Falling back to Yahoo data.")
+                paytm_provider = None
+
+            manager = MarketDataManager(
+                yahoo_provider=data_provider, 
+                paytm_provider=paytm_provider
+            )
+            
             logger.info("Fetching Symbol Universe...")
             universe_start = time.time()
             fno_data = get_all_symbols()
@@ -134,7 +149,26 @@ class SwingScannerService:
                 stock_list.append(Stock(symbol=sym, company_name=company_name, sector=sector, is_fno=True, is_nifty50=False))
                 
             score_engine = ScoreEngine()
-            sector_rotation_service = SectorEngine(data_provider)
+            
+            import pandas as pd
+            class SectorEngineDataProviderWrapper:
+                def __init__(self, provider):
+                    self._provider = provider
+                def get_ohlcv(self, symbol, interval="1d", period="3mo"):
+                    data = self._provider.get_ohlcv(symbol, interval, period)
+                    if not data:
+                        return pd.DataFrame()
+                    rows = []
+                    for item in data:
+                        if hasattr(item, 'close'):
+                            rows.append({'Close': item.close, 'Open': item.open, 'High': item.high, 'Low': item.low, 'Volume': getattr(item, 'volume', 0)})
+                        elif isinstance(item, dict):
+                            rows.append({'Close': item.get('close', item.get('Close')), 'Open': item.get('open', item.get('Open')), 'High': item.get('high', item.get('High')), 'Low': item.get('low', item.get('Low')), 'Volume': item.get('volume', item.get('Volume', 0))})
+                    return pd.DataFrame(rows)
+                def __getattr__(self, name):
+                    return getattr(self._provider, name)
+            
+            sector_rotation_service = SectorEngine(SectorEngineDataProviderWrapper(data_provider))
             scanner = ScannerEngine(
                 data_provider=data_provider,
                 trend_engine=self.engines["trend"],
@@ -178,9 +212,15 @@ class SwingScannerService:
                 symbol = r.symbol
                 tick_start = time.time()
                 
-                # Fetch cached price/volume directly from ScanResult instead of hitting Yahoo Finance again
-                price = getattr(r, 'price', 0.0)
-                volume = getattr(r, 'volume', 0.0)
+                # Fetch price from ScanResult which is already populated by ScannerEngine
+                price = getattr(r, "price", 0.0)
+                if price is None or price <= 0:
+                    price = 0.0
+                    
+                # Fetch volume from ScanResult
+                volume = getattr(r, "volume", 0.0)
+                if volume is None or volume <= 0:
+                    volume = 0.0
                     
                 decision_str = getattr(r.signal, 'value', str(r.signal))
                 
@@ -220,9 +260,9 @@ class SwingScannerService:
                 # Priority: pipeline calibrated_confidence > ScanResult.confidence > computed from scores
                 conf_from_engine = getattr(r, 'confidence', None)
                 conf_from_pipeline = pipeline_res.get("calibrated_confidence", None)
-                if conf_from_pipeline is not None:
+                if conf_from_pipeline is not None and conf_from_pipeline > 0:
                     confidence = safe_float(conf_from_pipeline, -1)
-                elif conf_from_engine is not None:
+                elif conf_from_engine is not None and conf_from_engine > 0:
                     confidence = safe_float(conf_from_engine, -1)
                 else:
                     confidence = -1  # Genuinely unavailable
@@ -244,21 +284,12 @@ class SwingScannerService:
                 else:
                     rr = pipeline_res.get("risk_reward", 2.0)
                 
-                # SPRINT-73 Validation Check
-                print("=" * 60)
-                print("Symbol      :", r.symbol)
-                print("Signal      :", decision_str)
-                print("Score       :", score)
-                print("Confidence  :", r.confidence)
-                print("Entry       :", entry)
-                print("SL          :", sl)
-                print("Target1     :", t1)
-                print("RR          :", rr)
-                print("=" * 60)
+                logger.debug(f"[SPRINT-73] {symbol}: signal={decision_str}, score={score}, conf={getattr(r,'confidence',0)}, entry={entry}, sl={sl}, t1={t1}, rr={rr:.2f}")
+
                 is_valid, valid_reason = validate_trade_levels(decision_str, entry, sl, t1)
                 if not is_valid:
                     decision_str = "WATCH"
-                    print("Downgraded because:", valid_reason)
+                    logger.debug(f"Downgraded to WATCH: {symbol} | Reason: {valid_reason}")
                     if "reasons" not in pipeline_res:
                         pipeline_res["reasons"] = []
                     pipeline_res["reasons"].append(f"Downgraded to WATCH: {valid_reason}")
@@ -314,6 +345,16 @@ class SwingScannerService:
                 # Confidence display: use real value, or "--" if not available
                 conf_display = round(confidence, 1) if confidence and confidence > 0 else 0
                 
+                # Extract Relative Strength data
+                rs_score_display = round(getattr(r, 'relative_strength_score', 0.0), 1)
+                rs_rank_display = "--"
+                if getattr(r, 'composite_relative_strength', None):
+                    crs = r.composite_relative_strength
+                    if isinstance(crs, dict):
+                        rs_score_display = round(crs.get('market_alpha', rs_score_display), 1)
+                    else:
+                        rs_score_display = round(getattr(crs, 'market_alpha', rs_score_display), 1)
+
                 return {
                     "Symbol": symbol,
                     "Company": company_raw,
@@ -326,6 +367,10 @@ class SwingScannerService:
                     "Trend": trend_display,
                     "Volume": vol_display,
                     "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
+                    "RR": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
+                    "RS Score": rs_score_display,
+                    "RS Rank": rs_rank_display,
+                    "OI Activity": "--", # Only for F&O, handled by detail_map usually
                     "Entry": round(entry, 2),
                     "Stop Loss": round(sl, 2),
                     "Target 1": round(t1, 2),
@@ -337,7 +382,7 @@ class SwingScannerService:
                     "Execution Reason": pipeline_res.get("execution_reason", ""),
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "_raw_data": pipeline_res,
-                    "_reasons": pipeline_res.get("reasons", [])
+                    "_reasons": getattr(r, 'reasons', [])
                 }
                 
             import concurrent.futures
@@ -403,13 +448,7 @@ class SwingScannerService:
                         downgrade_reasons.append("RR below minimum threshold")
                         
                     if downgrade_reasons:
-                        # signal = "WATCH"
-                        print("Threshold Downgrade")
-                        print("Score:", score)
-                        print("Confidence:", conf)
-                        print("RR:", rr)
-                        print("Reasons:", downgrade_reasons)
-                        # item["Signal"] = "WATCH"
+                        logger.debug(f"Threshold Downgrade: {item.get('Symbol','?')} | Score:{score} | Conf:{conf} | RR:{rr} | Reasons: {downgrade_reasons}")
                         if "_reasons" not in item:
                             item["_reasons"] = []
                         item["_reasons"].extend(downgrade_reasons)
@@ -511,17 +550,8 @@ class SwingScannerService:
             if progress_callback:
                 progress_callback(100)
                 
-            print("\n========== FIRST RESULT ==========")
             if qualified_results:
-                from pprint import pprint
-                pprint(qualified_results[0])
-            print("==================================")
-
-            from collections import Counter
-            print(Counter(
-                str(x.get("Signal", "<missing>"))
-                for x in qualified_results
-            ))
+                logger.debug(f"[TOP RESULT] {qualified_results[0].get('Symbol','?')} | Signal: {qualified_results[0].get('Signal','?')} | Score: {qualified_results[0].get('Score','?')} | Conf: {qualified_results[0].get('Confidence','?')}")
 
             scan_stats = getattr(scanner, "last_scan_stats", {})
             no_data_count = scan_stats.get("no_data", 0)

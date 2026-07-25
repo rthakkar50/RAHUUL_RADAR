@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QFont
 import pandas as pd
 import sqlite3
 
-from application.trade_manager import TradeManager, TradeStatus
+from application.paper_trading_service import PaperTradingEngine
 from application.data_manager import DataManager
 from strategy.ltme_engine import LiveTradeMonitoringEngine
 
@@ -15,7 +15,7 @@ class LiveTradesPage(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        self.trade_manager = TradeManager.get_instance()
+        self.trade_manager = PaperTradingEngine.get_instance()
         self.data_manager = DataManager.get_instance()
         self.ltme = LiveTradeMonitoringEngine()
         
@@ -96,13 +96,11 @@ class LiveTradesPage(QWidget):
         layout.addLayout(btn_layout)
 
     def connect_signals(self):
-        self.trade_manager.signals.trade_created.connect(self.refresh_ui)
-        self.trade_manager.signals.trade_updated.connect(self.refresh_ui)
-        self.trade_manager.signals.trade_closed.connect(self.refresh_ui)
+        self.trade_manager.signals.position_updated.connect(self.refresh_ui)
+        self.trade_manager.signals.order_executed.connect(self.refresh_ui)
         self.trade_manager.signals.notification.connect(self.show_notification)
 
     def show_notification(self, title, msg):
-        # Native OS Notification if SystemTray is active, or QMessageBox
         QMessageBox.information(self, title, msg)
 
     def change_refresh_rate(self, text):
@@ -111,45 +109,65 @@ class LiveTradesPage(QWidget):
         
     def refresh_prices(self):
         # Background fetch to update cmp and run LTME for all active trades
-        for t_id, t in self.trade_manager.active_trades.items():
-            sym = t['symbol']
+        for pid, pos in self.trade_manager.engine.open_positions.items():
+            sym = pos.symbol
             df = self.data_manager.get_stock_data(sym)
             if df is not None and not df.empty:
                 cmp = df.iloc[-1]['Close']
                 self.trade_manager.update_market_price(sym, cmp)
-                # Run LTME evaluation (Mocking market/sector trend for now)
-                ltme_res = self.ltme.monitor_trade(t, df, "UPTREND", "UPTREND")
-                t['ltme_status'] = ltme_res['ltme_status']
-                t['ltme_health'] = ltme_res['ltme_health']
-                t['ltme_alerts'] = ltme_res['ltme_alerts']
-                t['ltme_market'] = ltme_res['ltme_market']
-                t['ltme_sector'] = ltme_res['ltme_sector']
-                t['ltme_conf'] = ltme_res['ltme_conf']
                 
-                t['eme_new_sl'] = ltme_res['new_sl']
-                t['eme_profit'] = ltme_res['profit']
-                t['eme_risk'] = ltme_res['risk']
+                # LTME evaluation
+                t_dict = {
+                    'symbol': sym,
+                    'entry_price': pos.entry_price,
+                    'sl': pos.sl,
+                    'target': pos.target,
+                    'direction': pos.direction,
+                    'pnl': pos.unrealized_pnl
+                }
+                ltme_res = self.ltme.monitor_trade(t_dict, df, "UPTREND", "UPTREND")
+                pos.ltme_status = ltme_res['ltme_status']
+                pos.ltme_health = ltme_res['ltme_health']
+                pos.ltme_alerts = ltme_res['ltme_alerts']
+                pos.ltme_market = ltme_res['ltme_market']
+                pos.ltme_sector = ltme_res['ltme_sector']
+                pos.ltme_conf = ltme_res['ltme_conf']
+                
+                pos.eme_new_sl = ltme_res['new_sl']
+                pos.eme_profit = ltme_res['profit']
+                pos.eme_risk = ltme_res['risk']
                 
         # Force UI update if there are trades
-        if self.trade_manager.active_trades:
+        if self.trade_manager.engine.open_positions:
             self.refresh_ui()
 
-    def refresh_ui(self):
+    def refresh_ui(self, *args, **kwargs):
         # Update Stats
-        stats = self.trade_manager.get_statistics()
-        self.lbl_today.setText(str(stats['today_trades']))
-        self.lbl_open.setText(str(stats['open_trades']))
-        self.lbl_closed.setText(str(stats['closed_trades']))
-        self.lbl_winrate.setText(f"{stats['win_rate']}%")
-        self.lbl_pnl.setText(str(stats['total_pnl']))
-        if stats['total_pnl'] > 0: self.lbl_pnl.setStyleSheet("color: #4CAF50;")
-        elif stats['total_pnl'] < 0: self.lbl_pnl.setStyleSheet("color: #F44336;")
+        stats = self.trade_manager.engine.get_portfolio_state()
+        
+        from datetime import datetime
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        today_trades = sum(1 for p in stats.open_positions.values() if p.entry_time.startswith(today_str))
+        
+        closed_trades = len(stats.closed_positions)
+        win_trades = sum(1 for p in stats.closed_positions if p.realized_pnl > 0)
+        win_rate = (win_trades / closed_trades * 100) if closed_trades > 0 else 0.0
+        
+        self.lbl_today.setText(str(today_trades))
+        self.lbl_open.setText(str(len(stats.open_positions)))
+        self.lbl_closed.setText(str(closed_trades))
+        self.lbl_winrate.setText(f"{win_rate:.2f}%")
+        
+        total_pnl = stats.realized_pnl + stats.unrealized_pnl
+        self.lbl_pnl.setText(f"{total_pnl:.2f}")
+        if total_pnl > 0: self.lbl_pnl.setStyleSheet("color: #4CAF50;")
+        elif total_pnl < 0: self.lbl_pnl.setStyleSheet("color: #F44336;")
         
         # Update Table
-        trades = list(self.trade_manager.active_trades.values())
-        self.table_active.setRowCount(len(trades))
+        positions = list(self.trade_manager.engine.open_positions.values())
+        self.table_active.setRowCount(len(positions))
         
-        for i, t in enumerate(trades):
+        for i, pos in enumerate(positions):
             def c(val, color=None):
                 s = str(val) if not isinstance(val, float) else f"{val:.2f}"
                 it = QTableWidgetItem(s)
@@ -157,44 +175,43 @@ class LiveTradesPage(QWidget):
                 if color: it.setForeground(QColor(color))
                 return it
                 
-            status = t.get('ltme_status', t.get('status', 'HOLD'))
+            status = getattr(pos, 'ltme_status', pos.status)
             status_color = "#FF9800" # Orange for Wait/Hold/Caution
             if status in ["BOOK PARTIAL", "MOVE SL", "HOLD"]: status_color = "#2196F3"
             elif status == "FULL EXIT": status_color = "#4CAF50"
             elif "EXIT" in status: status_color = "#F44336"
             
-            pnl = t.get('eme_profit', t.get('pnl', 0.0))
+            pnl = getattr(pos, 'eme_profit', pos.unrealized_pnl)
             pnl_color = "#FFF"
             if pnl > 0: pnl_color = "#4CAF50"
             elif pnl < 0: pnl_color = "#F44336"
             
-            alerts = t.get('ltme_alerts', '')
+            alerts = getattr(pos, 'ltme_alerts', '')
             warn_color = "#F44336" if alerts != "Trade Healthy" else "#4CAF50"
 
-            self.table_active.setItem(i, 0, c(t['signal'], "#4CAF50" if t['signal']=="BUY" else "#F44336"))
-            self.table_active.setItem(i, 1, c(t['symbol']))
+            self.table_active.setItem(i, 0, c(pos.direction, "#4CAF50" if pos.direction=="BUY" else "#F44336"))
+            self.table_active.setItem(i, 1, c(pos.symbol))
             self.table_active.setItem(i, 2, c(status, status_color))
-            self.table_active.setItem(i, 3, c(t.get('ltme_health', t.get('score', 0))))
-            self.table_active.setItem(i, 4, c(t.get('ltme_conf', t.get('confidence', '85%'))))
-            self.table_active.setItem(i, 5, c(t.get('entry_price', 0.0)))
-            self.table_active.setItem(i, 6, c(t.get('cmp', 0.0)))
+            self.table_active.setItem(i, 3, c(getattr(pos, 'ltme_health', 'N/A')))
+            self.table_active.setItem(i, 4, c(getattr(pos, 'ltme_conf', '85%')))
+            self.table_active.setItem(i, 5, c(pos.entry_price))
+            self.table_active.setItem(i, 6, c(pos.current_price))
             self.table_active.setItem(i, 7, c(pnl, pnl_color))
-            self.table_active.setItem(i, 8, c(t.get('eme_risk', 0.0), "#F44336"))
-            self.table_active.setItem(i, 9, c(t.get('eme_new_sl', t.get('sl', 0.0)), "#FF9800"))
-            self.table_active.setItem(i, 10, c(t.get('ltme_market', '')))
-            self.table_active.setItem(i, 11, c(t.get('ltme_sector', '')))
+            self.table_active.setItem(i, 8, c(getattr(pos, 'eme_risk', 0.0), "#F44336"))
+            self.table_active.setItem(i, 9, c(getattr(pos, 'eme_new_sl', pos.sl), "#FF9800"))
+            self.table_active.setItem(i, 10, c(getattr(pos, 'ltme_market', '')))
+            self.table_active.setItem(i, 11, c(getattr(pos, 'ltme_sector', '')))
             self.table_active.setItem(i, 12, c(alerts, warn_color))
             
     def on_trade_clicked(self, row, col):
         sym = self.table_active.item(row, 1).text()
-        # Open Charts Page
         self.main_window.navigate_to_chart(sym)
         
     def export_csv(self):
         path, _ = QFileDialog.getSaveFileName(self, "Export Trades", "trade_history.csv", "CSV Files (*.csv)")
         if path:
-            conn = sqlite3.connect("data/trade_journal.db")
-            df = pd.read_sql("SELECT * FROM trades", conn)
+            conn = sqlite3.connect("data/paper_trading.db")
+            df = pd.read_sql("SELECT * FROM positions", conn)
             df.to_csv(path, index=False)
             conn.close()
             QMessageBox.information(self, "Exported", f"Successfully exported to {path}")

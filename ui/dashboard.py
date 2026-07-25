@@ -25,7 +25,7 @@ class MarketBreadthCard(QFrame):
         self.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
         layout = QVBoxLayout(self)
         
-        lbl_title = QLabel("Market Breadth (Nifty 50)")
+        lbl_title = QLabel("Market Health Score (%)")
         lbl_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
         layout.addWidget(lbl_title)
         
@@ -361,7 +361,7 @@ class Dashboard(QWidget):
             
             regime_obj = regime_engine.get_current_regime()
             if isinstance(regime_obj, dict):
-                regime = regime_obj.get("status", "Unknown")
+                regime = regime_obj.get("Market Regime", "Unknown")
             else:
                 regime = str(regime_obj)
             sector_data = sector_engine.get_sector_data()

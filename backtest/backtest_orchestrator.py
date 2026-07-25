@@ -54,7 +54,26 @@ class BacktestOrchestrator:
         pipeline = MasterSignalPipeline(engines)
         
         score_engine = ScoreEngine()
-        sector_rotation_service = SectorEngine(data_provider)
+        
+        import pandas as pd
+        class SectorEngineDataProviderWrapper:
+            def __init__(self, provider):
+                self._provider = provider
+            def get_ohlcv(self, symbol, interval="1d", period="3mo"):
+                data = self._provider.get_ohlcv(symbol, interval, period)
+                if not data:
+                    return pd.DataFrame()
+                rows = []
+                for item in data:
+                    if hasattr(item, 'close'):
+                        rows.append({'Close': item.close, 'Open': item.open, 'High': item.high, 'Low': item.low, 'Volume': getattr(item, 'volume', 0)})
+                    elif isinstance(item, dict):
+                        rows.append({'Close': item.get('close', item.get('Close')), 'Open': item.get('open', item.get('Open')), 'High': item.get('high', item.get('High')), 'Low': item.get('low', item.get('Low')), 'Volume': item.get('volume', item.get('Volume', 0))})
+                return pd.DataFrame(rows)
+            def __getattr__(self, name):
+                return getattr(self._provider, name)
+                
+        sector_rotation_service = SectorEngine(SectorEngineDataProviderWrapper(data_provider))
         scanner = ScannerEngine(
             data_provider=data_provider,
             trend_engine=engines["trend"],

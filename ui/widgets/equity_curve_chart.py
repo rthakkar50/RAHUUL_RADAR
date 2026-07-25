@@ -36,4 +36,18 @@ class EquityCurveChart(QWidget):
         self.y_data = history_df['capital'].tolist()
         self.x_data = list(range(len(self.y_data)))
         
+        # Calculate dynamic bounds for better visualization
+        if len(self.y_data) > 0:
+            min_y = min(self.y_data)
+            max_y = max(self.y_data)
+            padding = (max_y - min_y) * 0.1 if max_y > min_y else max_y * 0.01
+            
+            # Set dynamic fill level
+            fill_base = min_y - padding
+            self.curve.setFillLevel(fill_base)
+            
+            # Adjust plot limits manually if it's too flat
+            if max_y == min_y:
+                self.plot_widget.setYRange(min_y - min_y*0.01, min_y + min_y*0.01)
+                
         self.curve.setData(self.x_data, self.y_data)

@@ -26,26 +26,30 @@ class ViewAllWindow(QDialog):
         
         self.table.setRowCount(len(data_list))
         for row, item in enumerate(data_list):
-            self.table.setItem(row, 0, QTableWidgetItem(item["symbol"]))
-            self.table.setItem(row, 1, QTableWidgetItem(item["score"]))
+            symbol = str(item.get("symbol", item.get("Symbol", "--")))
+            score = str(item.get("score", item.get("Score", "--")))
+            self.table.setItem(row, 0, QTableWidgetItem(symbol))
+            self.table.setItem(row, 1, QTableWidgetItem(score))
             
-            signal_item = QTableWidgetItem(item["signal"])
-            if item["signal"] == "BUY":
+            signal_val = str(item.get("signal", item.get("Signal", "--")))
+            signal_item = QTableWidgetItem(signal_val)
+            if signal_val == "BUY":
                 signal_item.setForeground(QBrush(QColor("#4CAF50")))
-            elif item["signal"] == "SELL":
+            elif signal_val == "SELL":
                 signal_item.setForeground(QBrush(QColor("#F44336")))
-            elif item["signal"] == "WATCH":
+            elif signal_val == "WATCH":
                 signal_item.setForeground(QBrush(QColor("#FF9800")))
                 
             self.table.setItem(row, 2, signal_item)
             
             # RS Columns
-            rs_score = item.get("rs_score", "--")
-            rs_rank = item.get("rs_rank", "--")
+            rs_score = item.get("rs_score", item.get("RS Score", "--"))
+            rs_rank = item.get("rs_rank", item.get("RS Rank", "--"))
             self.table.setItem(row, 3, QTableWidgetItem(str(rs_score)))
             self.table.setItem(row, 4, QTableWidgetItem(str(rs_rank)))
             
-            self.table.setItem(row, 5, QTableWidgetItem(item["rr"]))
+            rr = item.get("rr", item.get("RR", "--"))
+            self.table.setItem(row, 5, QTableWidgetItem(str(rr)))
             
         layout.addWidget(self.table)
 
@@ -122,29 +126,36 @@ class TopBuyTable(QFrame):
         display_data = data_list[:5] # show top 5 here
         self.table.setRowCount(len(display_data))
         for row, item in enumerate(display_data):
-            self.table.setItem(row, 0, QTableWidgetItem(item["symbol"]))
-            self.table.setItem(row, 1, QTableWidgetItem(item["score"]))
+            symbol = str(item.get("symbol", item.get("Symbol", "--")))
+            score = str(item.get("score", item.get("Score", "--")))
+            self.table.setItem(row, 0, QTableWidgetItem(symbol))
+            self.table.setItem(row, 1, QTableWidgetItem(score))
             
-            signal_item = QTableWidgetItem(item["signal"])
-            if item["signal"] == "BUY":
+            signal_val = str(item.get("signal", item.get("Signal", "--")))
+            signal_item = QTableWidgetItem(signal_val)
+            if signal_val == "BUY":
                 signal_item.setForeground(QBrush(QColor("#4CAF50")))
-            elif item["signal"] == "SELL":
+            elif signal_val == "SELL":
                 signal_item.setForeground(QBrush(QColor("#F44336")))
-            elif item["signal"] == "WATCH":
+            elif signal_val == "WATCH":
                 signal_item.setForeground(QBrush(QColor("#FF9800")))
                 
             self.table.setItem(row, 2, signal_item)
             
             # RS Columns
-            rs_score = item.get("rs_score", "--")
-            rs_rank = item.get("rs_rank", "--")
+            rs_score = item.get("rs_score", item.get("RS Score", "--"))
+            rs_rank = item.get("rs_rank", item.get("RS Rank", "--"))
             self.table.setItem(row, 3, QTableWidgetItem(str(rs_score)))
             self.table.setItem(row, 4, QTableWidgetItem(str(rs_rank)))
             
-            self.table.setItem(row, 5, QTableWidgetItem(item["rr"]))
+            rr = item.get("rr", item.get("RR", "--"))
+            self.table.setItem(row, 5, QTableWidgetItem(str(rr)))
+            
+            oi = item.get("oi_activity", item.get("OI Activity", "--"))
+            self.table.setItem(row, 6, QTableWidgetItem(str(oi)))
 
             # OI Activity column (F&O mode only)
-            sym = item["symbol"]
+            sym = symbol
             oi_data = self.detail_map.get(sym, {}).get("oi_activity")
             if oi_data:
                 emoji    = oi_data.get("emoji", "⛔")

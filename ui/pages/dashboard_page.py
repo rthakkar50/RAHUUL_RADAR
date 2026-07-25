@@ -30,7 +30,7 @@ class MarketBreadthCard(QFrame):
         self.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
         layout = QVBoxLayout(self)
         
-        lbl_title = QLabel("Market Breadth (Nifty 50)")
+        lbl_title = QLabel("Market Health Score (%)")
         lbl_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
         layout.addWidget(lbl_title)
         

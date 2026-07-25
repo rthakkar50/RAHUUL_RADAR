@@ -8,6 +8,12 @@ import pandas as pd
 import numpy as np
 import concurrent.futures
 import yfinance as yf
+import requests
+
+_yf_session = requests.Session()
+_yf_session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+})
 
 from utils.logger import get_logger
 from market.data_provider import MarketDataProvider
@@ -47,7 +53,7 @@ VOL_SURGE_MULTIPLIER = 2.0
 def _fetch_india_vix() -> Optional[float]:
     """Fetch live India VIX from Yahoo Finance. Returns None on failure."""
     try:
-        ticker = yf.Ticker("^INDIAVIX")
+        ticker = yf.Ticker("^INDIAVIX", session=_yf_session)
         hist = ticker.history(period="2d", interval="1d")
         if not hist.empty:
             return float(hist["Close"].iloc[-1])
@@ -82,7 +88,7 @@ def _fetch_pcr(symbol: str) -> Optional[float]:
     Returns None if options data unavailable.
     """
     try:
-        ticker = yf.Ticker(symbol)
+        ticker = yf.Ticker(symbol, session=_yf_session)
         exp_dates = ticker.options
         if not exp_dates:
             return None
@@ -138,7 +144,7 @@ def _fetch_oi_volume_analysis(symbol: str) -> Optional[dict]:
       bias          : 'BULLISH' | 'BEARISH' | 'NEUTRAL'
     """
     try:
-        ticker = yf.Ticker(symbol)
+        ticker = yf.Ticker(symbol, session=_yf_session)
         exp_dates = ticker.options
         if not exp_dates:
             return None
@@ -286,6 +292,7 @@ class ScannerEngine:
         self.structure_engine = structure_engine
         self.score_engine = score_engine
         self.rs_engine = relative_strength_engine
+        self.paytm_provider = None
         self.sector_engine = sector_engine
         
         # Instantiate internally to protect legacy main.py bindings
@@ -684,6 +691,24 @@ class ScannerEngine:
                 # Append upstream reasons safely inside ScanResult instance dynamically if needed
                 setattr(scan_result, "reasons", decision_result.reasons)
                 setattr(scan_result, "raw_score", getattr(decision_result, "raw_score", 0))
+                # Attach F&O data if available
+                if mode in ["INTRADAY", "OPTIONS"] and self.paytm_provider:
+                    try:
+                        fno_data = self.paytm_provider.get_fno_summary(stock.symbol.replace(".NS", ""))
+                        if fno_data and fno_data.get("total_oi", 0) > 0:
+                            setattr(scan_result, "oi_change_pct", fno_data.get("oi_change_pct", 0))
+                            setattr(scan_result, "pcr", fno_data.get("pcr", 1.0))
+                            setattr(scan_result, "max_pain", fno_data.get("max_pain", 0))
+                            setattr(scan_result, "total_oi", fno_data.get("total_oi", 0))
+                            bias = "NEUTRAL"
+                            if fno_data.get("pcr", 1.0) < 0.7: bias = "BULLISH_EXTREME"
+                            elif fno_data.get("pcr", 1.0) < 1.0: bias = "BULLISH"
+                            elif fno_data.get("pcr", 1.0) > 1.3: bias = "BEARISH_EXTREME"
+                            elif fno_data.get("pcr", 1.0) > 1.0: bias = "BEARISH"
+                            setattr(scan_result, "fno_bias", bias)
+                    except Exception as e:
+                        logger.debug(f"F&O data attach failed for {stock.symbol}: {e}")
+
                 setattr(scan_result, "adjusted_score", getattr(decision_result, "adjusted_score", decision_result.total_score))
                 setattr(scan_result, "confidence", decision_result.confidence)
                 setattr(scan_result, "relative_momentum", rs_momentum)

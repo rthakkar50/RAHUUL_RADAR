@@ -7,6 +7,7 @@ from PySide6.QtGui import QFont
 from ui.styles import BG_COLOR, CARD_BG, TEXT_PRIMARY, COLOR_BUY, COLOR_SELL
 from application.paper_trading_service import PaperTradingEngine
 from ui.widgets.equity_curve_chart import EquityCurveChart
+from application.paper_market_updater import PaperMarketUpdater
 
 class KPICard(QFrame):
     def __init__(self, title, initial_value, parent=None):
@@ -32,6 +33,7 @@ class PaperTradingDashboard(QWidget):
         super().__init__(parent)
         self.setStyleSheet(f"background-color: {BG_COLOR}; color: {TEXT_PRIMARY};")
         self.service = PaperTradingEngine.get_instance()
+        self.market_updater = PaperMarketUpdater()
         
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -86,6 +88,11 @@ class PaperTradingDashboard(QWidget):
         
         self._init_data()
         self._connect_signals()
+        self.market_updater.start()
+        
+    def closeEvent(self, event):
+        self.market_updater.stop()
+        super().closeEvent(event)
         
     def _connect_signals(self):
         self.service.signals.portfolio_updated.connect(self._on_portfolio_update)
@@ -143,12 +150,16 @@ class PaperTradingDashboard(QWidget):
             self.open_table.setItem(row, 1, dir_item)
             
             self.open_table.setItem(row, 2, QTableWidgetItem(str(p.qty)))
-            self.open_table.setItem(row, 3, QTableWidgetItem(f"{p.entry_price:.2f}"))
-            self.open_table.setItem(row, 4, QTableWidgetItem(f"{p.current_price:.2f}"))
+            entry_price = float(p.entry_price) if p.entry_price is not None else 0.0
+            curr_price = float(p.current_price) if p.current_price is not None else 0.0
+            pnl = float(p.unrealized_pnl) if p.unrealized_pnl is not None else 0.0
+            
+            self.open_table.setItem(row, 3, QTableWidgetItem(f"{entry_price:.2f}"))
+            self.open_table.setItem(row, 4, QTableWidgetItem(f"{curr_price:.2f}"))
             self.open_table.setItem(row, 5, QTableWidgetItem(f"{p.target_1}/{p.target_2}/{p.target_3}"))
             
-            pnl_item = QTableWidgetItem(f"{p.unrealized_pnl:.2f}")
-            pnl_item.setForeground(Qt.green if p.unrealized_pnl >= 0 else Qt.red)
+            pnl_item = QTableWidgetItem(f"{pnl:.2f}")
+            pnl_item.setForeground(Qt.green if pnl >= 0 else Qt.red)
             self.open_table.setItem(row, 6, pnl_item)
             
     def refresh_closed_table(self):
@@ -166,9 +177,13 @@ class PaperTradingDashboard(QWidget):
             self.closed_table.setItem(row, 1, dir_item)
             
             self.closed_table.setItem(row, 2, QTableWidgetItem(str(p.qty)))
-            self.closed_table.setItem(row, 3, QTableWidgetItem(f"{p.entry_price:.2f}"))
-            self.closed_table.setItem(row, 4, QTableWidgetItem(f"{p.exit_price:.2f}"))
+            entry_price = float(p.entry_price) if p.entry_price is not None else 0.0
+            exit_price = float(p.exit_price) if p.exit_price is not None else 0.0
+            pnl = float(p.realized_pnl) if p.realized_pnl is not None else 0.0
             
-            pnl_item = QTableWidgetItem(f"{p.realized_pnl:.2f}")
-            pnl_item.setForeground(Qt.green if p.realized_pnl >= 0 else Qt.red)
+            self.closed_table.setItem(row, 3, QTableWidgetItem(f"{entry_price:.2f}"))
+            self.closed_table.setItem(row, 4, QTableWidgetItem(f"{exit_price:.2f}"))
+            
+            pnl_item = QTableWidgetItem(f"{pnl:.2f}")
+            pnl_item.setForeground(Qt.green if pnl >= 0 else Qt.red)
             self.closed_table.setItem(row, 5, pnl_item)
