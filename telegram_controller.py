@@ -146,9 +146,15 @@ def handle_command(text, token, chat_id):
     
     if text in ("/start", "/help"):
         msg = (
-            "🤖 *RAHUUL RADAR TELEGRAM CONTROLLER (v1.1)*\n"
+            "🤖 *RAHUUL RADAR TELEGRAM TRADING CENTER (v1.1)*\n"
             "-------------------------------------\n"
             "Available Commands:\n\n"
+            "📋 `/watchlist`\n"
+            "   Top 10 opportunities ranked by Confidence, R/R & Score.\n\n"
+            "💼 `/positions`\n"
+            "   Active open trades, CMP, P&L, SL, Target & Holding Time.\n\n"
+            "📊 `/summary`\n"
+            "   End-of-day market summary & performance metrics.\n\n"
             "🔑 `/login`\n"
             "   Generate a fresh daily Paytm login link and check session status.\n\n"
             "🛡️ `/session`\n"
@@ -197,6 +203,33 @@ def handle_command(text, token, chat_id):
         start_t = time.time()
         latency_ms = round((time.time() - start_t) * 1000, 2)
         send_message(token, chat_id, f"🏓 *Pong!*\n----------------------------\n*Latency*: `{latency_ms} ms`\n*Server Status*: `Active & Operational 🟢`\n*Timestamp*: `{time.strftime('%Y-%m-%d %H:%M:%S')}`")
+
+    elif text.startswith("/watchlist"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_ranked_watchlist(limit=10)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching watchlist: `{e}`")
+
+    elif text.startswith("/positions"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_open_positions_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching open positions: `{e}`")
+
+    elif text.startswith("/summary"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.generate_daily_summary()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error generating daily summary: `{e}`")
 
     elif text.startswith("/session"):
         config = get_config()
