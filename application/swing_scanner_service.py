@@ -378,19 +378,34 @@ class SwingScannerService:
                             signal TEXT,
                             reasons TEXT,
                             score REAL,
+                            price REAL DEFAULT 0.0,
+                            entry REAL DEFAULT 0.0,
+                            sl REAL DEFAULT 0.0,
+                            target_1 REAL DEFAULT 0.0,
+                            target_2 REAL DEFAULT 0.0,
                             status TEXT,
                             result TEXT DEFAULT 'PENDING'
                         )
                     """)
+                    for col in ["price", "entry", "sl", "target_1", "target_2"]:
+                        try:
+                            c_radar.execute(f"ALTER TABLE master_ai_decisions ADD COLUMN {col} REAL DEFAULT 0.0")
+                        except Exception:
+                            pass
                     c_radar.execute("""
-                        INSERT INTO master_ai_decisions (timestamp, symbol, signal, reasons, score, status)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO master_ai_decisions (timestamp, symbol, signal, reasons, score, price, entry, sl, target_1, target_2, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
                         time.strftime('%Y-%m-%d %H:%M:%S'),
                         symbol,
                         decision_str,
                         json.dumps(pipeline_res.get("reasons", [])),
                         score,
+                        price,
+                        entry,
+                        sl,
+                        t1,
+                        t2,
                         "ACTIVE"
                     ))
                     conn_radar.commit()

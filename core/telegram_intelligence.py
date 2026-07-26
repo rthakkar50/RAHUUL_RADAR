@@ -44,10 +44,20 @@ class TelegramIntelligence:
                     signal TEXT,
                     reasons TEXT,
                     score REAL,
+                    price REAL DEFAULT 0.0,
+                    entry REAL DEFAULT 0.0,
+                    sl REAL DEFAULT 0.0,
+                    target_1 REAL DEFAULT 0.0,
+                    target_2 REAL DEFAULT 0.0,
                     status TEXT,
                     result TEXT DEFAULT 'PENDING'
                 )
             """)
+            for col in ["price", "entry", "sl", "target_1", "target_2"]:
+                try:
+                    c.execute(f"ALTER TABLE master_ai_decisions ADD COLUMN {col} REAL DEFAULT 0.0")
+                except Exception:
+                    pass
             conn.commit()
             conn.close()
 
@@ -243,7 +253,7 @@ class TelegramIntelligence:
                 conn = sqlite3.connect("data/radar.db")
                 c = conn.cursor()
                 c.execute("""
-                    SELECT symbol, signal, score, reasons, timestamp
+                    SELECT symbol, signal, score, reasons, timestamp, price, entry, sl, target_1
                     FROM master_ai_decisions
                     ORDER BY id DESC LIMIT 50
                 """)
@@ -251,25 +261,32 @@ class TelegramIntelligence:
                 conn.close()
 
                 for row in rows:
-                    sym, sig, score, reas, ts = row
+                    sym, sig, score, reas, ts, p_col, e_col, sl_col, tgt_col = row
                     clean_sym = sym.replace(".NS", "")
                     if any(o["symbol"] == clean_sym for o in opportunities):
                         continue
                     conf = min(99.0, max(60.0, float(score or 70.0) * 1.05))
                     rr = 2.0 + (float(score or 70.0) / 100.0)
 
-                    # Extract price/sl/target if present in reasons JSON
-                    price_val = 1000.0
-                    sl_val = 960.0
-                    tgt_val = 1100.0
-                    try:
-                        if isinstance(reas, str) and reas.startswith("{"):
-                            r_data = json.loads(reas)
-                            price_val = float(r_data.get("price", 1000.0))
-                            sl_val = float(r_data.get("sl", round(price_val * 0.98, 2)))
-                            tgt_val = float(r_data.get("target", round(price_val * 1.04, 2)))
-                    except Exception:
-                        pass
+                    disp_price = float(p_col or e_col or 0.0)
+                    disp_sl = float(sl_col or 0.0)
+                    disp_tgt = float(tgt_col or 0.0)
+
+                    # Extract price/sl/target if present in reasons JSON fallback
+                    if disp_price <= 0:
+                        try:
+                            if isinstance(reas, str) and reas.startswith("{"):
+                                r_data = json.loads(reas)
+                                disp_price = float(r_data.get("price", 1000.0))
+                                disp_sl = float(r_data.get("sl", round(disp_price * 0.98, 2)))
+                                disp_tgt = float(r_data.get("target", round(disp_price * 1.04, 2)))
+                        except Exception:
+                            pass
+
+                    if disp_price <= 0:
+                        disp_price = 1000.0
+                        disp_sl = 960.0
+                        disp_tgt = 1100.0
 
                     opportunities.append({
                         "symbol": clean_sym,
@@ -277,9 +294,9 @@ class TelegramIntelligence:
                         "score": float(score or 70.0),
                         "confidence": conf,
                         "risk_reward": rr,
-                        "price": price_val,
-                        "sl": sl_val,
-                        "target": tgt_val
+                        "price": disp_price,
+                        "sl": disp_sl,
+                        "target": disp_tgt
                     })
             except Exception as e:
                 print(f"Error fetching watchlist from radar.db: {e}")
