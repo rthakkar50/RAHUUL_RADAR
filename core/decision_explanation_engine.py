@@ -4,7 +4,7 @@ Responsible for formatting, prioritizing, and generating human-readable explanat
 for every AI decision (BUY, SELL, WAIT, REJECT).
 """
 import re
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
 
 class DecisionExplanationEngine:
     def __init__(self):

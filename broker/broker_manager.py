@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 from .base.base_broker import BaseBroker
+from .paytm.paytm_broker import PaytmBroker
 from .dhan.dhan_broker import DhanBroker
 from .zerodha.zerodha_broker import ZerodhaBroker
 from .angel.angel_broker import AngelBroker
@@ -11,7 +12,7 @@ from .utils.exceptions import BrokerAuthError
 logger = logging.getLogger("BrokerManager")
 
 class BrokerManager:
-    """Singleton manager for the active broker session."""
+    """Singleton manager for the active broker session (Paytm Money Primary)."""
     
     _instance = None
     
@@ -24,12 +25,18 @@ class BrokerManager:
     def _init(self):
         self.active_broker: Optional[BaseBroker] = None
         self.security_manager = SecurityManager()
+        # Paytm Money is the primary broker for RAHUUL RADAR
         self.broker_map = {
+            "paytm": PaytmBroker,
+            "primary": PaytmBroker,
+            "default": PaytmBroker,
             "dhan": DhanBroker,
             "zerodha": ZerodhaBroker,
             "angel": AngelBroker,
             "fyers": FyersBroker
         }
+        # Auto-initialize Paytm Money as default primary adapter
+        self.initialize_broker("paytm")
         
     def initialize_broker(self, broker_name: str) -> bool:
         """Initializes a broker instance without logging in yet."""

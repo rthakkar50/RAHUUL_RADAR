@@ -91,3 +91,6 @@ class HistoricalDataProvider(MarketDataProvider):
 
     def get_market_status(self) -> MarketStatus:
         return MarketStatus(is_open=False, status_message="BACKTEST MODE")
+
+    def get_option_chain(self, symbol: str) -> dict:
+        return {}

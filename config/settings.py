@@ -36,4 +36,4 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Application Metadata
 APP_NAME = "RAHUUL_RADAR"
-APP_VERSION = "0.1.0"
+APP_VERSION = "1.0.0"

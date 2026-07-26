@@ -110,11 +110,11 @@ class SwingScannerService:
             from market.market_data_manager import MarketDataManager
             from market.paytm_provider import PaytmMoneyProvider
             
-            paytm_provider = PaytmMoneyProvider()
             try:
+                paytm_provider = PaytmMoneyProvider()
                 paytm_provider.connect()
             except Exception as e:
-                logger.warning(f"Paytm API Connection Error: {e}. Falling back to Yahoo data.")
+                logger.warning(f"Paytm API Connection/Init Error: {e}. Falling back to Yahoo data.")
                 paytm_provider = None
 
             manager = MarketDataManager(
@@ -253,7 +253,7 @@ class SwingScannerService:
                 bullish_score = score
                 
                 # Normalization Layer before Elite Selection
-                if decision_str in ["SELL", "STRONG_SELL"]:
+                if decision_str in ["SELL", "STRONG_SELL"] and bullish_score <= 50:
                     score = 100 - bullish_score
                 
                 # BUG-04 FIX: Use real confidence from the engine, never fabricate 80.0
@@ -271,7 +271,18 @@ class SwingScannerService:
                 sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
                 t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
                 t2 = safe_float(pipeline_res.get("target_2", 0.0), 0.0)
-
+                if entry > 0.0 and (sl == 0.0 or t1 == 0.0):
+                    if decision_str in ["BUY", "STRONG_BUY", "WATCH"]:
+                        sl = sl if sl > 0 else round(entry * 0.98, 2)
+                        risk_amt = abs(entry - sl)
+                        t1 = t1 if t1 > 0 else round(entry + risk_amt * 2.0, 2)
+                        t2 = t2 if t2 > 0 else round(entry + risk_amt * 3.0, 2)
+                    elif decision_str in ["SELL", "STRONG_SELL"]:
+                        sl = sl if sl > 0 else round(entry * 1.02, 2)
+                        risk_amt = abs(entry - sl)
+                        t1 = t1 if t1 > 0 else round(entry - risk_amt * 2.0, 2)
+                        t2 = t2 if t2 > 0 else round(entry - risk_amt * 3.0, 2)
+                        
                 if entry == 0.0 or sl == 0.0 or t1 == 0.0:
                     return None
 
@@ -382,7 +393,7 @@ class SwingScannerService:
                     "Execution Reason": pipeline_res.get("execution_reason", ""),
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "_raw_data": pipeline_res,
-                    "_reasons": getattr(r, 'reasons', [])
+                    "_reasons": list(getattr(r, 'reasons', [])) + list(pipeline_res.get("reasons", []))
                 }
                 
             import concurrent.futures
@@ -419,7 +430,7 @@ class SwingScannerService:
                 
                 # 2. Hard Conditions (Strict AI Trade Decision Engine V1.0 rules)
                 # Very weak setups are ignored entirely to avoid cluttering WATCH
-                if score < 50.0 and conf < 50.0: continue
+                if max(score, safe_float(item.get("Raw Score", 0.0), 0.0)) < 50.0 and conf < 50.0: continue
                 if signal not in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL", "WATCH"]: continue
                 
                 # SPRINT-74 FIX: Strictness Modes & Confidence Gating
@@ -449,6 +460,8 @@ class SwingScannerService:
                         
                     if downgrade_reasons:
                         logger.debug(f"Threshold Downgrade: {item.get('Symbol','?')} | Score:{score} | Conf:{conf} | RR:{rr} | Reasons: {downgrade_reasons}")
+                        item["Signal"] = "WATCH"
+                        signal = "WATCH"
                         if "_reasons" not in item:
                             item["_reasons"] = []
                         item["_reasons"].extend(downgrade_reasons)

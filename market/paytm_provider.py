@@ -1,8 +1,9 @@
 import os
 import json
+import time
 import logging
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from market.data_provider import MarketDataProvider, OHLCV, MarketStatus
 from market.yahoo_provider import YahooFinanceProvider
 from market.paytm_websocket import PaytmLiveBroadcast
@@ -15,14 +16,17 @@ class PaytmMoneyProvider(MarketDataProvider):
     
     BASE_URL_ACCOUNTS = "https://developer.paytmmoney.com/accounts"
     BASE_URL_DATA = "https://developer.paytmmoney.com/data"
+    DEFAULT_HTTP_TIMEOUT = 5.0
+    OPTION_CHAIN_CACHE_TTL = 60.0
     
-    def __init__(self):
+    def __init__(self, timeout: float = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._connected = False
+        self.timeout = float(os.environ.get("PAYTM_HTTP_TIMEOUT", str(self.DEFAULT_HTTP_TIMEOUT))) if timeout is None else float(timeout)
         
-        self.api_key = os.environ.get("PAYTM_API_KEY", "4615860acbe14a709cf259a23bdb8c19")
-        self.api_secret = os.environ.get("PAYTM_API_SECRET", "a466b8be3eb8459e8cfe5f24337ad788")
-        self.request_token = os.environ.get("PAYTM_REQUEST_TOKEN", "81a2b33475ab4b31b4aab5950c125875")
+        self.api_key = os.environ.get("PAYTM_API_KEY", None)
+        self.api_secret = os.environ.get("PAYTM_API_SECRET", None)
+        self.request_token = os.environ.get("PAYTM_REQUEST_TOKEN", None)
         self.access_token = None
         self.public_access_token = None
         self.read_access_token = None
@@ -30,9 +34,13 @@ class PaytmMoneyProvider(MarketDataProvider):
         self.fallback = YahooFinanceProvider()
         self.ws_cache = PaytmLiveBroadcast.get_instance()
         self._rest_cache: Dict[str, Dict[str, float]] = {}
+        self._option_chain_cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
         
         if not self.api_key or not self.api_secret or not self.request_token:
             self._load_credentials_from_config()
+
+        if not self.api_key or not self.api_secret or not self.request_token:
+            raise ValueError("PaytmMoneyProvider initialization error: Missing required Paytm Money credentials (PAYTM_API_KEY, PAYTM_API_SECRET, or PAYTM_REQUEST_TOKEN). Never silently use placeholder credentials.")
 
     def _load_credentials_from_config(self):
         try:
@@ -56,6 +64,11 @@ class PaytmMoneyProvider(MarketDataProvider):
                         self.public_access_token = paytm_block.get("public_access_token", "")
                     if not self.read_access_token:
                         self.read_access_token = paytm_block.get("read_access_token", "")
+                    if "http_timeout" in paytm_block and self.timeout == self.DEFAULT_HTTP_TIMEOUT:
+                        try:
+                            self.timeout = float(paytm_block.get("http_timeout", self.DEFAULT_HTTP_TIMEOUT))
+                        except (ValueError, TypeError):
+                            pass
         except Exception as e:
             self.logger.warning(f"Failed to load Paytm credentials from config.json: {e}")
 
@@ -103,7 +116,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         }
         
         try:
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
             data = response.json()
             
@@ -138,9 +151,11 @@ class PaytmMoneyProvider(MarketDataProvider):
             raise ConnectionError(f"Paytm API Connection Error: {str(e)}")
 
     def _refresh_token(self):
-        """Helper to refresh token when expired"""
-        self.logger.info("Refreshing Paytm Money API token...")
-        self.connect()
+        """Helper to handle expired token - marks session disconnected and requires clean re-authentication"""
+        self.logger.error("Paytm Money API token expired. Session terminated.")
+        self._connected = False
+        from broker.utils.exceptions import TokenExpiredError
+        raise TokenExpiredError("Paytm session token expired. Clean re-authentication required.")
 
     def disconnect(self) -> bool:
         self.logger.info("Disconnecting from Paytm Money API...")
@@ -197,7 +212,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         }
         
         try:
-            response = requests.get(url, params=params, headers=headers)
+            response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
             
             # Handle token expiry
             if response.status_code == 401:
@@ -205,7 +220,7 @@ class PaytmMoneyProvider(MarketDataProvider):
                 self._refresh_token()
                 jwt_token = self.read_access_token if self.read_access_token else self.access_token
                 headers["x-jwt-token"] = jwt_token if jwt_token else ""
-                response = requests.get(url, params=params, headers=headers)
+                response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                 
             response.raise_for_status()
             data = response.json()
@@ -235,7 +250,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
         headers = {"x-jwt-token": jwt_token if jwt_token else ""}
         
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
         if response.status_code != 200:
             return f"HTTP {response.status_code}: {response.text}"
             
@@ -280,13 +295,13 @@ class PaytmMoneyProvider(MarketDataProvider):
                         prefs.append(f"NSE:{sec_id}:EQUITY")
                         
                 params = {"mode": "QUOTE", "pref": ",".join(prefs)}
-                response = requests.get(url, params=params, headers=headers)
+                response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                 
                 if response.status_code == 401:
                     self._refresh_token()
                     jwt_token = self.read_access_token if self.read_access_token else self.access_token
                     headers["x-jwt-token"] = jwt_token if jwt_token else ""
-                    response = requests.get(url, params=params, headers=headers)
+                    response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                     
                 if response.status_code == 200:
                     data = response.json()
@@ -328,12 +343,12 @@ class PaytmMoneyProvider(MarketDataProvider):
         headers = {"x-jwt-token": jwt_token if jwt_token else ""}
         
         try:
-            response = requests.get(url, params=params, headers=headers)
+            response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
             if response.status_code == 401:
                 self._refresh_token()
                 jwt_token = self.read_access_token if self.read_access_token else self.access_token
                 headers["x-jwt-token"] = jwt_token if jwt_token else ""
-                response = requests.get(url, params=params, headers=headers)
+                response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                 
             response.raise_for_status()
             data = response.json()
@@ -355,6 +370,13 @@ class PaytmMoneyProvider(MarketDataProvider):
         if not self.is_connected():
             raise ConnectionError("Not connected to Paytm Money API.")
             
+        cache_key = f"{symbol}_{expiry}"
+        if cache_key in self._option_chain_cache:
+            timestamp, cached_data = self._option_chain_cache[cache_key]
+            if time.time() - timestamp < self.OPTION_CHAIN_CACHE_TTL:
+                self.logger.debug(f"Returning valid cached option chain for {symbol} (Expiry: {expiry})")
+                return cached_data
+                
         clean_symbol = symbol.replace('.NS', '')
         url = f"{self.BASE_URL_DATA}/fno/v1/option-chain"
         
@@ -366,15 +388,17 @@ class PaytmMoneyProvider(MarketDataProvider):
         headers = {"x-jwt-token": jwt_token if jwt_token else ""}
         
         try:
-            response = requests.get(url, params=params, headers=headers)
+            response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
             if response.status_code == 401:
                 self._refresh_token()
                 jwt_token = self.read_access_token if self.read_access_token else self.access_token
                 headers["x-jwt-token"] = jwt_token if jwt_token else ""
-                response = requests.get(url, params=params, headers=headers)
+                response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
                 
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            self._option_chain_cache[cache_key] = (time.time(), data)
+            return data
         except Exception as e:
             self.logger.error(f"Failed to fetch Option Chain for {symbol}: {e}")
             return {}

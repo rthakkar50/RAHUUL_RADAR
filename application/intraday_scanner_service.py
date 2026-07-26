@@ -247,11 +247,11 @@ class IntradayScannerService:
             from market.market_data_manager import MarketDataManager
             from market.paytm_provider import PaytmMoneyProvider
             
-            paytm_provider = PaytmMoneyProvider()
             try:
+                paytm_provider = PaytmMoneyProvider()
                 paytm_provider.connect()
             except Exception as e:
-                logger.warning(f"Paytm API Connection Error: {e}. Falling back to Yahoo data.")
+                logger.warning(f"Paytm API Connection/Init Error: {e}. Falling back to Yahoo data.")
                 paytm_provider = None
 
             manager = MarketDataManager(

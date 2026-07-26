@@ -20,6 +20,11 @@ class AIDecisionPanel(QWidget):
         self.layout.setAlignment(Qt.AlignTop)
         self.layout.setContentsMargins(10, 10, 10, 10)
         self.layout.setSpacing(15)
+        
+        self.lbl_no_data = QLabel("No Data")
+        self.lbl_no_data.setAlignment(Qt.AlignCenter)
+        self.lbl_no_data.setStyleSheet("color: #A0AAB5; font-size: 16px; font-weight: bold; padding: 20px;")
+        self.layout.addWidget(self.lbl_no_data)
 
     def get_color(self, val_str):
         v = str(val_str).upper()
@@ -61,9 +66,11 @@ class AIDecisionPanel(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-        if "error" in data:
-            lbl = QLabel(data["error"])
-            lbl.setStyleSheet("color: #888; font-size: 16px;")
+        if not data or "error" in data:
+            err_msg = f" - {data.get('error')}" if data and "error" in data else ""
+            lbl = QLabel(f"No Data{err_msg}")
+            lbl.setAlignment(Qt.AlignCenter)
+            lbl.setStyleSheet("color: #A0AAB5; font-size: 16px; font-weight: bold; padding: 20px;")
             self.layout.addWidget(lbl)
             return
             

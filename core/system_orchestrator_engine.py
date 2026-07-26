@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class SystemOrchestratorEngine:
     def __init__(self):
         self.name = "SystemOrchestratorEngine"
-        self.version = "1.0"
+        self.version = "1.0.0"
         
         # In a full migration, this engine will instantiate all 22 other engines.
         # Currently, it acts as the strict workflow manager.

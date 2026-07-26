@@ -10,7 +10,9 @@ class OrderType(Enum):
     STOP_LOSS_MARKET = "SL-M"
 
 class OrderStatus(Enum):
+    PENDING = "PENDING"
     OPEN = "OPEN"
+    COMPLETE = "COMPLETE"
     COMPLETED = "COMPLETED"
     REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"

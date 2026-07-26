@@ -83,19 +83,11 @@ class PaytmAuthenticator:
         response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code != 200:
-            print("=" * 80)
-            print("HTTP STATUS:", response.status_code)
-            print("RESPONSE BODY:")
-            print(response.text)
-            print("=" * 80)
+            logger.error(f"Paytm token generation failed with HTTP {response.status_code}.")
             response.raise_for_status()
         
         data = response.json()
-
-        print("=" * 80)
-        print("PAYTM TOKEN RESPONSE")
-        print(json.dumps(data, indent=2))
-        print("=" * 80)
+        logger.info("Paytm access tokens generated successfully.")
 
         token_data = data.get('data', data) if isinstance(data, dict) else data
         return {

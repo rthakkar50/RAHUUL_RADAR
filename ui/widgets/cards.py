@@ -87,35 +87,35 @@ class ScanStatsCard(QFrame):
         
         grid = QGridLayout()
         
-        self.val_total = QLabel("50")
+        self.val_total = QLabel("No Data")
         grid.addWidget(QLabel("Total Stocks :"), 0, 0)
         grid.addWidget(self.val_total, 0, 1)
         
         buy_lbl = QLabel("BUY        :")
-        self.val_buy = QLabel("0")
+        self.val_buy = QLabel("No Data")
         self.val_buy.setStyleSheet(f"color: {COLOR_BUY}; font-weight: bold;")
         grid.addWidget(buy_lbl, 1, 0)
         grid.addWidget(self.val_buy, 1, 1)
         
         strong_lbl = QLabel("Strong BUY :")
-        self.val_strong = QLabel("0")
+        self.val_strong = QLabel("No Data")
         self.val_strong.setStyleSheet(f"color: {COLOR_BUY}; font-weight: bold;")
         grid.addWidget(strong_lbl, 2, 0)
         grid.addWidget(self.val_strong, 2, 1)
         
         watch_lbl = QLabel("WATCH      :")
-        self.val_watch = QLabel("0")
+        self.val_watch = QLabel("No Data")
         self.val_watch.setStyleSheet(f"color: {COLOR_WATCH}; font-weight: bold;")
         grid.addWidget(watch_lbl, 3, 0)
         grid.addWidget(self.val_watch, 3, 1)
         
         sell_lbl = QLabel("SELL       :")
-        self.val_sell = QLabel("0")
+        self.val_sell = QLabel("No Data")
         self.val_sell.setStyleSheet(f"color: {COLOR_SELL}; font-weight: bold;")
         grid.addWidget(sell_lbl, 4, 0)
         grid.addWidget(self.val_sell, 4, 1)
         
-        self.val_score = QLabel("0")
+        self.val_score = QLabel("No Data")
         grid.addWidget(QLabel("Avg Score  :"), 5, 0)
         grid.addWidget(self.val_score, 5, 1)
         
@@ -123,9 +123,17 @@ class ScanStatsCard(QFrame):
         layout.addStretch()
 
     def update_data(self, data):
-        self.val_total.setText(str(data.get("total", 50)))
-        self.val_buy.setText(str(data.get("buy", 0)))
-        self.val_strong.setText(str(data.get("strong_buy", 0)))
-        self.val_watch.setText(str(data.get("watch", 0)))
-        self.val_sell.setText(str(data.get("sell", 0)))
-        self.val_score.setText(str(data.get("avg_score", 0)))
+        if not data:
+            self.val_total.setText("No Data")
+            self.val_buy.setText("No Data")
+            self.val_strong.setText("No Data")
+            self.val_watch.setText("No Data")
+            self.val_sell.setText("No Data")
+            self.val_score.setText("No Data")
+            return
+        self.val_total.setText(str(data.get("total", "No Data")))
+        self.val_buy.setText(str(data.get("buy", "No Data")))
+        self.val_strong.setText(str(data.get("strong_buy", "No Data")))
+        self.val_watch.setText(str(data.get("watch", "No Data")))
+        self.val_sell.setText(str(data.get("sell", "No Data")))
+        self.val_score.setText(str(data.get("avg_score", "No Data")))

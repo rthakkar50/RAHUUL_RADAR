@@ -11,7 +11,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _ipController = TextEditingController();
   final _portController = TextEditingController();
-  String _selectedEnv = 'Development';
+  String _selectedEnv = 'Production';
 
   final List<String> _environments = ['Development', 'Staging', 'Production'];
 
@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedEnv,
+              initialValue: _selectedEnv,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 filled: true,
@@ -118,6 +118,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Wrap(
               spacing: 8.0,
               children: [
+                ActionChip(
+                  label: const Text('Production VM (Oracle)'),
+                  onPressed: () => _applyPreset('137.23.34.223', '8000'),
+                ),
                 ActionChip(
                   label: const Text('Android Emulator'),
                   onPressed: () => _applyPreset('10.0.2.2', '8000'),

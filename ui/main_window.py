@@ -445,7 +445,7 @@ class MainWindow(QMainWindow):
         
         QMessageBox.about(self, f"About {title_str}", 
                           f"<b>{title_str}</b><br><br>"
-                          "Version : 1.0 RC<br>"
+                          "Version : 1.0.0<br>"
                           "Build : 2026.07<br>"
                           f"Platform : {os_info}<br>"
                           f"Python Version : {py_version}<br>"

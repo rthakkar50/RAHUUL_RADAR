@@ -1,7 +1,10 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QProgressBar, QComboBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QProgressBar, QComboBox, QScrollArea, QGridLayout
 from PySide6.QtCore import Qt, QTimer, Signal
 from ui.widgets.cards import BestTradeCard, ScanStatsCard
-from ui.widgets.tables import TopBuyTable
+from ui.widgets.tables import TopBuyTable, TopSellTable, TopWatchTable
+from ui.widgets.portfolio_summary import PortfolioSummary
+from ui.widgets.ai_decision_panel import AIDecisionPanel
+from ui.widgets.system_health_widget import SystemHealthWidget
 from ui.scanner_wrapper import ScannerWrapperThread
 from datetime import datetime, time
 from PySide6.QtGui import QPainter, QColor, QPen, QFont
@@ -160,14 +163,14 @@ class Dashboard(QWidget):
         self.auto_scan_timer.timeout.connect(self.start_scan)
         self.is_auto_scan_active = False
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
         
-        # Market Status Row
+        # 1. Market Status Row
         status_layout = QHBoxLayout()
         self.market_status = QLabel(get_market_status())
-        self.market_status.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.market_status.setStyleSheet("font-size: 16px; font-weight: bold;")
         
         self.last_scan = QLabel("Last Scan:\n--")
         self.last_scan.setObjectName("Secondary")
@@ -176,30 +179,86 @@ class Dashboard(QWidget):
         status_layout.addWidget(self.market_status)
         status_layout.addStretch()
         status_layout.addWidget(self.last_scan)
-        layout.addLayout(status_layout)
+        main_layout.addLayout(status_layout)
         
-        # Cards Row
-        cards_layout = QHBoxLayout()
-        self.best_trade_card = BestTradeCard()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet("background: transparent;")
+        layout = QVBoxLayout(scroll_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(20)
+        
+        # 2. Cards Row
+        cards_grid = QGridLayout()
         self.scan_stats_card = ScanStatsCard()
+        self.best_trade_card = BestTradeCard()
         self.market_breadth_card = MarketBreadthCard()
         self.market_regime_card = MarketRegimeCard()
         self.adaptive_strategy_card = AdaptiveStrategyCard()
-        cards_layout.addWidget(self.best_trade_card)
-        cards_layout.addWidget(self.scan_stats_card)
-        cards_layout.addWidget(self.market_breadth_card)
-        cards_layout.addWidget(self.market_regime_card)
-        cards_layout.addWidget(self.adaptive_strategy_card)
-        layout.addLayout(cards_layout)
         
-        # Top Buy Table
+        cards_grid.addWidget(self.scan_stats_card, 0, 0)
+        cards_grid.addWidget(self.best_trade_card, 0, 1)
+        cards_grid.addWidget(self.market_breadth_card, 0, 2)
+        cards_grid.addWidget(self.market_regime_card, 1, 0)
+        cards_grid.addWidget(self.adaptive_strategy_card, 1, 1)
+        layout.addLayout(cards_grid)
+        
+        # 3. Top BUY Table
         self.top_buy_table = TopBuyTable()
         layout.addWidget(self.top_buy_table)
         
+        # 4. Top SELL Table
+        self.top_sell_table = TopSellTable()
+        layout.addWidget(self.top_sell_table)
+        
+        # 5. Top WATCH Table
+        self.top_watch_table = TopWatchTable()
+        layout.addWidget(self.top_watch_table)
+        
         # Connect Signals for Navigation
         self.best_trade_card.clicked.connect(self.navigate_to_chart.emit)
-        self.top_buy_table.symbol_clicked.connect(self.navigate_to_chart.emit)
-        self.top_buy_table.add_to_watchlist.connect(self._add_to_watchlist)
+        for table in (self.top_buy_table, self.top_sell_table, self.top_watch_table):
+            table.symbol_clicked.connect(self.navigate_to_chart.emit)
+            table.add_to_watchlist.connect(self._add_to_watchlist)
+            
+        # 6. Portfolio Summary & 7. AI Summary
+        summary_row = QHBoxLayout()
+        summary_row.setSpacing(20)
+        
+        port_frame = QFrame()
+        port_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
+        port_layout = QVBoxLayout(port_frame)
+        port_title = QLabel("PORTFOLIO SUMMARY")
+        port_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
+        port_layout.addWidget(port_title)
+        self.portfolio_summary = PortfolioSummary()
+        port_layout.addWidget(self.portfolio_summary)
+        summary_row.addWidget(port_frame, 1)
+        
+        ai_frame = QFrame()
+        ai_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
+        ai_layout = QVBoxLayout(ai_frame)
+        ai_title = QLabel("AI SUMMARY")
+        ai_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
+        ai_layout.addWidget(ai_title)
+        self.ai_summary_panel = AIDecisionPanel()
+        ai_layout.addWidget(self.ai_summary_panel)
+        summary_row.addWidget(ai_frame, 1)
+        
+        layout.addLayout(summary_row)
+        
+        # 8. System Health
+        health_frame = QFrame()
+        health_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px; padding: 10px;")
+        health_layout = QHBoxLayout(health_frame)
+        self.system_health = SystemHealthWidget()
+        health_layout.addWidget(self.system_health)
+        layout.addWidget(health_frame)
+        
+        scroll.setWidget(scroll_widget)
+        main_layout.addWidget(scroll, 1)
         
         # Progress Bar Layout
         progress_layout = QVBoxLayout()
@@ -207,7 +266,7 @@ class Dashboard(QWidget):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.hide()
         progress_layout.addWidget(self.progress_bar)
-        layout.addLayout(progress_layout)
+        main_layout.addLayout(progress_layout)
         
         # Bottom Action
         action_layout = QHBoxLayout()
@@ -231,9 +290,26 @@ class Dashboard(QWidget):
         action_layout.addWidget(self.btn_scan)
         action_layout.addStretch()
         
-        layout.addLayout(action_layout)
+        main_layout.addLayout(action_layout)
         
         self.scanner = None
+        self.refresh_backend_services()
+
+    def refresh_backend_services(self):
+        if hasattr(self, 'portfolio_summary'):
+            try:
+                from application.portfolio_service import PortfolioService
+                ps = PortfolioService()
+                self.portfolio_summary.update_summary(ps.get_summary())
+            except Exception as e:
+                logger.error(f"Error updating Portfolio Summary: {e}")
+                self.portfolio_summary.update_summary({})
+                
+        if hasattr(self, 'system_health'):
+            try:
+                self.system_health.refresh_health()
+            except Exception as e:
+                logger.error(f"Error updating System Health: {e}")
 
     def toggle_auto_scan(self):
         self.is_auto_scan_active = not self.is_auto_scan_active
@@ -322,6 +398,25 @@ class Dashboard(QWidget):
             self.adaptive_strategy_card.update_data(None)
             
         self.top_buy_table.update_data(results.get("top_buys", []), results.get("detail_map", {}))
+        if hasattr(self, 'top_sell_table'):
+            self.top_sell_table.update_data(results.get("top_sells", []), results.get("detail_map", {}))
+        if hasattr(self, 'top_watch_table'):
+            self.top_watch_table.update_data(results.get("top_watches", []), results.get("detail_map", {}))
+            
+        best = results.get("best_trade", {})
+        if best and hasattr(self, 'ai_summary_panel'):
+            try:
+                from application.decision_explanation_service import DecisionExplanationService
+                des = DecisionExplanationService()
+                parsed = des.extract_decision_data(best)
+                self.ai_summary_panel.update_panel(parsed)
+            except Exception as e:
+                logger.error(f"Error updating AI Summary: {e}")
+                self.ai_summary_panel.update_panel({})
+        elif hasattr(self, 'ai_summary_panel'):
+            self.ai_summary_panel.update_panel({})
+            
+        self.refresh_backend_services()
         
         # Notifications logic
         best = results.get("best_trade", {})

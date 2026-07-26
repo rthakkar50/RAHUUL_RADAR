@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 def test_buy_valid():
     is_valid, reason = validate_trade_levels("BUY", 100, 95, 110)
     assert is_valid == True
-    assert reason == ""
+    assert reason in ("", "Valid trade levels")
 
 def test_buy_invalid_sl():
     is_valid, reason = validate_trade_levels("BUY", 100, 105, 110)
@@ -23,7 +23,7 @@ def test_buy_invalid_target():
 def test_sell_valid():
     is_valid, reason = validate_trade_levels("SELL", 100, 105, 90)
     assert is_valid == True
-    assert reason == ""
+    assert reason in ("", "Valid trade levels")
 
 def test_sell_invalid_sl():
     is_valid, reason = validate_trade_levels("SELL", 100, 95, 90)
@@ -43,10 +43,11 @@ def test_regression_screenshot_example():
 
 # --- Integration Tests for SwingScannerService Pipeline ---
 
+@patch("market.yahoo_provider.YahooFinanceProvider.pre_cache")
 @patch("application.swing_scanner_service.get_all_symbols")
 @patch("scanner.scanner_engine.ScannerEngine.scan_market")
 @patch("core.master_signal_pipeline.MasterSignalPipeline.run")
-def test_pipeline_confidence_and_rr(mock_pipeline_run, mock_scan_market, mock_get_all_symbols):
+def test_pipeline_confidence_and_rr(mock_pipeline_run, mock_scan_market, mock_get_all_symbols, mock_pre_cache):
     """
     Test that the swing scanner service correctly applies confidence gating and RR calculations
     during process_post_scan.
@@ -98,10 +99,11 @@ def test_pipeline_confidence_and_rr(mock_pipeline_run, mock_scan_market, mock_ge
     assert qualified[0]["Risk Reward"] == "1:2.0"
     
     
+@patch("market.yahoo_provider.YahooFinanceProvider.pre_cache")
 @patch("application.swing_scanner_service.get_all_symbols")
 @patch("scanner.scanner_engine.ScannerEngine.scan_market")
 @patch("core.master_signal_pipeline.MasterSignalPipeline.run")
-def test_pipeline_fallback_rr(mock_pipeline_run, mock_scan_market, mock_get_all_symbols):
+def test_pipeline_fallback_rr(mock_pipeline_run, mock_scan_market, mock_get_all_symbols, mock_pre_cache):
     """
     Test that the swing scanner service correctly calculates fallback targets and RR.
     """

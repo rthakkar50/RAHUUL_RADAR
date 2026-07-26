@@ -1,7 +1,10 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QProgressBar, QComboBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QProgressBar, QComboBox, QScrollArea, QGridLayout
 from PySide6.QtCore import Qt, QTimer, Signal
 from ui.widgets.cards import BestTradeCard, ScanStatsCard
-from ui.widgets.tables import TopBuyTable
+from ui.widgets.tables import TopBuyTable, TopSellTable, TopWatchTable
+from ui.widgets.portfolio_summary import PortfolioSummary
+from ui.widgets.ai_decision_panel import AIDecisionPanel
+from ui.widgets.system_health_widget import SystemHealthWidget
 from datetime import datetime, time
 from PySide6.QtGui import QPainter, QColor, QPen, QFont
 from config.config import AppConfig
@@ -175,8 +178,24 @@ class DashboardScannerWorker(QThread):
             rej = scan_dict.get("rejected_count", 0)
             total = scan_dict.get("total_scanned", 0)
             
-            buys = [x for x in qual if "BUY" in x.get("Signal", "")]
-            best_trade = buys[0] if buys else {}
+            buys = [x for x in qual if "BUY" in str(x.get("Signal", x.get("signal", ""))).upper()]
+            strong_buys = [x for x in qual if "STRONG" in str(x.get("Signal", x.get("signal", ""))).upper()]
+            sells = [x for x in qual if "SELL" in str(x.get("Signal", x.get("signal", ""))).upper()]
+            watches = [x for x in qual if any(w in str(x.get("Signal", x.get("signal", ""))).upper() for w in ["WATCH", "HOLD", "NEUTRAL", "NO TRADE"])]
+            
+            best_trade = buys[0] if buys else (qual[0] if qual else {})
+            
+            scores = [float(x.get("Score", x.get("score", 0))) for x in qual if x.get("Score", x.get("score")) is not None]
+            avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+            
+            scan_stats = {
+                "total": total if total > 0 else "No Data",
+                "buy": len(buys) if total > 0 else "No Data",
+                "strong_buy": len(strong_buys) if total > 0 else "No Data",
+                "watch": len(watches) if total > 0 else "No Data",
+                "sell": len(sells) if total > 0 else "No Data",
+                "avg_score": avg_score if total > 0 else "No Data"
+            }
             
             market_health = "Neutral (50/100)"
             if total > 0:
@@ -192,9 +211,13 @@ class DashboardScannerWorker(QThread):
             self.finished.emit({
                 "best_trade": best_trade,
                 "top_buys": buys[:5],
+                "top_sells": sells[:5],
+                "top_watches": watches[:5],
+                "scan_stats": scan_stats,
                 "market_health": market_health,
                 "total_scanned": total,
-                "qualified": len(qual)
+                "qualified": len(qual),
+                "detail_map": scan_dict.get("detail_map", {})
             })
         except Exception as e:
             import traceback
@@ -216,14 +239,14 @@ class Dashboard(QWidget):
         self.auto_scan_timer.timeout.connect(self.start_scan)
         self.is_auto_scan_active = False
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
         
-        # Market Status Row
+        # 1. Market Status Row
         status_layout = QHBoxLayout()
         self.market_status = QLabel(get_market_status())
-        self.market_status.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.market_status.setStyleSheet("font-size: 16px; font-weight: bold;")
         
         self.last_scan = QLabel("Last Scan:\n--")
         self.last_scan.setObjectName("Secondary")
@@ -232,25 +255,87 @@ class Dashboard(QWidget):
         status_layout.addWidget(self.market_status)
         status_layout.addStretch()
         status_layout.addWidget(self.last_scan)
-        layout.addLayout(status_layout)
+        main_layout.addLayout(status_layout)
         
-        # Cards Row
-        cards_layout = QHBoxLayout()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet("background: transparent;")
+        layout = QVBoxLayout(scroll_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(20)
+        
+        # 2. Cards Row (Scanner Summary & Overview)
+        cards_grid = QGridLayout()
+        self.scan_stats_card = ScanStatsCard()
+        self.best_trade_card = BestTradeCard()
         self.market_breadth_card = MarketBreadthCard()
         self.market_regime_card = MarketRegimeCard()
+        self.adaptive_strategy_card = AdaptiveStrategyCard()
+        self.cpe_card = CapitalProtectionCard()
         
-        cards_layout.addWidget(self.market_breadth_card)
-        cards_layout.addWidget(self.market_regime_card)
-        cards_layout.addStretch()
-        layout.addLayout(cards_layout)
+        cards_grid.addWidget(self.scan_stats_card, 0, 0)
+        cards_grid.addWidget(self.best_trade_card, 0, 1)
+        cards_grid.addWidget(self.market_breadth_card, 0, 2)
+        cards_grid.addWidget(self.market_regime_card, 1, 0)
+        cards_grid.addWidget(self.adaptive_strategy_card, 1, 1)
+        cards_grid.addWidget(self.cpe_card, 1, 2)
+        layout.addLayout(cards_grid)
         
-        # Top Buy Table
+        # 3. Top BUY Table
         self.top_buy_table = TopBuyTable()
         layout.addWidget(self.top_buy_table)
         
+        # 4. Top SELL Table
+        self.top_sell_table = TopSellTable()
+        layout.addWidget(self.top_sell_table)
+        
+        # 5. Top WATCH Table
+        self.top_watch_table = TopWatchTable()
+        layout.addWidget(self.top_watch_table)
+        
         # Connect Signals for Navigation
-        self.top_buy_table.symbol_clicked.connect(self.navigate_to_chart.emit)
-        self.top_buy_table.add_to_watchlist.connect(self._add_to_watchlist)
+        for table in (self.top_buy_table, self.top_sell_table, self.top_watch_table):
+            table.symbol_clicked.connect(self.navigate_to_chart.emit)
+            table.add_to_watchlist.connect(self._add_to_watchlist)
+            
+        # 6. Portfolio Summary & 7. AI Summary
+        summary_row = QHBoxLayout()
+        summary_row.setSpacing(20)
+        
+        port_frame = QFrame()
+        port_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
+        port_layout = QVBoxLayout(port_frame)
+        port_title = QLabel("PORTFOLIO SUMMARY")
+        port_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
+        port_layout.addWidget(port_title)
+        self.portfolio_summary = PortfolioSummary()
+        port_layout.addWidget(self.portfolio_summary)
+        summary_row.addWidget(port_frame, 1)
+        
+        ai_frame = QFrame()
+        ai_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px;")
+        ai_layout = QVBoxLayout(ai_frame)
+        ai_title = QLabel("AI SUMMARY")
+        ai_title.setStyleSheet("color: #888; font-weight: bold; font-size: 14px; border: none;")
+        ai_layout.addWidget(ai_title)
+        self.ai_summary_panel = AIDecisionPanel()
+        ai_layout.addWidget(self.ai_summary_panel)
+        summary_row.addWidget(ai_frame, 1)
+        
+        layout.addLayout(summary_row)
+        
+        # 8. System Health
+        health_frame = QFrame()
+        health_frame.setStyleSheet("background-color: #22242D; border: 1px solid #3D4047; border-radius: 8px; padding: 10px;")
+        health_layout = QHBoxLayout(health_frame)
+        self.system_health = SystemHealthWidget()
+        health_layout.addWidget(self.system_health)
+        layout.addWidget(health_frame)
+        
+        scroll.setWidget(scroll_widget)
+        main_layout.addWidget(scroll, 1)
         
         # Progress Bar Layout
         progress_layout = QVBoxLayout()
@@ -258,7 +343,7 @@ class Dashboard(QWidget):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.hide()
         progress_layout.addWidget(self.progress_bar)
-        layout.addLayout(progress_layout)
+        main_layout.addLayout(progress_layout)
         
         # Bottom Action
         action_layout = QHBoxLayout()
@@ -278,9 +363,28 @@ class Dashboard(QWidget):
         action_layout.addWidget(self.btn_scan)
         action_layout.addStretch()
         
-        layout.addLayout(action_layout)
+        main_layout.addLayout(action_layout)
         
         self.scanner = None
+        self.refresh_backend_services()
+
+    def refresh_backend_services(self):
+        if hasattr(self, 'portfolio_summary'):
+            try:
+                from application.portfolio_service import PortfolioService
+                ps = PortfolioService()
+                self.portfolio_summary.update_summary(ps.get_summary())
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating Portfolio Summary: {e}")
+                self.portfolio_summary.update_summary({})
+                
+        if hasattr(self, 'system_health'):
+            try:
+                self.system_health.refresh_health()
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating System Health: {e}")
 
     def toggle_auto_scan(self):
         self.is_auto_scan_active = not self.is_auto_scan_active
@@ -343,7 +447,7 @@ class Dashboard(QWidget):
         if hasattr(self, 'best_trade_card'):
             self.best_trade_card.update_data(results.get("best_trade", {}))
         if hasattr(self, 'scan_stats_card'):
-            self.scan_stats_card.update_data(results)
+            self.scan_stats_card.update_data(results.get("scan_stats", results))
         
         # Market Health (Sprint 49)
         mkt_health_str = results.get("market_health", "Neutral (50/100)")
@@ -374,7 +478,8 @@ class Dashboard(QWidget):
                 leader = "--"
                 weakest = "--"
                 
-            self.market_regime_card.update_data(regime, leader, weakest)
+            if hasattr(self, 'market_regime_card'):
+                self.market_regime_card.update_data(regime, leader, weakest)
         except Exception as e:
             logger.error(f"Error updating Market Regime Card: {e}")
             
@@ -383,7 +488,8 @@ class Dashboard(QWidget):
             from core.adaptive_strategy_engine import AdaptiveStrategyEngine
             ase = AdaptiveStrategyEngine() if not hasattr(AdaptiveStrategyEngine, 'get_instance') else AdaptiveStrategyEngine.get_instance()
             strat_info = ase.get_current_strategy()
-            self.adaptive_strategy_card.update_data(strat_info)
+            if hasattr(self, 'adaptive_strategy_card'):
+                self.adaptive_strategy_card.update_data(strat_info)
         except Exception as e:
             logger.error(f"Error updating Adaptive Strategy Card: {e}")
             
@@ -391,11 +497,31 @@ class Dashboard(QWidget):
         try:
             from strategy.cpe_engine import CapitalProtectionEngine
             cpe = CapitalProtectionEngine.get_instance()
-            self.cpe_card.update_data(cpe.get_dashboard_stats())
+            if hasattr(self, 'cpe_card'):
+                self.cpe_card.update_data(cpe.get_dashboard_stats())
         except Exception as e:
             logger.error(f"Error updating CPE Card: {e}")
             
         self.top_buy_table.update_data(results.get("top_buys", []), results.get("detail_map", {}))
+        if hasattr(self, 'top_sell_table'):
+            self.top_sell_table.update_data(results.get("top_sells", []), results.get("detail_map", {}))
+        if hasattr(self, 'top_watch_table'):
+            self.top_watch_table.update_data(results.get("top_watches", []), results.get("detail_map", {}))
+            
+        best = results.get("best_trade", {})
+        if best and hasattr(self, 'ai_summary_panel'):
+            try:
+                from application.decision_explanation_service import DecisionExplanationService
+                des = DecisionExplanationService()
+                parsed = des.extract_decision_data(best)
+                self.ai_summary_panel.update_panel(parsed)
+            except Exception as e:
+                logger.error(f"Error updating AI Summary: {e}")
+                self.ai_summary_panel.update_panel({})
+        elif hasattr(self, 'ai_summary_panel'):
+            self.ai_summary_panel.update_panel({})
+            
+        self.refresh_backend_services()
         
         # Notifications logic
         best = results.get("best_trade", {})

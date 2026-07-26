@@ -5,18 +5,18 @@ class ApiConfig {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static String _localIp = '10.0.2.2'; // Default to Android Emulator
+  static String _localIp = '137.23.34.223'; // Default to Production API
   static String _port = '8000';
-  static String _env = 'Development';
+  static String _env = 'Production';
 
   static const int timeoutSeconds = 60; // Scanner can take a few seconds
   static const int healthTimeoutSeconds = 3; // Fast fail for health check
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _localIp = prefs.getString(keyIp) ?? '10.0.2.2';
+    _localIp = prefs.getString(keyIp) ?? '137.23.34.223';
     _port = prefs.getString(keyPort) ?? '8000';
-    _env = prefs.getString(keyEnv) ?? 'Development';
+    _env = prefs.getString(keyEnv) ?? 'Production';
   }
 
   static String get localIp => _localIp;
