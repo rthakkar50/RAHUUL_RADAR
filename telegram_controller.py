@@ -351,11 +351,11 @@ def main():
     while True:
         try:
             config = get_config()
-            token = config.get("telegram_token", "").strip()
-            chat_id = str(config.get("telegram_chat_id", "")).strip()
+            token = config.get("telegram_token", "").strip() or os.environ.get("TELEGRAM_TOKEN", "").strip() or os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+            chat_id = str(config.get("telegram_chat_id", "") or os.environ.get("TELEGRAM_CHAT_ID", "")).strip()
             
             if not token:
-                print("telegram_token not configured in config.json. Retrying in 10s...")
+                print("telegram_token not configured in config.json or environment. Retrying in 10s...")
                 time.sleep(10)
                 continue
             
