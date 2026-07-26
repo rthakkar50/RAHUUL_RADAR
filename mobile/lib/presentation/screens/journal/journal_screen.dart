@@ -234,7 +234,7 @@ class _JournalScreenState extends State<JournalScreen> {
                   label: 'Total Trades',
                   value: '${analytics.totalTrades}',
                   icon: Icons.format_list_bulleted,
-                  color: Colors.blueLighten,
+                  color: const Color(0xFF64B5F6),
                 ),
               ),
               const SizedBox(width: 10),

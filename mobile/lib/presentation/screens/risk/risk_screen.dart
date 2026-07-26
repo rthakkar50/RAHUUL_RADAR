@@ -95,7 +95,7 @@ class RiskReport {
 
 class RiskRepository {
   final String _base;
-  RiskRepository() : _base = ApiConfig().baseUrl;
+  RiskRepository() : _base = ApiConfig.baseUrl;
 
   Future<RiskReport> fetchReport() async {
     final res = await http
