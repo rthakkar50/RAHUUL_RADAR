@@ -326,6 +326,9 @@ class PaytmOrderEngine:
                 status="SUCCESS",
                 order_id=order_no
             )
+            self._dispatch_telegram_order_event("ORDER_EXECUTED", {
+                "symbol": symbol_clean, "action": action_clean, "quantity": quantity, "price": price
+            })
 
             return {
                 "success": True,
@@ -345,31 +348,57 @@ class PaytmOrderEngine:
             err_message = f"Token Expired: {e}"
             self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
                            req_payload, {"error": str(e)}, 401, latency_ms, "EXPIRED", error_message=err_message)
+            self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
         except InsufficientFundsError as e:
             latency_ms = (time.time() - start_time) * 1000.0
             err_message = f"Insufficient Funds: {e}"
             self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
                            req_payload, {"error": str(e)}, 400, latency_ms, "REJECTED", error_message=err_message)
+            self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
         except MarketClosedError as e:
             latency_ms = (time.time() - start_time) * 1000.0
             err_message = f"Market Closed: {e}"
             self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
                            req_payload, {"error": str(e)}, 400, latency_ms, "REJECTED", error_message=err_message)
+            self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
         except InvalidSymbolError as e:
             latency_ms = (time.time() - start_time) * 1000.0
             err_message = f"Invalid Symbol: {e}"
             self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
                            req_payload, {"error": str(e)}, 400, latency_ms, "REJECTED", error_message=err_message)
+            self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
         except NetworkTimeoutError as e:
             latency_ms = (time.time() - start_time) * 1000.0
             err_message = f"Timeout: {e}"
             self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
-                           req_payload, {"error": str(e)}, 504, latency_ms, "TIMEOUT", error_message=err_message)
+                           req_payload, {"error": str(e)}, 408, latency_ms, "TIMEOUT", error_message=err_message)
+            self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
+
+    def _dispatch_telegram_order_event(self, event_type: str, details: Dict[str, Any]):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.format_order_event_alert(event_type, details)
+            tg_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+            tg_chat = os.environ.get('TELEGRAM_CHAT_ID', '')
+            if not tg_token or not tg_chat:
+                try:
+                    with open("config.json") as f:
+                        c_json = json.load(f)
+                        tg_token = tg_token or c_json.get("telegram_token", "")
+                        tg_chat = tg_chat or c_json.get("telegram_chat_id", "")
+                except Exception:
+                    pass
+            if tg_token and tg_chat:
+                from telegram_controller import send_message
+                send_message(str(tg_token), str(tg_chat), msg)
+        except Exception as e:
+            self.logger.warning(f"Telegram order alert dispatch skipped: {e}")
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000.0
             err_message = str(e)

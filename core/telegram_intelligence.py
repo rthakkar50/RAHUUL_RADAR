@@ -25,9 +25,56 @@ class TelegramIntelligence:
         self.rate_limit_file = rate_limit_file
         self.max_trade_alerts_per_day = 10
         self._ensure_data_dir()
+        self._ensure_tables_exist()
 
     def _ensure_data_dir(self):
         os.makedirs(os.path.dirname(self.rate_limit_file), exist_ok=True)
+
+    def _ensure_tables_exist(self):
+        """Ensures SQLite tables exist before any queries to avoid OperationalError."""
+        try:
+            os.makedirs("data", exist_ok=True)
+            conn = sqlite3.connect("data/radar.db")
+            c = conn.cursor()
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS master_ai_decisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    symbol TEXT,
+                    signal TEXT,
+                    reasons TEXT,
+                    score REAL,
+                    status TEXT,
+                    result TEXT DEFAULT 'PENDING'
+                )
+            """)
+            conn.commit()
+            conn.close()
+
+            conn2 = sqlite3.connect("data/paper_trading.db")
+            c2 = conn2.cursor()
+            c2.execute("""
+                CREATE TABLE IF NOT EXISTS positions (
+                    id TEXT PRIMARY KEY,
+                    symbol TEXT,
+                    order_type TEXT,
+                    direction TEXT,
+                    qty INTEGER,
+                    entry_price REAL,
+                    cmp REAL,
+                    target REAL,
+                    sl REAL,
+                    status TEXT,
+                    entry_time TEXT,
+                    exit_price REAL,
+                    exit_time TEXT,
+                    pnl REAL
+                )
+            """)
+            conn2.commit()
+            conn2.close()
+        except Exception as e:
+            print(f"Database table check notice: {e}")
 
     # ── Rate Limiting (Module 7) ──────────────────────────────────────────────
 

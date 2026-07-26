@@ -366,6 +366,46 @@ class SwingScannerService:
                     else:
                         rs_score_display = round(getattr(crs, 'market_alpha', rs_score_display), 1)
 
+                # ── Sprint M7.1: Telegram Intelligence Integration Hook ──
+                try:
+                    from core.telegram_intelligence import TelegramIntelligence
+                    intel = TelegramIntelligence.get_instance()
+                    setup_info = {
+                        "symbol": symbol,
+                        "decision": decision_str,
+                        "signal": decision_str,
+                        "confidence": confidence if confidence > 0 else 80.0,
+                        "risk_reward": rr,
+                        "passed_quality_gates": (is_valid and (decision_str not in ["WATCH", "NEUTRAL"])),
+                        "current_price": price,
+                        "entry_price": entry,
+                        "sl": sl,
+                        "target_1": t1,
+                        "target_2": t2,
+                        "reasons": pipeline_res.get("reasons", [])
+                    }
+                    eligible, _ = intel.evaluate_trade_alert_eligibility(setup_info)
+                    if eligible:
+                        alert_msg = intel.format_trade_alert(setup_info)
+                        tg_token = getattr(self.config, 'telegram_bot_token', '') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+                        tg_chat = getattr(self.config, 'telegram_chat_id', '') or os.environ.get('TELEGRAM_CHAT_ID', '')
+                        if not tg_token or not tg_chat:
+                            # Read from config.json if not on config instance
+                            try:
+                                with open("config.json") as f:
+                                    c_json = json.load(f)
+                                    tg_token = tg_token or c_json.get("telegram_token", "")
+                                    tg_chat = tg_chat or c_json.get("telegram_chat_id", "")
+                            except Exception:
+                                pass
+                        if tg_token and tg_chat:
+                            from telegram_controller import send_message
+                            send_message(str(tg_token), str(tg_chat), alert_msg)
+                            intel._increment_trade_alert_count()
+                            logger.info(f"Dispatched high-quality Telegram trade alert for {symbol} ({decision_str}).")
+                except Exception as tg_err:
+                    logger.warning(f"Telegram trade alert evaluation error for {symbol}: {tg_err}")
+
                 return {
                     "Symbol": symbol,
                     "Company": company_raw,

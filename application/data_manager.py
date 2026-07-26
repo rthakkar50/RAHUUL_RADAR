@@ -4,8 +4,8 @@ import logging
 import threading
 from PySide6.QtCore import QObject, Signal
 
-from providers.yahoo_provider import YahooProvider
-from providers.nse_provider import NSEProvider
+from market.yahoo_provider import YahooFinanceProvider as YahooProvider
+from market.nse_provider import NSEProvider
 from providers.cache_manager import CacheManager
 from utils.paths import get_logs_dir
 
