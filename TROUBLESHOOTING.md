@@ -1,36 +1,54 @@
-# TROUBLESHOOTING
+# RAHUUL RADAR — Troubleshooting Guide (v1.1)
 
-## 1. No Internet / Connection Failed
-**Symptom**: The application opens but the scanner hangs immediately or displays "Network Error".
-**Solution**: Verify your broadband connection. RAHUUL RADAR PRO requires an active, uninterrupted internet connection to function. If you are behind a corporate proxy, you must configure your proxy settings at the OS level.
+---
 
-## 2. Yahoo Timeout / Freezing
-**Symptom**: Scanner progress bar is stuck. Log files show `TimeoutException`.
-**Solution**: Yahoo Finance enforces rate limits.
-1. Wait 5-10 minutes before initiating a new scan.
-2. In `Settings`, switch to a different Data Provider (e.g., Dhan) if you possess API credentials.
+## Common Issues & Verified Solutions
 
-## 3. Missing Data / NO_DATA Tags
-**Symptom**: Stocks like `TATAMOTORS.NS` are listed as `NO_DATA` or missing from the results.
-**Solution**:
-- This typically happens if the symbol has been delisted, renamed, or temporarily blocked by the exchange.
-- The engine automatically skips and ranks them with zero scores to prevent application crashes.
+### 1. Paytm Money Authentication Errors (`TokenExpiredError` / HTTP 401)
+* **Symptom:** API returns `TokenExpiredError: Paytm session token expired (HTTP 401)` or live order placement fails.
+* **Root Cause:** Paytm Money public JWT access token has expired (Paytm access tokens expire daily after market hours).
+* **Solution:**
+  1. Login to Paytm Money Developer Portal.
+  2. Generate a new request token / public JWT access token.
+  3. Update `config.json` with the new token or submit via Desktop login dialog.
+  4. Re-connect Paytm broker session.
 
-## 4. Scanner Running Slow
-**Symptom**: Scans take longer than 30 seconds.
-**Solution**:
-- Ensure no other heavily CPU-bound tasks are running on your machine.
-- Under **Settings > Performance**, lower the concurrent thread count.
-- Delete the `/cache` folder and restart the application to force a clean data download.
+---
 
-## 5. No BUY Signals
-**Symptom**: The scanner finishes successfully, but 0 BUY signals are generated.
-**Solution**: This is a feature, not a bug. If the overall Market Regime is severely Bearish or highly volatile, the Risk Manager explicitly blocks BUY setups to protect capital. 
+### 2. WebSocket Stale Connection or Disconnects
+* **Symptom:** Mobile or Desktop ticker prices stop updating.
+* **Root Cause:** Network packet loss or silent socket drop by broker gateway.
+* **Solution:**
+  1. The integrated **WebSocket Watchdog (`PaytmWSWatchdog`)** automatically detects missing ticks (> 15s) and triggers socket auto-reconnect with exponential backoff (1s–60s).
+  2. Verify network internet connectivity.
+  3. Check `logs/paytm_websocket.log` to view reconnect latency and exact disconnect reason.
 
-## 6. Export Problems
-**Symptom**: Clicking "Export to Excel" does nothing or shows an error.
-**Solution**: Ensure that Microsoft Excel is closed if you are attempting to overwrite an existing `exports/scan.xlsx` file. Windows locks open files, preventing the software from writing to them.
+---
 
-## 7. Reset Settings
-**Symptom**: UI is corrupted or settings are misconfigured.
-**Solution**: Close the application. Navigate to the installation folder, locate the `/config` directory, and delete `settings.json`. Relaunch the application to restore factory defaults.
+### 3. Pre-Trade Risk Engine Rejections (`RiskDecision.REJECTED`)
+* **Symptom:** Order placement fails with message `"🔴 KILL SWITCH ACTIVE"` or `"Daily Loss Limit Breached"`.
+* **Root Cause:** Order violates pre-trade risk safety parameters defined in `config.json`.
+* **Solution:**
+  * **Kill Switch Active:** Deactivate kill switch via Flutter Risk Screen toggle or `POST /api/v1/risk/kill-switch/deactivate`.
+  * **Daily Loss Limit Hit:** Check daily realized P&L on Risk Screen. Daily loss threshold resets automatically at midnight.
+  * **Max Open Trades Hit:** Close existing open positions before opening new trades.
+  * **Duplicate Order Lock:** Wait for pending order to clear or release lock via Risk Screen.
+
+---
+
+### 4. SQLite Database Locks (`OperationalError: database is locked`)
+* **Symptom:** Database write fails with database locked error.
+* **Root Cause:** Concurrent file write lock in SQLite.
+* **Solution:**
+  1. All system databases utilize `PRAGMA journal_mode=WAL;` and 5,000ms busy timeouts.
+  2. Ensure external SQLite viewing tools are opened in read-only mode.
+
+---
+
+### 5. Flutter App Unable to Connect to Backend (`Network error fetching portfolio`)
+* **Symptom:** Mobile app shows network error or timeout.
+* **Root Cause:** Incorrect IP/Port configured in Settings.
+* **Solution:**
+  1. Open Flutter app -> **Settings** tab.
+  2. Ensure IP Address is set to server IP (`137.23.34.223`) and Port is set to `8000`.
+  3. Tap **Save Settings** and pull to refresh.
