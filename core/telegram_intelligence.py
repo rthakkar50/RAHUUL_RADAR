@@ -207,6 +207,35 @@ class TelegramIntelligence:
         3. Final Score (descending)
         """
         opportunities = []
+        # 0. Fetch active in-memory scanner results if available
+        try:
+            from application.swing_scanner_service import SwingScannerService
+            if hasattr(SwingScannerService, '_instance') and SwingScannerService._instance and getattr(SwingScannerService._instance, 'last_results', None):
+                for item in SwingScannerService._instance.last_results:
+                    sym = str(item.get("Symbol", "")).replace(".NS", "")
+                    sig = str(item.get("Signal", "BUY")).upper()
+                    sc = float(item.get("Score", 70.0) or 70.0)
+                    conf = float(item.get("Confidence", 80.0) or 80.0)
+                    p = float(item.get("Price", 0.0) or 0.0)
+                    rr_raw = str(item.get("Risk Reward", "1:2.0")).replace("1:", "")
+                    try:
+                        rr = float(rr_raw)
+                    except ValueError:
+                        rr = 2.0
+                    sl = round(p * 0.98, 2) if p > 0 else 0.0
+                    tgt = round(p * 1.04, 2) if p > 0 else 0.0
+                    opportunities.append({
+                        "symbol": sym,
+                        "signal": sig,
+                        "score": sc,
+                        "confidence": conf if conf > 0 else 80.0,
+                        "risk_reward": rr,
+                        "price": p,
+                        "sl": sl,
+                        "target": tgt
+                    })
+        except Exception as err:
+            pass
 
         # 1. Fetch from radar.db master_ai_decisions if available
         if os.path.exists("data/radar.db"):
@@ -223,10 +252,14 @@ class TelegramIntelligence:
 
                 for row in rows:
                     sym, sig, score, reas, ts = row
+                    clean_sym = sym.replace(".NS", "")
+                    # Prevent duplicate entries if already added from memory
+                    if any(o["symbol"] == clean_sym for o in opportunities):
+                        continue
                     conf = min(99.0, max(60.0, float(score or 70.0) * 1.05))
                     rr = 2.0 + (float(score or 70.0) / 100.0)
                     opportunities.append({
-                        "symbol": sym.replace(".NS", ""),
+                        "symbol": clean_sym,
                         "signal": sig or "BUY",
                         "score": float(score or 70.0),
                         "confidence": conf,

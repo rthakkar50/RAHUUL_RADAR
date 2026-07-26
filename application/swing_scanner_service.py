@@ -366,6 +366,38 @@ class SwingScannerService:
                     else:
                         rs_score_display = round(getattr(crs, 'market_alpha', rs_score_display), 1)
 
+                # Save decision to data/radar.db master_ai_decisions for Telegram /watchlist
+                try:
+                    conn_radar = sqlite3.connect("data/radar.db")
+                    c_radar = conn_radar.cursor()
+                    c_radar.execute("""
+                        CREATE TABLE IF NOT EXISTS master_ai_decisions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            timestamp TEXT,
+                            symbol TEXT,
+                            signal TEXT,
+                            reasons TEXT,
+                            score REAL,
+                            status TEXT,
+                            result TEXT DEFAULT 'PENDING'
+                        )
+                    """)
+                    c_radar.execute("""
+                        INSERT INTO master_ai_decisions (timestamp, symbol, signal, reasons, score, status)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        time.strftime('%Y-%m-%d %H:%M:%S'),
+                        symbol,
+                        decision_str,
+                        json.dumps(pipeline_res.get("reasons", [])),
+                        score,
+                        "ACTIVE"
+                    ))
+                    conn_radar.commit()
+                    conn_radar.close()
+                except Exception as db_err:
+                    logger.warning(f"Error logging decision to radar.db: {db_err}")
+
                 # ── Sprint M7.1: Telegram Intelligence Integration Hook ──
                 try:
                     from core.telegram_intelligence import TelegramIntelligence
