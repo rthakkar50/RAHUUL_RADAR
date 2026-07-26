@@ -253,20 +253,33 @@ class TelegramIntelligence:
                 for row in rows:
                     sym, sig, score, reas, ts = row
                     clean_sym = sym.replace(".NS", "")
-                    # Prevent duplicate entries if already added from memory
                     if any(o["symbol"] == clean_sym for o in opportunities):
                         continue
                     conf = min(99.0, max(60.0, float(score or 70.0) * 1.05))
                     rr = 2.0 + (float(score or 70.0) / 100.0)
+
+                    # Extract price/sl/target if present in reasons JSON
+                    price_val = 1000.0
+                    sl_val = 960.0
+                    tgt_val = 1100.0
+                    try:
+                        if isinstance(reas, str) and reas.startswith("{"):
+                            r_data = json.loads(reas)
+                            price_val = float(r_data.get("price", 1000.0))
+                            sl_val = float(r_data.get("sl", round(price_val * 0.98, 2)))
+                            tgt_val = float(r_data.get("target", round(price_val * 1.04, 2)))
+                    except Exception:
+                        pass
+
                     opportunities.append({
                         "symbol": clean_sym,
                         "signal": sig or "BUY",
                         "score": float(score or 70.0),
                         "confidence": conf,
                         "risk_reward": rr,
-                        "price": 1000.0,
-                        "sl": 960.0,
-                        "target": 1100.0
+                        "price": price_val,
+                        "sl": sl_val,
+                        "target": tgt_val
                     })
             except Exception as e:
                 print(f"Error fetching watchlist from radar.db: {e}")
