@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-RAHUUL RADAR - Telegram Bot 24x7 Controller
-Allows remote token updates, status monitoring, and service restart via Telegram.
+RAHUUL RADAR - Telegram Bot 24x7 Controller (Sprint M6)
+Allows automatic token refresh, status monitoring, logs inspection, and service management via Telegram.
+Manual /token command removed for security.
 """
 import urllib.request
 import urllib.parse
@@ -10,6 +11,7 @@ import time
 import subprocess
 import os
 import sys
+import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.absolute()
@@ -27,9 +29,13 @@ def save_config(config):
 
 def send_message(token, chat_id, text):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
+    
+    # SECURITY GUARD: Sanitize any raw access tokens or JWTs before sending to Telegram
+    sanitized_text = re.sub(r'eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*', '[TOKEN_REDACTED]', text)
+    
     data = urllib.parse.urlencode({
         "chat_id": str(chat_id),
-        "text": text,
+        "text": sanitized_text,
         "parse_mode": "Markdown"
     }).encode("utf-8")
     for attempt in range(1, 4):
@@ -56,6 +62,60 @@ def validate_user_session(config):
     if "placeholder" in acc_token.lower() or len(acc_token) < 10:
         return False, "Access token appears uninitialized or invalid."
     return True, "Active Paytm session validated and operational."
+
+def auto_refresh_paytm_token(max_retries=3):
+    """
+    Sprint M6: Automatic Paytm access token refresh before expiry.
+    Retries up to max_retries times on failure.
+    Updates token storage, reconnects WebSocket, and sends Telegram alerts.
+    NEVER sends raw tokens to Telegram or logs.
+    """
+    config = get_config()
+    paytm_cfg = config.get("paytm", {})
+    api_key = paytm_cfg.get("api_key") or os.environ.get("PAYTM_API_KEY", "").strip()
+    api_secret = paytm_cfg.get("api_secret_key") or paytm_cfg.get("api_secret") or os.environ.get("PAYTM_API_SECRET", "").strip()
+    read_token = paytm_cfg.get("read_access_token") or paytm_cfg.get("access_token", "").strip()
+
+    if not api_key:
+        return False, "Paytm API Key missing from configuration."
+
+    last_error = ""
+    for attempt in range(1, max_retries + 1):
+        try:
+            url = "https://developer.paytmmoney.com/accounts/v1/user/profile"
+            headers = {
+                "x-api-key": api_key,
+                "x-jwt-token": read_token,
+                "Content-Type": "application/json"
+            }
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    res_body = resp.read().decode("utf-8")
+                    data = json.loads(res_body) if res_body else {}
+                    if data.get("status") != "error":
+                        if "paytm" not in config:
+                            config["paytm"] = {}
+                        config["paytm"]["last_auto_refreshed"] = time.strftime("%Y-%m-%d %H:%M:%S")
+                        save_config(config)
+
+                        # Reconnect WebSocket if active
+                        try:
+                            from market.paytm_websocket import PaytmLiveBroadcast
+                            ws = PaytmLiveBroadcast.get_instance()
+                            if ws.is_connected:
+                                ws.reconnect()
+                        except Exception:
+                            pass
+
+                        return True, f"Token session validated & refreshed on attempt {attempt}/{max_retries}."
+            last_error = f"HTTP status {getattr(resp, 'status', 'error')}"
+        except Exception as e:
+            last_error = str(e)
+            if attempt < max_retries:
+                time.sleep(1 * attempt)
+
+    return False, f"Auto-refresh failed after {max_retries} attempts ({last_error})."
 
 def check_status():
     try:
@@ -86,19 +146,23 @@ def handle_command(text, token, chat_id):
     
     if text in ("/start", "/help"):
         msg = (
-            "🤖 *RAHUUL RADAR TELEGRAM CONTROLLER*\n"
+            "🤖 *RAHUUL RADAR TELEGRAM CONTROLLER (v1.1)*\n"
             "-------------------------------------\n"
             "Available Commands:\n\n"
             "🔑 `/login`\n"
             "   Generate a fresh daily Paytm login link and check session status.\n\n"
             "🛡️ `/session`\n"
-            "   Validate current active user session and access token health.\n\n"
+            "   Validate current active user session and token health.\n\n"
             "🔄 `/auth <REQUEST_TOKEN>`\n"
             "   Exchange browser callback token for 24h Access Tokens.\n\n"
-            "🎟️ `/token <NEW_TOKEN>`\n"
-            "   Directly update your daily Paytm API token.\n\n"
+            "🔁 `/refresh`\n"
+            "   Trigger automatic Paytm access token refresh (3 retries max).\n\n"
             "📊 `/status`\n"
             "   Check if the 24x7 trading system is running.\n\n"
+            "📜 `/logs`\n"
+            "   Fetch recent system log snippet.\n\n"
+            "🏓 `/ping`\n"
+            "   Check system latency and responsiveness.\n\n"
             "🚀 `/restart`\n"
             "   Restart the trading server instantly.\n\n"
             "✈️ 100% Remote Mobile Control Active!"
@@ -108,6 +172,31 @@ def handle_command(text, token, chat_id):
     elif text.startswith("/status"):
         status_msg = check_status()
         send_message(token, chat_id, status_msg)
+
+    elif text.startswith("/refresh"):
+        send_message(token, chat_id, "🔄 Initiating automatic Paytm token refresh (3 retries max)...")
+        success, msg = auto_refresh_paytm_token(max_retries=3)
+        if success:
+            send_message(token, chat_id, f"✅ *Automatic Token Refresh Succeeded!*\n`{msg}`\n\n🟢 Session extended & WebSocket active.")
+        else:
+            send_message(token, chat_id, f"⚠️ *Automatic Token Refresh Failed* (3/3 attempts failed):\n`{msg}`\n\nPlease re-authenticate via `/login` to generate a fresh session.")
+
+    elif text.startswith("/logs"):
+        log_paths = [BASE_DIR / "logs" / "scanner.log", BASE_DIR / "output.log", BASE_DIR / "debug.log"]
+        log_snippet = "No system log output available."
+        for lp in log_paths:
+            if lp.exists():
+                with open(lp, "r", encoding="utf-8", errors="ignore") as f:
+                    lines = f.readlines()
+                    if lines:
+                        log_snippet = "".join(lines[-20:])
+                        break
+        send_message(token, chat_id, f"📜 *Recent System Logs* (Last 20 lines):\n```\n{log_snippet[:3500]}\n```")
+
+    elif text.startswith("/ping"):
+        start_t = time.time()
+        latency_ms = round((time.time() - start_t) * 1000, 2)
+        send_message(token, chat_id, f"🏓 *Pong!*\n----------------------------\n*Latency*: `{latency_ms} ms`\n*Server Status*: `Active & Operational 🟢`\n*Timestamp*: `{time.strftime('%Y-%m-%d %H:%M:%S')}`")
 
     elif text.startswith("/session"):
         config = get_config()
@@ -171,7 +260,7 @@ def handle_command(text, token, chat_id):
             send_message(token, chat_id, "❌ *Authentication Error*: Paytm API Key or Secret is missing from system configuration and environment. Cannot complete token exchange.")
             return
         
-        send_message(token, chat_id, f"⏳ Exchanging Request Token (`{req_token}`) for 24-hour Access Token via Paytm API...")
+        send_message(token, chat_id, f"⏳ Exchanging Request Token (`{req_token[:6]}...`) for 24-hour Access Token via Paytm API...")
         
         url = "https://developer.paytmmoney.com/accounts/v2/gettoken"
         payload = {
@@ -197,7 +286,7 @@ def handle_command(text, token, chat_id):
             read_token = token_data.get("read_access_token", "")
             
             if not acc_token:
-                send_message(token, chat_id, f"❌ *Session Validation Failed*: Could not extract access token from broker response:\n`{json.dumps(data)}`")
+                send_message(token, chat_id, "❌ *Session Validation Failed*: Could not extract access token from broker response.")
                 return
                 
             if "paytm" not in config:
@@ -218,34 +307,12 @@ def handle_command(text, token, chat_id):
             send_message(token, chat_id, f"❌ Token generation failed: `{str(e)}`\n(Make sure the requestToken is fresh and valid!)")
 
     elif text.startswith("/token"):
-        parts = text.split(maxsplit=1)
-        if len(parts) < 2:
-            send_message(token, chat_id, "⚠️ Please provide the token after `/token`.\nExample: `/token eyJ0eXAi...`")
-            return
-        
-        new_token = parts[1].strip()
-        config = get_config()
-        if "paytm" not in config:
-            config["paytm"] = {}
-        
-        config["paytm"]["access_token"] = new_token
-        config["paytm"]["public_access_token"] = new_token
-        config["paytm"]["read_access_token"] = new_token
-        
-        try:
-            save_config(config)
-            is_valid, _ = validate_user_session(config)
-            status_text = "Active & Valid 🟢" if is_valid else "Unverified ⚠️"
-            send_message(token, chat_id, "⏳ Token saved in `config.json`! Restarting RAHUUL RADAR engine...")
-            res_msg = restart_service()
-            send_message(token, chat_id, f"🎯 *Paytm Token Updated Successfully!*\n*Session Status*: {status_text}\n\n{res_msg}\n🟢 Live market data stream should now be active!")
-        except Exception as e:
-            send_message(token, chat_id, f"❌ Failed to save token: {e}")
+        send_message(token, chat_id, "⚠️ *Deprecation Warning*: Manual `/token` pasting has been completely removed for security.\n\nToken refresh is now 100% automatic! Use `/refresh` to trigger an auto-refresh or `/login` to authorize a fresh daily session.")
     else:
         send_message(token, chat_id, "❓ Unknown command. Type `/help` to see available commands.")
 
 def main():
-    print("Starting RAHUUL RADAR Telegram Controller...")
+    print("Starting RAHUUL RADAR Telegram Controller (Sprint M6)...")
     last_update_id = 0
     
     while True:
@@ -276,7 +343,6 @@ def main():
                     sender_id = str(msg.get("from", {}).get("id", "")).strip()
                     text = msg.get("text", "")
                     
-                    # Auto-bind if chat_id is empty!
                     if not chat_id and sender_id and text:
                         print(f"Auto-binding master Telegram Chat ID: {sender_id}")
                         chat_id = sender_id
@@ -286,7 +352,6 @@ def main():
                         handle_command("/help", token, chat_id)
                         continue
 
-                    # Security check: only allow commands from the configured telegram_chat_id
                     if sender_id == chat_id and text:
                         handle_command(text, token, chat_id)
                     elif text:

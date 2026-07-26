@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import time
 import requests
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -205,6 +206,26 @@ class PaytmBroker(BaseBroker):
         except Exception as e:
             self.is_connected = False
             raise TokenExpiredError(f"Paytm token validation failed: {e}")
+
+    def auto_refresh_token(self, max_retries: int = 3) -> bool:
+        """
+        Sprint M6: Automatic Paytm access token refresh before expiry.
+        Retries up to max_retries times. Never exposes raw tokens in logs or output.
+        """
+        for attempt in range(1, max_retries + 1):
+            try:
+                res = self.refresh_token()
+                if res:
+                    if self._ws_broadcast and self._ws_broadcast.is_connected:
+                        self._ws_broadcast.reconnect()
+                    self.logger.info(f"Automatic Paytm token refresh succeeded on attempt {attempt}/{max_retries}.")
+                    return True
+            except Exception as e:
+                self.logger.warning(f"Auto token refresh attempt {attempt}/{max_retries} failed: {e}")
+                if attempt < max_retries:
+                    time.sleep(1 * attempt)
+        self.logger.error(f"Automatic Paytm token refresh failed after {max_retries} retries.")
+        return False
 
     # -------------------------------------------------------------------------
     # 3 & 4. WebSocket Live Feed & Historical Data
