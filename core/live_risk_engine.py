@@ -525,6 +525,14 @@ class LiveRiskEngine:
         reasons: List[str] = []
         warnings: List[str] = []
 
+        # Guard: Invalid order price or quantity
+        if request.quantity <= 0 or request.price <= 0:
+            return RiskCheckResult(
+                decision=RiskDecision.REJECTED,
+                approved_quantity=0,
+                reasons=["Invalid order parameters: quantity and price must be greater than zero."],
+            )
+
         # Task 5: Kill Switch — hard stop
         if self.tracker.kill_switch:
             return RiskCheckResult(
