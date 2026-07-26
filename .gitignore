@@ -12,11 +12,11 @@ build/
 *.zip
 *.spec
 .DS_Store
-data/
+/data/
 exports/
 reports/
 logs/
-journal/
+/journal/
 out*.txt
 *.csv
 *.xlsx
