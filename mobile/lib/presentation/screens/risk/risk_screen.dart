@@ -177,12 +177,19 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  bool _isFetching = false;
+
   Future<void> _load() async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     try {
       final r = await _repo.fetchReport();
       if (mounted) setState(() { _report = r; _loading = false; _error = null; });
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = e.toString(); });
+    } finally {
+      _isFetching = false;
     }
   }
 
