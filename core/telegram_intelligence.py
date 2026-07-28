@@ -277,38 +277,36 @@ class TelegramIntelligence:
                         try:
                             if isinstance(reas, str) and reas.startswith("{"):
                                 r_data = json.loads(reas)
-                                disp_price = float(r_data.get("price", 1000.0))
-                                disp_sl = float(r_data.get("sl", round(disp_price * 0.98, 2)))
-                                disp_tgt = float(r_data.get("target", round(disp_price * 1.04, 2)))
+                                disp_price = float(r_data.get("price", 0.0))
+                                disp_sl = float(r_data.get("sl", 0.0))
+                                disp_tgt = float(r_data.get("target", 0.0))
                         except Exception:
                             pass
 
-                    if disp_price <= 0:
-                        disp_price = 1000.0
-                        disp_sl = 960.0
-                        disp_tgt = 1100.0
-
-                    opportunities.append({
-                        "symbol": clean_sym,
-                        "signal": sig or "BUY",
-                        "score": float(score or 70.0),
-                        "confidence": conf,
-                        "risk_reward": rr,
-                        "price": disp_price,
-                        "sl": disp_sl,
-                        "target": disp_tgt
-                    })
+                    # Only append if valid price available; never inject 1000/960/1100 dummy values
+                    if disp_price > 0:
+                        disp_sl = disp_sl if disp_sl > 0 else round(disp_price * 0.98, 2)
+                        disp_tgt = disp_tgt if disp_tgt > 0 else round(disp_price * 1.04, 2)
+                        opportunities.append({
+                            "symbol": clean_sym,
+                            "signal": sig or "BUY",
+                            "score": float(score or 70.0),
+                            "confidence": conf,
+                            "risk_reward": rr,
+                            "price": disp_price,
+                            "sl": disp_sl,
+                            "target": disp_tgt
+                        })
             except Exception as e:
                 print(f"Error fetching watchlist from radar.db: {e}")
 
-        # Fallback dummy sample if db empty to avoid blank response
         if not opportunities:
-            opportunities = [
-                {"symbol": "RELIANCE", "signal": "STRONG BUY", "score": 92.0, "confidence": 91.5, "risk_reward": 2.5, "price": 2450.0, "sl": 2400.0, "target": 2575.0},
-                {"symbol": "INFY", "signal": "STRONG BUY", "score": 88.5, "confidence": 89.0, "risk_reward": 2.2, "price": 1520.0, "sl": 1490.0, "target": 1586.0},
-                {"symbol": "TCS", "signal": "BUY", "score": 84.0, "confidence": 85.0, "risk_reward": 2.1, "price": 3500.0, "sl": 3430.0, "target": 3647.0},
-                {"symbol": "HDFCBANK", "signal": "BUY", "score": 81.0, "confidence": 82.5, "risk_reward": 2.0, "price": 1650.0, "sl": 1620.0, "target": 1710.0},
-            ]
+            return self.sanitize_text(
+                "📋 *TOP 10 WATCHLIST OPPORTUNITIES*\n"
+                "-------------------------------------\n\n"
+                "⏳ *Scanner Initializing*: Live market scanner is currently evaluating symbols.\n"
+                "Please run a scan from the Mobile App or wait a moment for fresh scanner results!"
+            )
 
         # Rank by: 1. Confidence DESC, 2. Risk/Reward DESC, 3. Score DESC
         opportunities.sort(key=lambda x: (x["confidence"], x["risk_reward"], x["score"]), reverse=True)

@@ -74,7 +74,10 @@ def safe_int(val, default=0):
 
 
 class SwingScannerService:
+    _instance = None
+
     def __init__(self):
+        SwingScannerService._instance = self
         self.config = AppConfig()
         self.config.load()
         

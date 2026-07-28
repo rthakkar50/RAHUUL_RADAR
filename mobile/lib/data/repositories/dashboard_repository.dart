@@ -10,18 +10,22 @@ class DashboardRepository {
       : _scannerRepository = scannerRepository ?? ScannerRepository();
 
   Future<String> checkServerHealth() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/health'),
-      ).timeout(const Duration(seconds: ApiConfig.healthTimeoutSeconds));
-      
-      if (response.statusCode == 200) {
-        return 'ONLINE';
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      try {
+        final response = await http.get(
+          Uri.parse('${ApiConfig.baseUrl}/health'),
+        ).timeout(const Duration(seconds: ApiConfig.healthTimeoutSeconds));
+        
+        if (response.statusCode == 200) {
+          return 'ONLINE';
+        }
+      } catch (_) {
+        if (attempt < 3) {
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
       }
-      return 'DEGRADED (${response.statusCode})';
-    } catch (e) {
-      return 'OFFLINE';
     }
+    return 'OFFLINE';
   }
 
   String getMarketStatus() {

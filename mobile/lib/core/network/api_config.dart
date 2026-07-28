@@ -10,7 +10,7 @@ class ApiConfig {
   static String _env = 'Production';
 
   static const int timeoutSeconds = 60; // Scanner can take a few seconds
-  static const int healthTimeoutSeconds = 3; // Fast fail for health check
+  static const int healthTimeoutSeconds = 8; // Resilient health check timeout
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();

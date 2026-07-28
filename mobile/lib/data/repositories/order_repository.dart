@@ -14,7 +14,7 @@ class OrderRepository {
     String product = 'I',
   }) async {
     final baseUrl = ApiConfig.baseUrl;
-    final url = Uri.parse('$baseUrl/api/v1/orders/preview');
+    final url = Uri.parse('$baseUrl/orders/preview');
 
     final body = jsonEncode({
       'symbol': symbol,
@@ -50,7 +50,7 @@ class OrderRepository {
     bool confirmed = true,
   }) async {
     final baseUrl = ApiConfig.baseUrl;
-    final url = Uri.parse('$baseUrl/api/v1/orders/execute');
+    final url = Uri.parse('$baseUrl/orders/execute');
 
     final body = jsonEncode({
       'symbol': symbol,
@@ -78,7 +78,7 @@ class OrderRepository {
 
   Future<List<OrderBookItemModel>> fetchOrderBook() async {
     final baseUrl = ApiConfig.baseUrl;
-    final url = Uri.parse('$baseUrl/api/v1/orders/book');
+    final url = Uri.parse('$baseUrl/orders/book');
 
     final response = await http
         .get(url)
@@ -95,7 +95,7 @@ class OrderRepository {
 
   Future<bool> cancelOrder(String orderId) async {
     final baseUrl = ApiConfig.baseUrl;
-    final url = Uri.parse('$baseUrl/api/v1/orders/cancel/$orderId');
+    final url = Uri.parse('$baseUrl/orders/cancel/$orderId');
 
     final response = await http
         .post(url)
