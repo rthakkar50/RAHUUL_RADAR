@@ -45,7 +45,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
     super.dispose();
   }
 
+  bool _isFetching = false;
+
   Future<void> _fetchScans({bool isAutoRefresh = false}) async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     setState(() {
       _isLoading = true;
       if (!isAutoRefresh) _error = null;
@@ -68,6 +73,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
           _isLoading = false;
         });
       }
+    } finally {
+      _isFetching = false;
     }
   }
 

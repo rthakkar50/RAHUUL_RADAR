@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/network/api_config.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
@@ -13,7 +14,7 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
@@ -24,6 +25,29 @@ class _MainNavigationState extends State<MainNavigation> {
     const RiskScreen(),
     const SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    ApiConfig.logProductionEvent('INFO', 'App initialized and listening to lifecycle events.');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      ApiConfig.logProductionEvent('INFO', 'App resumed from background. Validating connectivity.');
+    } else if (state == AppLifecycleState.paused) {
+      ApiConfig.logProductionEvent('INFO', 'App paused into background.');
+    }
+  }
 
   void _navigateTo(int index) {
     setState(() {
