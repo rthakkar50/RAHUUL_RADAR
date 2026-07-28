@@ -39,7 +39,12 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     super.dispose();
   }
 
+  bool _isFetching = false;
+
   Future<void> _fetchPortfolio({bool silent = false}) async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     if (!silent) setState(() { _isLoading = true; _error = null; });
     try {
       final data = await _repository.getPortfolio();
@@ -58,6 +63,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           _isLoading = false;
         });
       }
+    } finally {
+      _isFetching = false;
     }
   }
 
