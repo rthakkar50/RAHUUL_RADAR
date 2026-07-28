@@ -16,7 +16,7 @@ class _JournalScreenState extends State<JournalScreen> {
   String? _error;
   String _selectedFilter = 'ALL'; // ALL, BUY, SELL, WIN, LOSS
 
-  final List<String> _filters = ['ALL', 'BUY', 'SELL', 'WIN', 'LOSS'];
+  final List<String> _filters = ['ALL', 'TODAY', 'WEEK', 'MONTH', 'WIN', 'LOSS'];
 
   @override
   void initState() {
@@ -24,7 +24,12 @@ class _JournalScreenState extends State<JournalScreen> {
     _fetchJournal();
   }
 
+  bool _isFetching = false;
+
   Future<void> _fetchJournal() async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -46,13 +51,34 @@ class _JournalScreenState extends State<JournalScreen> {
           _isLoading = false;
         });
       }
+    } finally {
+      _isFetching = false;
     }
   }
 
   List<JournalTradeModel> get _filteredTrades {
     if (_data == null) return [];
     final all = _data!.trades;
+    final now = DateTime.now();
+
     switch (_selectedFilter) {
+      case 'TODAY':
+        final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        final filtered = all.where((t) => t.tradeDate.startsWith(todayStr)).toList();
+        return filtered.isNotEmpty ? filtered : all.take(5).toList();
+      case 'WEEK':
+        final sevenDaysAgo = now.subtract(const Duration(days: 7));
+        return all.where((t) {
+          try {
+            final dt = DateTime.parse(t.tradeDate);
+            return dt.isAfter(sevenDaysAgo);
+          } catch (_) {
+            return true;
+          }
+        }).toList();
+      case 'MONTH':
+        final monthStr = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+        return all.where((t) => t.tradeDate.startsWith(monthStr)).toList();
       case 'BUY':
         return all.where((t) => t.signal.toUpperCase() == 'BUY').toList();
       case 'SELL':
