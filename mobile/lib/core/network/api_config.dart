@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
@@ -6,31 +8,62 @@ class ApiConfig {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static String _localIp = '137.23.34.223'; // Default to Production API
+  static String _localIp = '137.23.34.223';
+  static String _activeIp = '137.23.34.223';
   static String _port = '8000';
   static String _env = 'Production';
 
-  static const int timeoutSeconds = 60; // Scanner can take a few seconds
-  static const int healthTimeoutSeconds = 8; // Resilient health check timeout
+  static const int timeoutSeconds = 60;
+  static const int healthTimeoutSeconds = 8;
+
+  // Candidate IP endpoints for automatic multi-network failover (Wi-Fi, Mobile Data, Local, Cloud)
+  static final List<String> _candidateIps = [
+    '137.23.34.223',
+    '192.168.29.57',
+    '10.0.2.2',
+    '127.0.0.1'
+  ];
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _localIp = prefs.getString(keyIp) ?? '137.23.34.223';
     _port = prefs.getString(keyPort) ?? '8000';
     _env = prefs.getString(keyEnv) ?? 'Production';
+    _activeIp = _localIp;
+
+    // Trigger silent multi-network auto-discovery in background
+    unawaited(autoDiscoverReachableServer());
+  }
+
+  static Future<String> autoDiscoverReachableServer() async {
+    final candidates = [_localIp, ..._candidateIps.where((ip) => ip != _localIp)];
+
+    for (final ip in candidates) {
+      try {
+        final uri = Uri.parse('http://$ip:$_port/api/v1/health');
+        final response = await http.get(uri).timeout(const Duration(seconds: 2));
+        if (response.statusCode == 200) {
+          _activeIp = ip;
+          logProductionEvent('INFO', 'Auto-discovered active server IP: $_activeIp');
+          return _activeIp;
+        }
+      } catch (_) {}
+    }
+    return _activeIp;
   }
 
   static String get localIp => _localIp;
+  static String get activeIp => _activeIp;
   static String get port => _port;
   static String get env => _env;
 
   static String get baseUrl {
     validateConfig();
-    return 'http://$_localIp:$_port/api/v1';
+    return 'http://$_activeIp:$_port/api/v1';
   }
 
   static bool validateConfig() {
-    if (_localIp.trim().isEmpty || _port.trim().isEmpty) {
+    if (_activeIp.trim().isEmpty || _port.trim().isEmpty) {
       logProductionEvent('WARNING', 'Invalid configuration: IP or Port is empty.');
       return false;
     }
@@ -47,10 +80,14 @@ class ApiConfig {
     await prefs.setString(keyIp, ip);
     await prefs.setString(keyPort, p);
     await prefs.setString(keyEnv, environment);
-    
+
     _localIp = ip.trim();
+    _activeIp = ip.trim();
     _port = p.trim();
     _env = environment.trim();
     logProductionEvent('INFO', 'Configuration updated: IP=$_localIp, Port=$_port, Env=$_env');
+    
+    // Auto-verify reachable candidate
+    unawaited(autoDiscoverReachableServer());
   }
 }

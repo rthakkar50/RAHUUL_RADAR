@@ -20,7 +20,9 @@ class DashboardRepository {
           return 'ONLINE';
         }
       } catch (_) {
-        if (attempt < 3) {
+        if (attempt == 1) {
+          await ApiConfig.autoDiscoverReachableServer();
+        } else if (attempt < 3) {
           await Future.delayed(const Duration(milliseconds: 500));
         }
       }
