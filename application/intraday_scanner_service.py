@@ -77,14 +77,14 @@ def safe_int(val, default=0):
 logger = logging.getLogger("IntradayScannerService")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# F&O SPECIFIC THRESHOLDS - STRICTER FOR OPTIONS TRADING
+# F&O SPECIFIC THRESHOLDS - ADAPTIVE & REALISTIC FOR INTRADAY
 # ═══════════════════════════════════════════════════════════════════════════════
-FNO_BUY_THRESHOLD = 70.0           # Was 55 → Now 70 (strict)
-FNO_MIN_ADX = 30.0                 # Was 20 → Now 30 (strong trend)
-FNO_MIN_CONFIDENCE = 80.0          # Was 60 → Now 80 (high conviction)
-FNO_MIN_VOLUME_RATIO = 2.0       # Was 1.5 → Now 2.0 (high volume)
-FNO_MIN_RR_RATIO = 1.5            # NEW: Minimum risk-reward
-FNO_MIN_LIQUIDITY = 500000        # NEW: Minimum avg volume for F&O
+FNO_BUY_THRESHOLD = 55.0           # Realistic threshold (55)
+FNO_MIN_ADX = 18.0                 # Realistic ADX for 5m candles
+FNO_MIN_CONFIDENCE = 60.0          # Realistic confidence
+FNO_MIN_VOLUME_RATIO = 1.2         # Realistic volume ratio
+FNO_MIN_RR_RATIO = 1.2             # Realistic RR
+FNO_MIN_LIQUIDITY = 1000           # Realistic liquidity threshold
 
 
 class FNOFilterEngine:
@@ -230,6 +230,9 @@ class IntradayScannerService:
         
         try:
             # 1. Setup
+            from market.paytm_provider import PaytmMoneyProvider
+            from market.market_data_manager import MarketDataManager
+            
             market_provider = getattr(self.config, 'market_provider', getattr(self.config, 'data_provider', 'yahoo'))
             if market_provider == 'dhan':
                 data_provider = DhanProvider(
@@ -237,15 +240,16 @@ class IntradayScannerService:
                     access_token=getattr(self.config, 'dhan_access_token', '')
                 )
             elif market_provider == 'paytm':
-                data_provider = PaytmMoneyProvider()
+                try:
+                    data_provider = PaytmMoneyProvider()
+                except Exception as _e:
+                    logger.warning("PaytmMoneyProvider init failed (%s). Falling back to Yahoo Finance.", _e)
+                    data_provider = YahooFinanceProvider()
             else:
                 data_provider = YahooFinanceProvider()
                 
             logger.info("Connecting to data provider...")
             data_provider.connect()
-            
-            from market.market_data_manager import MarketDataManager
-            from market.paytm_provider import PaytmMoneyProvider
             
             try:
                 paytm_provider = PaytmMoneyProvider()
