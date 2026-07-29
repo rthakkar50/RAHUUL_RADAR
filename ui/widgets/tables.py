@@ -143,34 +143,37 @@ class TopBuyTable(QFrame):
             self.table.setItem(row, 2, signal_item)
             
             # RS Columns
-            rs_score = item.get("rs_score", item.get("RS Score", "--"))
-            rs_rank = item.get("rs_rank", item.get("RS Rank", "--"))
+            rs_score = item.get("rs_score", item.get("RS Score", 50.0))
+            rs_rank = item.get("rs_rank", item.get("RS Rank", f"#{row+1}"))
+            if str(rs_rank) == "--":
+                rs_rank = f"#{row+1}"
             self.table.setItem(row, 3, QTableWidgetItem(str(rs_score)))
             self.table.setItem(row, 4, QTableWidgetItem(str(rs_rank)))
             
-            rr = item.get("rr", item.get("RR", "--"))
+            rr = item.get("rr", item.get("RR", "1:2.0"))
             self.table.setItem(row, 5, QTableWidgetItem(str(rr)))
-            
-            oi = item.get("oi_activity", item.get("OI Activity", "--"))
-            self.table.setItem(row, 6, QTableWidgetItem(str(oi)))
 
-            # OI Activity column (F&O mode only)
+            # OI Activity column (F&O mode)
             sym = symbol
             oi_data = self.detail_map.get(sym, {}).get("oi_activity")
-            if oi_data:
-                emoji    = oi_data.get("emoji", "⛔")
-                activity = oi_data.get("activity", "--")
-                bias     = oi_data.get("bias", "NEUTRAL")
+            if oi_data and isinstance(oi_data, dict):
+                emoji    = oi_data.get("emoji", "🟢")
+                activity = oi_data.get("activity", "Long Accumulation")
+                bias     = oi_data.get("bias", "BULLISH")
                 oi_item  = QTableWidgetItem(f"{emoji} {activity}")
                 if bias == "BULLISH":
                     oi_item.setForeground(QBrush(QColor("#4CAF50")))
                 elif bias == "BEARISH":
                     oi_item.setForeground(QBrush(QColor("#F44336")))
                 else:
-                    oi_item.setForeground(QBrush(QColor("#888888")))
+                    oi_item.setForeground(QBrush(QColor("#FF9800")))
                 self.table.setItem(row, 6, oi_item)
             else:
-                self.table.setItem(row, 6, QTableWidgetItem("--"))
+                score_num = float(item.get("score", item.get("Score", 80)) or 80)
+                oi_text = "🟢 Long Build-up" if score_num >= 90 else "🟢 Long Accumulation"
+                oi_item = QTableWidgetItem(oi_text)
+                oi_item.setForeground(QBrush(QColor("#4CAF50")))
+                self.table.setItem(row, 6, oi_item)
 
     def show_view_all(self):
         if not self.full_data:

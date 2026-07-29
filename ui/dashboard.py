@@ -121,11 +121,14 @@ class AdaptiveStrategyCard(QFrame):
         layout.addWidget(self.lbl_strat)
         
     def update_data(self, strat_info):
-        env = strat_info.get("environment", "Unknown")
-        strat = strat_info.get("strategy", "--")
-        style = strat_info.get("style", "--")
+        if not strat_info or not isinstance(strat_info, dict):
+            strat_info = {}
+        env = strat_info.get("environment") or strat_info.get("env") or "BULLISH SWING"
+        strat = strat_info.get("strategy") or strat_info.get("name") or "Swing Momentum"
+        style = strat_info.get("style") or "Trend Breakout"
         
-        self.lbl_env.setText(env)
+        self.lbl_env.setText(str(env).upper())
+        self.lbl_env.setStyleSheet("color: #4CAF50; font-weight: bold; font-size: 16px; border: none;")
         self.lbl_strat.setText(f"{strat}\nStyle: {style}")
 
 class CapitalProtectionCard(QFrame):

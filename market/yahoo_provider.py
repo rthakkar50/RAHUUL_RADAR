@@ -355,5 +355,20 @@ class YahooFinanceProvider(MarketDataProvider):
 
     def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
         """Fetch Option Chain from Yahoo Finance (Not implemented)"""
-        self.logger.warning("Option Chain not supported for Yahoo Finance in this implementation.")
+        logger.warning("Option Chain not supported for Yahoo Finance in this implementation.")
         return {}
+
+    def fetch_stock_data(self, symbol: str, period: str = "1mo", interval: str = "1d") -> pd.DataFrame:
+        """Helper method to return DataFrame directly for DataManager compatibility."""
+        formatted_symbol = self._format_symbol(symbol)
+        try:
+            ticker = yf.Ticker(formatted_symbol, session=self._session)
+            df = ticker.history(period=period, interval=interval)
+            return df if df is not None and not df.empty else pd.DataFrame()
+        except Exception as e:
+            logger.error(f"Error fetching stock data for {symbol}: {e}")
+            return pd.DataFrame()
+
+    def get_stock_data(self, symbol: str, period: str = "1mo", interval: str = "1d") -> pd.DataFrame:
+        """Alias for fetch_stock_data."""
+        return self.fetch_stock_data(symbol, period, interval)

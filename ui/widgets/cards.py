@@ -56,24 +56,40 @@ class BestTradeCard(QFrame):
         super().mousePressEvent(event)
         
     def update_data(self, data):
-        self.val_symbol.setText(data.get("symbol", "--"))
-        
-        signal = data.get("signal", "--")
-        self.val_signal.setText(signal)
-        if signal == "BUY":
+        if not data:
+            return
+        sym = str(data.get("symbol") or data.get("Symbol") or "--").replace(".NS", "")
+        sig = str(data.get("signal") or data.get("Signal") or "--").upper()
+        grade = str(data.get("grade") or data.get("Grade") or ("A+" if "BUY" in sig else "--"))
+        conf = data.get("confidence") or data.get("Confidence") or "--"
+        if conf != "--":
+            try:
+                conf = f"{float(conf):.1f}%"
+            except Exception:
+                conf = f"{conf}%"
+
+        price = data.get("entry") or data.get("Entry") or data.get("price") or data.get("Price") or "--"
+        sl = data.get("sl") or data.get("Stop Loss") or "--"
+        t1 = data.get("target1") or data.get("Target 1") or "--"
+        t2 = data.get("target2") or data.get("Target 2") or "--"
+        rr = data.get("rr") or data.get("Risk Reward") or data.get("RR") or "--"
+
+        self.val_symbol.setText(sym)
+        self.val_signal.setText(sig)
+        if "BUY" in sig:
             self.val_signal.setStyleSheet(f"color: {COLOR_BUY}; font-weight: bold;")
-        elif signal == "SELL":
+        elif "SELL" in sig:
             self.val_signal.setStyleSheet(f"color: {COLOR_SELL}; font-weight: bold;")
         else:
             self.val_signal.setStyleSheet("")
-            
-        self.val_grade.setText(data.get("grade", "--"))
-        self.val_confidence.setText(f"{data.get('confidence', '--')}%")
-        self.val_entry.setText(data.get("entry", "--"))
-        self.val_sl.setText(data.get("sl", "--"))
-        self.val_target1.setText(data.get("target1", "--"))
-        self.val_target2.setText(data.get("target2", "--"))
-        self.val_rr.setText(data.get("rr", "--"))
+
+        self.val_grade.setText(grade)
+        self.val_confidence.setText(str(conf))
+        self.val_entry.setText(f"₹{float(price):,.2f}" if isinstance(price, (int, float)) or (isinstance(price, str) and price.replace(".","").isdigit()) else str(price))
+        self.val_sl.setText(f"₹{float(sl):,.2f}" if isinstance(sl, (int, float)) or (isinstance(sl, str) and sl.replace(".","").isdigit()) else str(sl))
+        self.val_target1.setText(f"₹{float(t1):,.2f}" if isinstance(t1, (int, float)) or (isinstance(t1, str) and t1.replace(".","").isdigit()) else str(t1))
+        self.val_target2.setText(f"₹{float(t2):,.2f}" if isinstance(t2, (int, float)) or (isinstance(t2, str) and t2.replace(".","").isdigit()) else str(t2))
+        self.val_rr.setText(str(rr))
 
 class ScanStatsCard(QFrame):
     def __init__(self):

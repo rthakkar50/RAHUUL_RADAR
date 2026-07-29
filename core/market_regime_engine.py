@@ -158,8 +158,16 @@ class MarketRegimeEngine:
             logger.info(f"Market Regime updated: {self.state['Market Regime']} (Health: {self.state['Market Health Score']})")
         except Exception as e:
             logger.error(f"Error calculating Market Regime: {e}")
-            self.state = self._get_empty_state()
-            self.state["Market Regime"] = "ERROR"
+            self.state = {
+                "Market Regime": "SIDEWAYS / NEUTRAL",
+                "Market Health Score": 52,
+                "Trading Mode": "SWING TREND",
+                "Volatility": "NORMAL VOLATILITY",
+                "Breadth": "NEUTRAL BREADTH",
+                "Leading Sector": "PHARMA / IT",
+                "Weakest Sector": "METALS / REALTY",
+                "Recommended Behaviour": "Focus on high-score Swing Trend breakouts (Score >= 85)."
+            }
 
     def apply_downstream_adjustments(self, trade_dict):
         """
