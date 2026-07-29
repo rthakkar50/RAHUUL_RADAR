@@ -9,7 +9,7 @@ import json
 import time
 import re
 import sqlite3
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, date
 
 class TelegramIntelligence:
