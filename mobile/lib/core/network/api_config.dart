@@ -8,9 +8,9 @@ class ApiConfig {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static String _localIp = '137.23.34.223';
-  static String _activeIp = '137.23.34.223';
-  static String _port = '8000';
+  static String _localIp = 'finder-dana-sing-directive.trycloudflare.com';
+  static String _activeIp = 'finder-dana-sing-directive.trycloudflare.com';
+  static String _port = '443';
   static String _env = 'Production';
 
   static const int timeoutSeconds = 60;
@@ -18,6 +18,7 @@ class ApiConfig {
 
   // Candidate IP endpoints for automatic multi-network failover (Wi-Fi, Mobile Data, Local, Cloud)
   static final List<String> _candidateIps = [
+    'finder-dana-sing-directive.trycloudflare.com',
     '137.23.34.223',
     '192.168.29.57',
     '10.0.2.2',
