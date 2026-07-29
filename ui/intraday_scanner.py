@@ -176,15 +176,6 @@ class IntradayScannerPage(QWidget):
         # ── Toolbar Row ─────────────────────────────────────────────────────────
         toolbar_layout = QHBoxLayout()
         
-        self.profile_combo = QComboBox()
-        self.profile_combo.addItems(["Intraday", "Swing", "Scalp"])
-        
-        self.exchange_combo = QComboBox()
-        self.exchange_combo.addItems(["NSE F&O", "NSE Equity"])
-        
-        self.combo_tf = QComboBox()
-        self.combo_tf.addItems(["5m", "15m"])
-        
         self.btn_auto_scan = QPushButton("Auto Scan: OFF")
         self.btn_auto_scan.setCheckable(True)
         self.btn_auto_scan.toggled.connect(self.toggle_auto_scan)
@@ -210,13 +201,10 @@ class IntradayScannerPage(QWidget):
         self.min_score_combo.addItems(["Score: All", "Score > 80", "Score > 70"])
         self.min_score_combo.currentTextChanged.connect(self.apply_filters)
         
-        toolbar_layout.addWidget(self.profile_combo)
-        toolbar_layout.addWidget(self.exchange_combo)
-        toolbar_layout.addWidget(self.combo_tf)
-        toolbar_layout.addStretch()
         toolbar_layout.addWidget(self.sector_combo)
         toolbar_layout.addWidget(self.min_score_combo)
         toolbar_layout.addWidget(self.search_box)
+        toolbar_layout.addStretch()
         toolbar_layout.addWidget(self.btn_auto_scan)
         toolbar_layout.addWidget(self.btn_scan)
         
@@ -404,7 +392,7 @@ class IntradayScannerPage(QWidget):
         self.sell_table.setRowCount(0)
         self.watch_table.setRowCount(0)
         
-        tf = self.combo_tf.currentText()
+        tf = self.combo_tf.currentText() if hasattr(self, 'combo_tf') else "5m"
         self.scan_thread = IntradayScanThread(tf)
         self.scan_thread.progress.connect(self.progress.setValue)
         self.scan_thread.status.connect(self.lbl_status.setText)
