@@ -107,11 +107,16 @@ class ScalpingScannerService:
                     access_token=getattr(self.config, 'dhan_access_token', '')
                 )
             elif market_provider == 'paytm':
-                data_provider = PaytmMoneyProvider()
-                data_provider.connect()
+                try:
+                    data_provider = PaytmMoneyProvider()
+                    data_provider.connect()
+                except Exception as _e:
+                    logger.warning("PaytmMoneyProvider init failed (%s). Falling back to Yahoo Finance.", _e)
+                    data_provider = YahooFinanceProvider()
+                    data_provider.connect()
             else:
                 data_provider = YahooFinanceProvider()
-            data_provider.connect()
+                data_provider.connect()
             
             try:
                 fno_data = get_fno_symbols()
