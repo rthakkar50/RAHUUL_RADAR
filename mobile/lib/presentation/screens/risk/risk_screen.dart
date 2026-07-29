@@ -106,13 +106,13 @@ class RiskReport {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RiskRepository {
-  final String _base;
-  RiskRepository() : _base = ApiConfig.baseUrl;
+  String get _base => ApiConfig.baseUrl;
 
   Future<RiskReport> fetchReport() async {
+    final uri = Uri.parse('$_base/risk/report');
     final res = await http
-        .get(Uri.parse('$_base/risk/report'))
-        .timeout(const Duration(seconds: 8));
+        .get(uri)
+        .timeout(const Duration(seconds: 12));
     if (res.statusCode == 200) {
       return RiskReport.fromJson(json.decode(res.body) as Map<String, dynamic>);
     }
@@ -122,28 +122,28 @@ class RiskRepository {
   Future<bool> activateKillSwitch() async {
     final res = await http
         .post(Uri.parse('$_base/risk/kill-switch/activate'))
-        .timeout(const Duration(seconds: 8));
+        .timeout(const Duration(seconds: 12));
     return res.statusCode == 200;
   }
 
   Future<bool> deactivateKillSwitch() async {
     final res = await http
         .post(Uri.parse('$_base/risk/kill-switch/deactivate'))
-        .timeout(const Duration(seconds: 8));
+        .timeout(const Duration(seconds: 12));
     return res.statusCode == 200;
   }
 
   Future<bool> disableAutoTrading() async {
     final res = await http
         .post(Uri.parse('$_base/risk/auto-trading/disable'))
-        .timeout(const Duration(seconds: 8));
+        .timeout(const Duration(seconds: 12));
     return res.statusCode == 200;
   }
 
   Future<bool> enableAutoTrading() async {
     final res = await http
         .post(Uri.parse('$_base/risk/auto-trading/enable'))
-        .timeout(const Duration(seconds: 8));
+        .timeout(const Duration(seconds: 12));
     return res.statusCode == 200;
   }
 }
