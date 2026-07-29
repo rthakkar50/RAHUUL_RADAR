@@ -148,6 +148,9 @@ class AnalyticsScreen(QWidget):
         for t in trades:
             sym, sig, res, ret_str, sc = t[2], t[3], t[7], t[8], t[9]
             
+            if not sym or sym.startswith("STRESS_") or sym.startswith("TEST"):
+                continue
+                
             if res not in ("WIN", "LOSS"):
                 continue
                 
