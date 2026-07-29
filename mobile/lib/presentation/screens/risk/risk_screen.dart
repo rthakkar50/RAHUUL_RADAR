@@ -55,28 +55,40 @@ class RiskReport {
     required this.autoTrading,
   });
 
+  static double _toDouble(dynamic v, double fallback) {
+    if (v == null) return fallback;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? fallback;
+  }
+
+  static int _toInt(dynamic v, int fallback) {
+    if (v == null) return fallback;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString()) ?? fallback;
+  }
+
   factory RiskReport.fromJson(Map<String, dynamic> j) => RiskReport(
-        riskUsed: (j['risk_used'] ?? 0).toDouble(),
-        riskRemaining: (j['risk_remaining'] ?? 0).toDouble(),
-        riskUsedPct: (j['risk_used_pct'] ?? 0).toDouble(),
-        riskRemainingPct: (j['risk_remaining_pct'] ?? 100).toDouble(),
-        availableMargin: (j['available_margin'] ?? 0).toDouble(),
-        buyingPower: (j['buying_power'] ?? 0).toDouble(),
-        dailyLoss: (j['daily_loss'] ?? 0).toDouble(),
-        dailyProfit: (j['daily_profit'] ?? 0).toDouble(),
-        dailyLossLimit: (j['daily_loss_limit'] ?? 5000).toDouble(),
-        dailyProfitTarget: (j['daily_profit_target'] ?? 15000).toDouble(),
-        capital: (j['capital'] ?? 0).toDouble(),
-        totalExposure: (j['total_exposure'] ?? 0).toDouble(),
-        exposurePct: (j['exposure_pct'] ?? 0).toDouble(),
-        openTrades: (j['open_trades'] ?? 0).toInt(),
-        maxOpenTrades: (j['max_open_trades'] ?? 5).toInt(),
-        ordersToday: (j['orders_today'] ?? 0).toInt(),
-        maxOrdersPerDay: (j['max_orders_per_day'] ?? 20).toInt(),
-        consecutiveLosses: (j['consecutive_losses'] ?? 0).toInt(),
-        maxConsecutiveLosses: (j['max_consecutive_losses'] ?? 3).toInt(),
-        killSwitch: j['kill_switch'] ?? false,
-        autoTrading: j['auto_trading'] ?? true,
+        riskUsed: _toDouble(j['risk_used'], 0.0),
+        riskRemaining: _toDouble(j['risk_remaining'], 5000.0),
+        riskUsedPct: _toDouble(j['risk_used_pct'], 0.0),
+        riskRemainingPct: _toDouble(j['risk_remaining_pct'], 100.0),
+        availableMargin: _toDouble(j['available_margin'], 85000.0),
+        buyingPower: _toDouble(j['buying_power'], 85000.0),
+        dailyLoss: _toDouble(j['daily_loss'], 0.0),
+        dailyProfit: _toDouble(j['daily_profit'], 0.0),
+        dailyLossLimit: _toDouble(j['daily_loss_limit'], 5000.0),
+        dailyProfitTarget: _toDouble(j['daily_profit_target'], 15000.0),
+        capital: _toDouble(j['capital'], 100000.0),
+        totalExposure: _toDouble(j['total_exposure'], 0.0),
+        exposurePct: _toDouble(j['exposure_pct'], 0.0),
+        openTrades: _toInt(j['open_trades'], 0),
+        maxOpenTrades: _toInt(j['max_open_trades'], 5),
+        ordersToday: _toInt(j['orders_today'], 0),
+        maxOrdersPerDay: _toInt(j['max_orders_per_day'], 20),
+        consecutiveLosses: _toInt(j['consecutive_losses'], 0),
+        maxConsecutiveLosses: _toInt(j['max_consecutive_losses'], 3),
+        killSwitch: j['kill_switch'] == true,
+        autoTrading: j['auto_trading'] != false,
       );
 
   static const empty = RiskReport(
