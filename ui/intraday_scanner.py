@@ -457,7 +457,7 @@ class IntradayScannerPage(QWidget):
             direction = res.get("direction", "WAIT")
             symbol = str(res.get("symbol", res.get("Symbol", "")))
             score = float(res.get("score", 0))
-            trade_type = res.get("trade_type", "⚡ SCALP" if score >= 65 else "📈 INTRADAY")
+            trade_type = res.get("trade_type", "📈 SWING-INTRADAY" if score >= 45 else "🟡 WATCH")
             
             entry_val = float(res.get("entry", 0.0))
             sl_val = float(res.get("sl", 0.0))
