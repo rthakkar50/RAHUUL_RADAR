@@ -112,7 +112,7 @@ class IntradayQualityGate:
                 custom_score -= 10
                 rejection_factors.append("Low Vol in High VIX")
 
-        # Signal Classification based on Score
+        # Signal Classification based on Score (45+ for BUY/SELL, 25+ for WATCH)
         if custom_score >= 45:
             signal = "BUY" if direction == "BULLISH" else "SELL"
         elif custom_score >= 25:
