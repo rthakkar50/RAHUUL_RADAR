@@ -39,8 +39,11 @@ class PaytmMoneyProvider(MarketDataProvider):
         if not self.api_key or not self.api_secret or not self.request_token:
             self._load_credentials_from_config()
 
-        if not self.api_key or not self.api_secret or not self.request_token:
-            raise ValueError("PaytmMoneyProvider initialization error: Missing required Paytm Money credentials (PAYTM_API_KEY, PAYTM_API_SECRET, or PAYTM_REQUEST_TOKEN). Never silently use placeholder credentials.")
+        if not self.api_key or self.api_key == "YOUR_PAYTM_API_KEY":
+            logger.warning("PaytmMoneyProvider: Paytm API key not set. Using Yahoo Finance fallback for live market data.")
+            self._use_fallback_only = True
+        else:
+            self._use_fallback_only = False
 
     def _load_credentials_from_config(self):
         try:

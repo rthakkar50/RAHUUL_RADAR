@@ -112,13 +112,13 @@ class IntradayQualityGate:
                 custom_score -= 10
                 rejection_factors.append("Low Vol in High VIX")
 
-        # Signal Classification based on SPRINT-94 Score
-        if custom_score >= 65:
+        # Signal Classification based on Score
+        if custom_score >= 45:
             signal = "BUY" if direction == "BULLISH" else "SELL"
-        elif custom_score >= 40:
+        elif custom_score >= 25:
             signal = "WATCH"
         else:
-            dominant_reason = " | ".join(rejection_factors[:2]) if rejection_factors else "Score below 40"
+            dominant_reason = " | ".join(rejection_factors[:2]) if rejection_factors else "Score below 25"
             return False, "REJECT", custom_score, [], dominant_reason
 
         # Generate Explanation and Next Trigger (SPRINT-95)

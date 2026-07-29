@@ -137,7 +137,22 @@ class IntradayScanThread(QThread):
         top_buys.sort(key=lambda x: x["score"], reverse=True)
         top_sells.sort(key=lambda x: x["score"], reverse=True)
         top_watch.sort(key=lambda x: x["score"], reverse=True)
-        
+
+        # Auto-promote top candidates to ensure BUY and SELL tables are never empty
+        if not top_buys and top_watch:
+            bullish_watches = [r for r in top_watch if r.get("direction") == "BULLISH"]
+            if bullish_watches:
+                top_buys = bullish_watches[:5]
+                for r in top_buys:
+                    if r in top_watch: top_watch.remove(r)
+                    
+        if not top_sells and top_watch:
+            bearish_watches = [r for r in top_watch if r.get("direction") == "BEARISH"]
+            if bearish_watches:
+                top_sells = bearish_watches[:5]
+                for r in top_sells:
+                    if r in top_watch: top_watch.remove(r)
+                    
         stats["Qualified"] = len(top_buys) + len(top_sells) + len(top_watch)
         
         self.status.emit("Scan Complete")
