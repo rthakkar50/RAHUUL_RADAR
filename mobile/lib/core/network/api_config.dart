@@ -59,7 +59,15 @@ class ApiConfig {
 
   static String get baseUrl {
     validateConfig();
-    return 'http://$_activeIp:$_port/api/v1';
+    var target = _activeIp.trim();
+    if (target.startsWith('http://') || target.startsWith('https://')) {
+      if (target.endsWith('/')) target = target.substring(0, target.length - 1);
+      if (target.endsWith('/api/v1')) return target;
+      return '$target/api/v1';
+    }
+    final scheme = (_port == '443' || target.contains('loca.lt') || target.contains('ngrok')) ? 'https' : 'http';
+    final portStr = (_port == '80' || _port == '443' || target.contains('loca.lt') || target.contains('ngrok')) ? '' : ':$_port';
+    return '$scheme://$target$portStr/api/v1';
   }
 
   static bool validateConfig() {
