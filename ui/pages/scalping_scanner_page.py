@@ -299,7 +299,9 @@ class ScalpingScannerPage(QWidget):
         # Apply Sorting first
         self.apply_sorting()
         
-    def _populate_table(self, results):
+    def _populate_table(self, results=None):
+        if results is None:
+            results = self.scan_results
         self.table.populate(results)
         
         # Update Statste Stats
