@@ -42,6 +42,7 @@ class ScalpingScannerPage(QWidget):
         # Setup auto refresh timer
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self.run_scan)
+        QTimer.singleShot(600, self.run_scan)
         
     def _init_ui(self):
         self.main_layout = QVBoxLayout(self)
