@@ -277,16 +277,17 @@ class IntradayScannerPage(QWidget):
     def create_table(self):
         from PySide6.QtWidgets import QTableWidget, QHeaderView, QAbstractItemView
         table = QTableWidget()
-        table.setColumnCount(11) # Hide Price, Change, Volume entirely for now
+        table.setColumnCount(12)
         table.setHorizontalHeaderLabels([
-            "Rank", "Symbol", "Sector", "Signal", "Grade", "Score", "Confidence", 
+            "Rank", "Type", "Symbol", "Sector", "Signal", "Grade", "Score", "Confidence", 
             "Entry", "SL", "Target", "RR"
         ])
         header_view = table.horizontalHeader()
         header_view.setSectionResizeMode(QHeaderView.Interactive)
-        header_view.setDefaultSectionSize(90)
+        header_view.setDefaultSectionSize(85)
         header_view.resizeSection(0, 45) # Rank
-        header_view.setSectionResizeMode(1, QHeaderView.Stretch) # Symbol
+        header_view.resizeSection(1, 100) # Type
+        header_view.setSectionResizeMode(2, QHeaderView.Stretch) # Symbol
         table.setSortingEnabled(True)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -461,13 +462,14 @@ class IntradayScannerPage(QWidget):
 
     def populate_table(self, table, data_list, action_color):
         table.setSortingEnabled(False)
-        table.setColumnCount(11)
+        table.setColumnCount(12)
         for row, res in enumerate(data_list):
             table.insertRow(row)
             
             direction = res.get("direction", "WAIT")
             symbol = str(res.get("symbol", res.get("Symbol", "")))
             score = float(res.get("score", 0))
+            trade_type = res.get("trade_type", "⚡ SCALP" if score >= 65 else "📈 INTRADAY")
             
             entry_val = float(res.get("entry", 0.0))
             sl_val = float(res.get("sl", 0.0))
@@ -485,6 +487,7 @@ class IntradayScannerPage(QWidget):
             
             items = [
                 f"#{row+1}",
+                trade_type,
                 symbol,
                 res.get("sector", "FNO"),
                 direction,
