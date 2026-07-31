@@ -16,7 +16,7 @@ class ApiConfig {
   static const int timeoutSeconds = 60;
   static const int healthTimeoutSeconds = 8;
 
-  // Candidate endpoints for multi-network auto-failover (Wi-Fi, 4G/5G Mobile Data, Cloud VPS, Tunnels)
+  // Candidate endpoints for multi-network auto-failover (Mac Wi-Fi, Localtunnel, Cloud VPS, Localhost)
   static final List<String> _candidateIps = [
     '192.168.29.57',
     'odd-vans-shave.loca.lt',
@@ -37,7 +37,15 @@ class ApiConfig {
   }
 
   static Future<String> autoDiscoverReachableServer() async {
-    final candidates = [_localIp, ..._candidateIps.where((ip) => ip != _localIp)].toSet().toList();
+    final candidates = [
+      _localIp,
+      '192.168.29.57',
+      'odd-vans-shave.loca.lt',
+      '140.238.161.80',
+      '10.0.2.2',
+      '127.0.0.1'
+    ].where((ip) => ip.trim().isNotEmpty).toSet().toList();
+
     final completer = Completer<String>();
 
     for (final ip in candidates) {
@@ -59,7 +67,7 @@ class ApiConfig {
 
           if (response.statusCode == 200 && !completer.isCompleted) {
             _activeIp = ip;
-            logProductionEvent('INFO', 'Fastest reachable active server selected: $_activeIp');
+            logProductionEvent('INFO', 'Auto-discovered working active server: $_activeIp');
             completer.complete(_activeIp);
           }
         } catch (_) {}
