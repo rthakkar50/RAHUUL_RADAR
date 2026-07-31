@@ -88,6 +88,13 @@ else
     sleep 3
 fi
 
+# Setup Automatic 15-Minute Auto-Update Cron Job
+if [ -f "scripts/auto_update_cron.sh" ]; then
+    chmod +x scripts/auto_update_cron.sh
+    (crontab -l 2>/dev/null | grep -v "auto_update_cron.sh" ; echo "*/15 * * * * $WORK_DIR/scripts/auto_update_cron.sh") | crontab - || true
+    echo "[+] Automated 15-minute GitHub Auto-Sync enabled in Crontab!"
+fi
+
 echo "=================================================="
 echo " ✅ CLOUD DEPLOYMENT SUCCESSFUL!"
 echo " RAHUUL RADAR Server & Telegram Bot are now running 24/7!"
