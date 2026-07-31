@@ -220,34 +220,42 @@ class TelegramIntelligence:
         # 0. Fetch live /api/v1/scanner/swing REST API first for 100% unified Mobile App alignment
         try:
             import urllib.request
-            req = urllib.request.Request("http://127.0.0.1:8000/api/v1/scanner/swing")
-            with urllib.request.urlopen(req, timeout=4) as resp:
-                data = json.loads(resp.read().decode())
-                qual = data.get("qualified_results", [])
-                for item in qual:
-                    sym = str(item.get("symbol") or item.get("Symbol") or "").replace(".NS", "").strip()
-                    if not sym: continue
-                    sig = str(item.get("signal") or item.get("Signal") or "BUY").upper()
-                    sc = float(item.get("score") or item.get("Score") or 80.0)
-                    conf = float(item.get("confidence") or item.get("Confidence") or 85.0)
-                    p = float(item.get("price") or item.get("Price") or 0.0)
-                    sl = float(item.get("sl") or item.get("Stop Loss") or (p * 0.98 if p > 0 else 0.0))
-                    tgt = float(item.get("target_1") or item.get("Target 1") or item.get("target") or (p * 1.04 if p > 0 else 0.0))
-                    rr_val = item.get("risk_reward") or item.get("Risk Reward") or 2.5
-                    try:
-                        rr = float(str(rr_val).replace("1:", ""))
-                    except Exception:
-                        rr = 2.5
-                    opportunities.append({
-                        "symbol": sym,
-                        "signal": sig,
-                        "score": sc,
-                        "confidence": conf,
-                        "risk_reward": rr,
-                        "price": p,
-                        "sl": sl,
-                        "target": tgt
-                    })
+            port = os.environ.get("PORT", "8000")
+            urls = [f"http://127.0.0.1:{port}/api/v1/scanner/swing", "http://127.0.0.1:8000/api/v1/scanner/swing"]
+            for url in urls:
+                try:
+                    req = urllib.request.Request(url)
+                    with urllib.request.urlopen(req, timeout=3) as resp:
+                        data = json.loads(resp.read().decode())
+                        qual = data.get("qualified_results", [])
+                        if qual:
+                            for item in qual:
+                                sym = str(item.get("symbol") or item.get("Symbol") or "").replace(".NS", "").strip()
+                                if not sym: continue
+                                sig = str(item.get("signal") or item.get("Signal") or "BUY").upper()
+                                sc = float(item.get("score") or item.get("Score") or 80.0)
+                                conf = float(item.get("confidence") or item.get("Confidence") or 85.0)
+                                p = float(item.get("price") or item.get("Price") or 0.0)
+                                sl = float(item.get("sl") or item.get("Stop Loss") or (p * 0.98 if p > 0 else 0.0))
+                                tgt = float(item.get("target_1") or item.get("Target 1") or item.get("target") or (p * 1.04 if p > 0 else 0.0))
+                                rr_val = item.get("risk_reward") or item.get("Risk Reward") or 2.5
+                                try:
+                                    rr = float(str(rr_val).replace("1:", ""))
+                                except Exception:
+                                    rr = 2.5
+                                opportunities.append({
+                                    "symbol": sym,
+                                    "signal": sig,
+                                    "score": sc,
+                                    "confidence": conf,
+                                    "risk_reward": rr,
+                                    "price": p,
+                                    "sl": sl,
+                                    "target": tgt
+                                })
+                            break
+                except Exception:
+                    pass
         except Exception:
             pass
 
