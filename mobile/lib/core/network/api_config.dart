@@ -8,9 +8,9 @@ class ApiConfig {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static String _localIp = 'odd-vans-shave.loca.lt';
-  static String _activeIp = 'odd-vans-shave.loca.lt';
-  static String _port = '443';
+  static String _localIp = '192.168.29.57';
+  static String _activeIp = '192.168.29.57';
+  static String _port = '8000';
   static String _env = 'Production';
 
   static const int timeoutSeconds = 60;
@@ -18,16 +18,15 @@ class ApiConfig {
 
   // Candidate IP endpoints for automatic multi-network failover (Wi-Fi, Mobile Data, Local, Cloud)
   static final List<String> _candidateIps = [
-    'odd-vans-shave.loca.lt',
     '192.168.29.57',
-    '137.23.34.223',
+    'odd-vans-shave.loca.lt',
     '10.0.2.2',
     '127.0.0.1'
   ];
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _localIp = prefs.getString(keyIp) ?? '137.23.34.223';
+    _localIp = prefs.getString(keyIp) ?? '192.168.29.57';
     _port = prefs.getString(keyPort) ?? '8000';
     _env = prefs.getString(keyEnv) ?? 'Production';
     _activeIp = _localIp;
@@ -41,8 +40,16 @@ class ApiConfig {
 
     for (final ip in candidates) {
       try {
-        final uri = Uri.parse('http://$ip:$_port/api/v1/health');
-        final response = await http.get(uri).timeout(const Duration(seconds: 2));
+        final isTunnel = ip.contains('loca.lt') || ip.contains('ngrok');
+        final scheme = isTunnel ? 'https' : 'http';
+        final portStr = isTunnel ? '' : ':$_port';
+        final uri = Uri.parse('$scheme://$ip$portStr/api/v1/health');
+        
+        final response = await http.get(
+          uri, 
+          headers: {'Bypass-Tunnel-Remainder': 'true', 'User-Agent': 'FlutterApp'}
+        ).timeout(const Duration(seconds: 2));
+        
         if (response.statusCode == 200) {
           _activeIp = ip;
           logProductionEvent('INFO', 'Auto-discovered active server IP: $_activeIp');
@@ -66,8 +73,8 @@ class ApiConfig {
       if (target.endsWith('/api/v1')) return target;
       return '$target/api/v1';
     }
-    final scheme = (_port == '443' || target.contains('loca.lt') || target.contains('ngrok')) ? 'https' : 'http';
-    final portStr = (_port == '80' || _port == '443' || target.contains('loca.lt') || target.contains('ngrok')) ? '' : ':$_port';
+    final scheme = (target.contains('loca.lt') || target.contains('ngrok')) ? 'https' : 'http';
+    final portStr = (target.contains('loca.lt') || target.contains('ngrok')) ? '' : ':$_port';
     return '$scheme://$target$portStr/api/v1';
   }
 
