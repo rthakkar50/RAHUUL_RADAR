@@ -23,7 +23,7 @@ elif command -v yum >/dev/null 2>&1; then
 fi
 
 # Setup virtual environment
-echo "[2/4] Setting up Python virtual environment..."
+echo "[2/4] Setting up Python virtual environment & dependencies..."
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv || true
 fi
@@ -33,8 +33,12 @@ if [ -f ".venv/bin/activate" ]; then
 fi
 
 pip install --upgrade pip || true
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
+
+if [ -f "requirements_server.txt" ]; then
+    echo "Installing production server dependencies from requirements_server.txt..."
+    pip install -r requirements_server.txt
+elif [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt || true
 fi
 
 # Ensure data directory exists
