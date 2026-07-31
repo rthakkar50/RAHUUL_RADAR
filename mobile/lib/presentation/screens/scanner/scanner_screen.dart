@@ -94,7 +94,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
           matchesFilter = item.signal.toUpperCase().contains('SELL');
           break;
         case ScannerFilter.watch:
-          matchesFilter = item.signal.toUpperCase().contains('WATCH');
+          matchesFilter = item.signal.toUpperCase().contains('WATCH') ||
+                          item.signal.toUpperCase().contains('HOLD') ||
+                          item.signal.toUpperCase().contains('NEUTRAL') ||
+                          item.confidence >= 70.0;
           break;
         case ScannerFilter.highConfidence:
           matchesFilter = item.confidence >= 70.0;
