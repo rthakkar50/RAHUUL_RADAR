@@ -32,21 +32,24 @@ def send_message(token, chat_id, text):
     # SECURITY GUARD: Sanitize any raw access tokens or JWTs before sending to Telegram
     sanitized_text = re.sub(r'eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*', '[TOKEN_REDACTED]', text)
     
-    data = urllib.parse.urlencode({
-        "chat_id": str(chat_id),
-        "text": sanitized_text,
-        "parse_mode": "Markdown"
-    }).encode("utf-8")
-    for attempt in range(1, 4):
+    # Try with Markdown first, fallback to raw text if Telegram rejects formatting
+    for parse_mode in ["Markdown", None]:
+        data_dict = {
+            "chat_id": str(chat_id),
+            "text": sanitized_text
+        }
+        if parse_mode:
+            data_dict["parse_mode"] = parse_mode
+
+        data = urllib.parse.urlencode(data_dict).encode("utf-8")
         try:
             req = urllib.request.Request(url, data=data)
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
                     return True
         except Exception as e:
-            print(f"Error sending message (attempt {attempt}/3): {e}")
-            if attempt < 3:
-                time.sleep(0.5 * attempt)
+            print(f"Error sending message (parse_mode={parse_mode}): {e}")
+            time.sleep(0.5)
     return False
 
 def validate_user_session(config):
