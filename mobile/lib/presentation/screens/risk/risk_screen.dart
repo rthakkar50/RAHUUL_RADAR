@@ -110,13 +110,19 @@ class RiskRepository {
 
   Future<RiskReport> fetchReport() async {
     final uri = Uri.parse('$_base/risk/report');
-    final res = await http
-        .get(uri)
-        .timeout(const Duration(seconds: 12));
-    if (res.statusCode == 200) {
-      return RiskReport.fromJson(json.decode(res.body) as Map<String, dynamic>);
-    }
-    throw Exception('Risk report fetch failed: ${res.statusCode}');
+    try {
+      final res = await http
+          .get(uri, headers: {
+            'Bypass-Tunnel-Remainder': 'true',
+            'User-Agent': 'FlutterApp',
+            'Accept': 'application/json'
+          })
+          .timeout(const Duration(seconds: 12));
+      if (res.statusCode == 200) {
+        return RiskReport.fromJson(json.decode(res.body) as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return RiskReport.empty;
   }
 
   Future<bool> activateKillSwitch() async {
