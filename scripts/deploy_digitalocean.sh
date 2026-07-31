@@ -7,19 +7,21 @@ echo " (Oracle Cloud / DigitalOcean / AWS / Linux)"
 echo "=================================================="
 
 SUDO=""
-if command -v sudo >/dev/null 2>&1; then
+if sudo -n true 2>/dev/null || sudo true 2>/dev/null; then
     SUDO="sudo"
 fi
 
 # Update system & dependencies
-echo "[1/4] Updating Linux packages & dependencies..."
-if command -v apt-get >/dev/null 2>&1; then
-    $SUDO apt-get update -y
-    $SUDO apt-get install -y python3 python3-venv python3-pip git curl || true
-elif command -v dnf >/dev/null 2>&1; then
-    $SUDO dnf install -y python3 python3-pip git curl || true
-elif command -v yum >/dev/null 2>&1; then
-    $SUDO yum install -y python3 python3-pip git curl || true
+echo "[1/4] Checking Linux environment & dependencies..."
+if [ -n "$SUDO" ]; then
+    if command -v apt-get >/dev/null 2>&1; then
+        $SUDO apt-get update -y
+        $SUDO apt-get install -y python3 python3-venv python3-pip git curl || true
+    elif command -v dnf >/dev/null 2>&1; then
+        $SUDO dnf install -y python3 python3-pip git curl || true
+    elif command -v yum >/dev/null 2>&1; then
+        $SUDO yum install -y python3 python3-pip git curl || true
+    fi
 fi
 
 # Setup virtual environment
@@ -44,11 +46,16 @@ fi
 # Ensure data directory exists
 mkdir -p data logs
 
-# Create systemd supervisor service for 24/7 uptime if systemd is supported
+# Register 24/7 background process
 WORK_DIR=$(pwd)
 CURRENT_USER=$(whoami)
 
-if command -v systemctl >/dev/null 2>&1 && [ -d "/etc/systemd/system" ]; then
+HAS_SYSTEMD=false
+if [ -n "$SUDO" ] && command -v systemctl >/dev/null 2>&1 && [ -d "/etc/systemd/system" ]; then
+    HAS_SYSTEMD=true
+fi
+
+if [ "$HAS_SYSTEMD" = true ]; then
     echo "[3/4] Registering 24x7 Systemd Production Service in $WORK_DIR..."
     $SUDO bash -c "cat << EOF > /etc/systemd/system/rahuul-radar.service
 [Unit]
@@ -72,12 +79,18 @@ EOF"
     $SUDO systemctl enable rahuul-radar
     $SUDO systemctl restart rahuul-radar
 else
-    echo "[3/4] Background Daemon Launch (Non-systemd / Cloud Shell environment)..."
-    nohup .venv/bin/python scripts/server_supervisor.py > logs/server_supervisor.log 2>&1 &
+    echo "[3/4] Launching 24x7 Background Supervisor Engine (Oracle Cloud Shell Mode)..."
+    pkill -f "server_supervisor.py" 2>/dev/null || true
+    pkill -f "telegram_controller.py" 2>/dev/null || true
+    pkill -f "uvicorn" 2>/dev/null || true
+    sleep 1
+    PYTHONPATH=. .venv/bin/python scripts/server_supervisor.py > logs/server_supervisor.log 2>&1 &
+    sleep 3
 fi
 
 echo "=================================================="
 echo " ✅ CLOUD DEPLOYMENT SUCCESSFUL!"
 echo " RAHUUL RADAR Server & Telegram Bot are now running 24/7!"
+echo " Status Check: ps aux | grep python"
 echo " Health Check: curl http://localhost:8000/api/v1/health"
 echo "=================================================="
