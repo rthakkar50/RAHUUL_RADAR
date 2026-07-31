@@ -374,7 +374,7 @@ def handle_command(text, token, chat_id):
 def main():
     print("Starting RAHUUL RADAR Telegram Controller (v1.1)...")
     config = get_config()
-    token = config.get("telegram_bot_token") or config.get("telegram_token") or os.environ.get("TELEGRAM_BOT_TOKEN")
+    token = config.get("telegram_bot_token") or config.get("telegram_token") or os.environ.get("TELEGRAM_BOT_TOKEN") or "8805672111:AAEBsy0L4Za7hb-2BthOd9WIvc37QdKXPPQ"
     if not token:
         print("Error: TELEGRAM_BOT_TOKEN not configured.")
         return

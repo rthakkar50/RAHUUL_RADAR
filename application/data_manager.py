@@ -2,7 +2,13 @@ import os
 import time
 import logging
 import threading
-from PySide6.QtCore import QObject, Signal
+try:
+    from PySide6.QtCore import QObject, Signal
+except ImportError:
+    class QObject:
+        pass
+    def Signal(*args, **kwargs):
+        return None
 
 from market.yahoo_provider import YahooFinanceProvider as YahooProvider
 from market.nse_provider import NSEProvider
