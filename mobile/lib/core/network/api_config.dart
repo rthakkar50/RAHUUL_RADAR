@@ -8,16 +8,17 @@ class ApiConfig {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static String _localIp = '192.168.29.57';
-  static String _activeIp = '192.168.29.57';
+  static String _localIp = '140.238.161.80';
+  static String _activeIp = '140.238.161.80';
   static String _port = '8000';
   static String _env = 'Production';
 
   static const int timeoutSeconds = 60;
   static const int healthTimeoutSeconds = 8;
 
-  // Candidate IP endpoints for automatic multi-network failover (Wi-Fi, Mobile Data, Local, Cloud)
+  // Candidate IP endpoints for automatic multi-network failover (Oracle Cloud, Local Wi-Fi, Cloud Tunnel, Localhost)
   static final List<String> _candidateIps = [
+    '140.238.161.80',
     '192.168.29.57',
     'odd-vans-shave.loca.lt',
     '10.0.2.2',
@@ -26,7 +27,7 @@ class ApiConfig {
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _localIp = prefs.getString(keyIp) ?? '192.168.29.57';
+    _localIp = prefs.getString(keyIp) ?? '140.238.161.80';
     _port = prefs.getString(keyPort) ?? '8000';
     _env = prefs.getString(keyEnv) ?? 'Production';
     _activeIp = _localIp;
