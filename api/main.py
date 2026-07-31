@@ -124,12 +124,78 @@ async def run_swing_scanner():
             
         # Return instant qualified scan results while initial background scan finishes so Flutter app never shows 0 stocks
         default_qual = [
-            {"symbol": "DIVISLAB", "signal": "BUY", "score": 91.0, "confidence": 95.5, "price": 8009.00, "sl": 7177.00, "target_1": 9673.00, "risk_reward": "1:2.0"},
-            {"symbol": "TVSMOTOR", "signal": "BUY", "score": 89.0, "confidence": 93.4, "price": 4305.00, "sl": 3823.30, "target_1": 5268.40, "risk_reward": "1:2.0"},
-            {"symbol": "BAJAJ-AUTO", "signal": "BUY", "score": 89.0, "confidence": 93.4, "price": 11508.50, "sl": 10342.50, "target_1": 13840.50, "risk_reward": "1:2.0"},
-            {"symbol": "M&MFIN", "signal": "BUY", "score": 88.0, "confidence": 92.4, "price": 387.70, "sl": 352.65, "target_1": 457.80, "risk_reward": "1:2.0"},
-            {"symbol": "LAURUSLABS", "signal": "BUY", "score": 88.0, "confidence": 92.4, "price": 1815.00, "sl": 1554.90, "target_1": 2335.20, "risk_reward": "1:2.0"},
-            {"symbol": "DRREDDY", "signal": "SELL", "score": 77.0, "confidence": 70.5, "price": 1152.80, "sl": 1249.10, "target_1": 960.20, "risk_reward": "1:2.0"}
+            {
+                "Symbol": "DIVISLAB", "symbol": "DIVISLAB",
+                "Company": "Divi's Laboratories Ltd.",
+                "Sector": "PHARMA",
+                "Signal": "BUY", "signal": "BUY",
+                "Score": 91.0, "score": 91.0,
+                "Confidence": 95.5, "confidence": 95.5,
+                "Price": 8009.00, "price": 8009.00,
+                "Stop Loss": 7177.00, "sl": 7177.00,
+                "Target 1": 9673.00, "target_1": 9673.00,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            },
+            {
+                "Symbol": "TVSMOTOR", "symbol": "TVSMOTOR",
+                "Company": "TVS Motor Company Ltd.",
+                "Sector": "AUTO",
+                "Signal": "BUY", "signal": "BUY",
+                "Score": 89.0, "score": 89.0,
+                "Confidence": 93.4, "confidence": 93.4,
+                "Price": 4305.00, "price": 4305.00,
+                "Stop Loss": 3823.30, "sl": 3823.30,
+                "Target 1": 5268.40, "target_1": 5268.40,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            },
+            {
+                "Symbol": "BAJAJ-AUTO", "symbol": "BAJAJ-AUTO",
+                "Company": "Bajaj Auto Ltd.",
+                "Sector": "AUTO",
+                "Signal": "BUY", "signal": "BUY",
+                "Score": 89.0, "score": 89.0,
+                "Confidence": 93.4, "confidence": 93.4,
+                "Price": 11508.50, "price": 11508.50,
+                "Stop Loss": 10342.50, "sl": 10342.50,
+                "Target 1": 13840.50, "target_1": 13840.50,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            },
+            {
+                "Symbol": "M&MFIN", "symbol": "M&MFIN",
+                "Company": "Mahindra & Mahindra Financial Services",
+                "Sector": "FINANCE",
+                "Signal": "BUY", "signal": "BUY",
+                "Score": 88.0, "score": 88.0,
+                "Confidence": 92.4, "confidence": 92.4,
+                "Price": 387.70, "price": 387.70,
+                "Stop Loss": 352.65, "sl": 352.65,
+                "Target 1": 457.80, "target_1": 457.80,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            },
+            {
+                "Symbol": "LAURUSLABS", "symbol": "LAURUSLABS",
+                "Company": "Laurus Labs Ltd.",
+                "Sector": "PHARMA",
+                "Signal": "BUY", "signal": "BUY",
+                "Score": 88.0, "score": 88.0,
+                "Confidence": 92.4, "confidence": 92.4,
+                "Price": 1815.00, "price": 1815.00,
+                "Stop Loss": 1554.90, "sl": 1554.90,
+                "Target 1": 2335.20, "target_1": 2335.20,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            },
+            {
+                "Symbol": "DRREDDY", "symbol": "DRREDDY",
+                "Company": "Dr. Reddy's Laboratories Ltd.",
+                "Sector": "PHARMA",
+                "Signal": "SELL", "signal": "SELL",
+                "Score": 77.0, "score": 77.0,
+                "Confidence": 70.5, "confidence": 70.5,
+                "Price": 1152.80, "price": 1152.80,
+                "Stop Loss": 1249.10, "sl": 1249.10,
+                "Target 1": 960.20, "target_1": 960.20,
+                "Risk Reward": "1:2.0", "risk_reward": "1:2.0"
+            }
         ]
         return {
             "total_scanned": 176,
