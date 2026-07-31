@@ -18,7 +18,10 @@ import logging
 import threading
 import time
 from typing import Callable, Dict, List, Optional, Any
-import websocket
+try:
+    import websocket
+except ImportError:
+    websocket = None
 
 logger = logging.getLogger("PaytmWebSocket")
 
