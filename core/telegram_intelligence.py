@@ -217,12 +217,47 @@ class TelegramIntelligence:
         3. Final Score (descending)
         """
         opportunities = []
-        # 0. Fetch active in-memory scanner results if available
+        # 0. Fetch live /api/v1/scanner/swing REST API first for 100% unified Mobile App alignment
+        try:
+            import urllib.request
+            req = urllib.request.Request("http://127.0.0.1:8000/api/v1/scanner/swing")
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = json.loads(resp.read().decode())
+                qual = data.get("qualified_results", [])
+                for item in qual:
+                    sym = str(item.get("symbol") or item.get("Symbol") or "").replace(".NS", "").strip()
+                    if not sym: continue
+                    sig = str(item.get("signal") or item.get("Signal") or "BUY").upper()
+                    sc = float(item.get("score") or item.get("Score") or 80.0)
+                    conf = float(item.get("confidence") or item.get("Confidence") or 85.0)
+                    p = float(item.get("price") or item.get("Price") or 0.0)
+                    sl = float(item.get("sl") or item.get("Stop Loss") or (p * 0.98 if p > 0 else 0.0))
+                    tgt = float(item.get("target_1") or item.get("Target 1") or item.get("target") or (p * 1.04 if p > 0 else 0.0))
+                    rr_val = item.get("risk_reward") or item.get("Risk Reward") or 2.5
+                    try:
+                        rr = float(str(rr_val).replace("1:", ""))
+                    except Exception:
+                        rr = 2.5
+                    opportunities.append({
+                        "symbol": sym,
+                        "signal": sig,
+                        "score": sc,
+                        "confidence": conf,
+                        "risk_reward": rr,
+                        "price": p,
+                        "sl": sl,
+                        "target": tgt
+                    })
+        except Exception:
+            pass
+
+        # 0.5. Fetch active in-memory scanner results if available
         try:
             from application.swing_scanner_service import SwingScannerService
             if hasattr(SwingScannerService, '_instance') and SwingScannerService._instance and getattr(SwingScannerService._instance, 'last_results', None):
                 for item in SwingScannerService._instance.last_results:
                     sym = str(item.get("Symbol", "")).replace(".NS", "")
+                    if any(o["symbol"] == sym for o in opportunities): continue
                     sig = str(item.get("Signal", "BUY")).upper()
                     sc = float(item.get("Score", 70.0) or 70.0)
                     conf = float(item.get("Confidence", 80.0) or 80.0)
@@ -244,7 +279,7 @@ class TelegramIntelligence:
                         "sl": sl,
                         "target": tgt
                     })
-        except Exception as err:
+        except Exception:
             pass
 
         # 1. Fetch from radar.db master_ai_decisions if available
@@ -312,7 +347,7 @@ class TelegramIntelligence:
         opportunities.sort(key=lambda x: (x["confidence"], x["risk_reward"], x["score"]), reverse=True)
         top_10 = opportunities[:limit]
 
-        lines = ["📋 *TOP 10 WATCHLIST OPPORTUNITIES*", "-------------------------------------"]
+        lines = ["📋 *TOP 10 WATCHLIST OPPORTUNITIES (BUY & SELL)*", "-------------------------------------"]
         for idx, item in enumerate(top_10, 1):
             sym = item["symbol"]
             sig = item["signal"]
@@ -322,13 +357,109 @@ class TelegramIntelligence:
             conf = item["confidence"]
             rr = item["risk_reward"]
             sc = item["score"]
+            icon = "🟢" if "BUY" in sig else "🔴"
 
             lines.append(
-                f"*{idx}. {sym}* (`{sig}`)\n"
-                f"   Price: ₹{p:,.2f} | SL: ₹{sl:,.2f} | Target: ₹{tgt:,.2f}\n"
+                f"*{idx}. {sym}* ({icon} `{sig}`)\n"
+                f"   CMP: ₹{p:,.2f} | SL: ₹{sl:,.2f} | Target: ₹{tgt:,.2f}\n"
                 f"   Score: `{sc:.1f}` | Conf: `{conf:.1f}%` | R/R: `1:{rr:.2f}`"
             )
 
+        return self.sanitize_text("\n\n".join(lines))
+
+    def get_buy_watchlist(self, limit: int = 10) -> str:
+        """Telegram command: /buy - Returns top BUY opportunities."""
+        return self._get_filtered_watchlist("BUY", limit)
+
+    def get_sell_watchlist(self, limit: int = 10) -> str:
+        """Telegram command: /sell - Returns top SELL opportunities."""
+        return self._get_filtered_watchlist("SELL", limit)
+
+    def _get_filtered_watchlist(self, target_signal: str, limit: int = 10) -> str:
+        opportunities = []
+        try:
+            import urllib.request
+            req = urllib.request.Request("http://127.0.0.1:8000/api/v1/scanner/swing")
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = json.loads(resp.read().decode())
+                qual = data.get("qualified_results", [])
+                for item in qual:
+                    sym = str(item.get("symbol") or item.get("Symbol") or "").replace(".NS", "").strip()
+                    if not sym: continue
+                    sig = str(item.get("signal") or item.get("Signal") or "BUY").upper()
+                    if target_signal not in sig: continue
+                    sc = float(item.get("score") or item.get("Score") or 80.0)
+                    conf = float(item.get("confidence") or item.get("Confidence") or 85.0)
+                    p = float(item.get("price") or item.get("Price") or 0.0)
+                    sl = float(item.get("sl") or item.get("Stop Loss") or (p * 0.98 if p > 0 else 0.0))
+                    tgt = float(item.get("target_1") or item.get("Target 1") or item.get("target") or (p * 1.04 if p > 0 else 0.0))
+                    rr_val = item.get("risk_reward") or item.get("Risk Reward") or 2.5
+                    try:
+                        rr = float(str(rr_val).replace("1:", ""))
+                    except Exception:
+                        rr = 2.5
+                    opportunities.append({
+                        "symbol": sym, "signal": sig, "score": sc, "confidence": conf,
+                        "risk_reward": rr, "price": p, "sl": sl, "target": tgt
+                    })
+        except Exception:
+            pass
+
+        if os.path.exists("data/radar.db"):
+            try:
+                conn = sqlite3.connect("data/radar.db")
+                c = conn.cursor()
+                c.execute("""
+                    SELECT symbol, signal, score, reasons, timestamp, price, entry, sl, target_1
+                    FROM master_ai_decisions
+                    ORDER BY id DESC LIMIT 100
+                """)
+                rows = c.fetchall()
+                conn.close()
+                for row in rows:
+                    sym, sig, score, reas, ts, p_col, e_col, sl_col, tgt_col = row
+                    sig = str(sig or "").upper()
+                    if target_signal not in sig: continue
+                    clean_sym = sym.replace(".NS", "")
+                    if any(o["symbol"] == clean_sym for o in opportunities): continue
+                    disp_price = float(p_col or e_col or 0.0)
+                    if disp_price > 0:
+                        disp_sl = float(sl_col or round(disp_price * 0.98, 2))
+                        disp_tgt = float(tgt_col or round(disp_price * 1.04, 2))
+                        opportunities.append({
+                            "symbol": clean_sym, "signal": sig, "score": float(score or 70.0),
+                            "confidence": min(99.0, max(60.0, float(score or 70.0) * 1.05)),
+                            "risk_reward": 2.0, "price": disp_price, "sl": disp_sl, "target": disp_tgt
+                        })
+            except Exception:
+                pass
+
+        if not opportunities:
+            icon = "🟢" if target_signal == "BUY" else "🔴"
+            return self.sanitize_text(
+                f"{icon} *TOP {target_signal} OPPORTUNITIES*\n"
+                f"-------------------------------------\n\n"
+                f"ℹ️ Currently 0 qualified {target_signal} setups in recent scan results.\n"
+                f"Use `/watchlist` to view all active setups!"
+            )
+
+        opportunities.sort(key=lambda x: (x["confidence"], x["risk_reward"], x["score"]), reverse=True)
+        top_items = opportunities[:limit]
+        icon = "🟢" if target_signal == "BUY" else "🔴"
+        lines = [f"{icon} *TOP {len(top_items)} {target_signal} OPPORTUNITIES*", "-------------------------------------"]
+        for idx, item in enumerate(top_items, 1):
+            sym = item["symbol"]
+            sig = item["signal"]
+            p = item.get("price", 0.0)
+            sl = item.get("sl", 0.0)
+            tgt = item.get("target", 0.0)
+            conf = item["confidence"]
+            sc = item["score"]
+            lines.append(
+                f"*{idx}. {sym}* ({icon} `{sig}`)\n"
+                f"   CMP: ₹{p:,.2f} | SL: ₹{sl:,.2f} | Target: ₹{tgt:,.2f}\n"
+                f"   Score: `{sc:.1f}` | Conf: `{conf:.1f}%`"
+            )
         return self.sanitize_text("\n\n".join(lines))
 
     # ── Open Positions (Module 3) ──────────────────────────────────────────────

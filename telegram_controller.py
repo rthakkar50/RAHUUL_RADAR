@@ -227,6 +227,24 @@ def handle_command(text, token, chat_id):
         except Exception as e:
             send_message(token, chat_id, f"❌ Error fetching watchlist: `{e}`")
 
+    elif text.startswith("/buy"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_buy_watchlist(limit=10)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching BUY watchlist: `{e}`")
+
+    elif text.startswith("/sell"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_sell_watchlist(limit=10)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching SELL watchlist: `{e}`")
+
     elif text.startswith("/signal"):
         parts = text.split()
         if len(parts) < 2:
