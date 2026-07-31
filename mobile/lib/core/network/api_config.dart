@@ -16,10 +16,11 @@ class ApiConfig {
   static const int timeoutSeconds = 60;
   static const int healthTimeoutSeconds = 8;
 
-  // Candidate IP endpoints for automatic multi-network failover (Local Wi-Fi, Localtunnel, Localhost)
+  // Candidate endpoints for multi-network auto-failover (Wi-Fi, 4G/5G Mobile Data, Cloud VPS, Tunnels)
   static final List<String> _candidateIps = [
     '192.168.29.57',
     'odd-vans-shave.loca.lt',
+    '140.238.161.80',
     '10.0.2.2',
     '127.0.0.1'
   ];
@@ -31,33 +32,45 @@ class ApiConfig {
     _env = prefs.getString(keyEnv) ?? 'Production';
     _activeIp = _localIp;
 
-    // Trigger silent multi-network auto-discovery in background
+    // Trigger instant parallel multi-network auto-discovery in background
     unawaited(autoDiscoverReachableServer());
   }
 
   static Future<String> autoDiscoverReachableServer() async {
-    final candidates = [_localIp, ..._candidateIps.where((ip) => ip != _localIp)];
+    final candidates = [_localIp, ..._candidateIps.where((ip) => ip != _localIp)].toSet().toList();
+    final completer = Completer<String>();
 
     for (final ip in candidates) {
-      try {
-        final isTunnel = ip.contains('loca.lt') || ip.contains('ngrok');
-        final scheme = isTunnel ? 'https' : 'http';
-        final portStr = isTunnel ? '' : ':$_port';
-        final uri = Uri.parse('$scheme://$ip$portStr/api/v1/health');
-        
-        final response = await http.get(
-          uri, 
-          headers: {'Bypass-Tunnel-Remainder': 'true', 'User-Agent': 'FlutterApp'}
-        ).timeout(const Duration(seconds: 2));
-        
-        if (response.statusCode == 200) {
-          _activeIp = ip;
-          logProductionEvent('INFO', 'Auto-discovered active server IP: $_activeIp');
-          return _activeIp;
-        }
-      } catch (_) {}
+      unawaited(() async {
+        try {
+          final isTunnel = ip.contains('loca.lt') || ip.contains('ngrok') || ip.contains('lhr.life');
+          final scheme = isTunnel ? 'https' : 'http';
+          final portStr = isTunnel ? '' : ':$_port';
+          final uri = Uri.parse('$scheme://$ip$portStr/api/v1/health');
+
+          final response = await http.get(
+            uri,
+            headers: {
+              'Bypass-Tunnel-Remainder': 'true',
+              'User-Agent': 'FlutterApp',
+              'Accept': 'application/json'
+            },
+          ).timeout(const Duration(milliseconds: 1800));
+
+          if (response.statusCode == 200 && !completer.isCompleted) {
+            _activeIp = ip;
+            logProductionEvent('INFO', 'Fastest reachable active server selected: $_activeIp');
+            completer.complete(_activeIp);
+          }
+        } catch (_) {}
+      }());
     }
-    return _activeIp;
+
+    try {
+      return await completer.future.timeout(const Duration(milliseconds: 2000));
+    } catch (_) {
+      return _activeIp;
+    }
   }
 
   static String get localIp => _localIp;
@@ -73,8 +86,9 @@ class ApiConfig {
       if (target.endsWith('/api/v1')) return target;
       return '$target/api/v1';
     }
-    final scheme = (target.contains('loca.lt') || target.contains('ngrok')) ? 'https' : 'http';
-    final portStr = (target.contains('loca.lt') || target.contains('ngrok')) ? '' : ':$_port';
+    final isTunnel = target.contains('loca.lt') || target.contains('ngrok') || target.contains('lhr.life');
+    final scheme = isTunnel ? 'https' : 'http';
+    final portStr = isTunnel ? '' : ':$_port';
     return '$scheme://$target$portStr/api/v1';
   }
 
@@ -102,7 +116,7 @@ class ApiConfig {
     _port = p.trim();
     _env = environment.trim();
     logProductionEvent('INFO', 'Configuration updated: IP=$_localIp, Port=$_port, Env=$_env');
-    
+
     // Auto-verify reachable candidate
     unawaited(autoDiscoverReachableServer());
   }
