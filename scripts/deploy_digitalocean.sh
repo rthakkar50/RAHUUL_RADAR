@@ -88,8 +88,8 @@ else
     sleep 3
 fi
 
-# Setup Automatic 15-Minute Auto-Update Cron Job
-if [ -f "scripts/auto_update_cron.sh" ]; then
+# Setup Automatic 15-Minute Auto-Update Cron Job if crontab exists
+if [ -f "scripts/auto_update_cron.sh" ] && command -v crontab >/dev/null 2>&1; then
     chmod +x scripts/auto_update_cron.sh
     (crontab -l 2>/dev/null | grep -v "auto_update_cron.sh" ; echo "*/15 * * * * $WORK_DIR/scripts/auto_update_cron.sh") | crontab - || true
     echo "[+] Automated 15-minute GitHub Auto-Sync enabled in Crontab!"
