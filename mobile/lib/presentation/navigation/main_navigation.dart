@@ -4,9 +4,10 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/copilot/ai_copilot_screen.dart';
 import '../screens/fno/fno_screen.dart';
+import '../screens/orders/order_book_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
 import '../screens/journal/journal_screen.dart';
-import '../screens/paper_trading/paper_trading_screen.dart';
+import '../screens/risk/live_risk_center_screen.dart';
 import '../screens/settings/settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -24,9 +25,10 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     const ScannerScreen(),
     const AiCopilotScreen(),
     const FnoScreen(),
+    const OrderBookScreen(),
     const PortfolioScreen(),
     const JournalScreen(),
-    const PaperTradingScreen(),
+    const LiveRiskCenterScreen(),
     const SettingsScreen(),
   ];
 
@@ -93,6 +95,11 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
             label: 'F&O',
           ),
           NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long, color: Colors.blueAccent),
+            label: 'Orders',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.pie_chart_outline),
             selectedIcon: Icon(Icons.pie_chart, color: Colors.cyanAccent),
             label: 'Portfolio',
@@ -103,9 +110,9 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
             label: 'Journal',
           ),
           NavigationDestination(
-            icon: Icon(Icons.note_alt_outlined),
-            selectedIcon: Icon(Icons.note_alt, color: Colors.tealAccent),
-            label: 'Paper',
+            icon: Icon(Icons.shield_outlined),
+            selectedIcon: Icon(Icons.shield, color: Colors.redAccent),
+            label: 'Risk',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

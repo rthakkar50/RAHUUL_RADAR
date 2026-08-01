@@ -95,6 +95,7 @@ class OrderExecutionResultModel {
 class OrderBookItemModel {
   final String orderId;
   final String symbol;
+  final String action;
   final int quantity;
   final String orderType;
   final double price;
@@ -105,6 +106,7 @@ class OrderBookItemModel {
   OrderBookItemModel({
     required this.orderId,
     required this.symbol,
+    required this.action,
     required this.quantity,
     required this.orderType,
     required this.price,
@@ -117,6 +119,7 @@ class OrderBookItemModel {
     return OrderBookItemModel(
       orderId: json['order_id'] ?? '',
       symbol: json['symbol'] ?? '',
+      action: json['action'] ?? 'BUY',
       quantity: (json['quantity'] ?? 0) as int,
       orderType: json['order_type'] ?? 'MARKET',
       price: (json['price'] ?? 0.0).toDouble(),
