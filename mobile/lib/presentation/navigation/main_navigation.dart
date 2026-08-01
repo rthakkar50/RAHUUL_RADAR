@@ -6,6 +6,7 @@ import '../screens/macro/global_macro_screen.dart';
 import '../screens/news/ai_news_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/copilot/ai_copilot_screen.dart';
+import '../screens/sentinel/ai_sentinel_screen.dart';
 import '../screens/forensics/ai_forensics_screen.dart';
 import '../screens/fno/fno_screen.dart';
 import '../screens/orders/order_book_screen.dart';
@@ -33,6 +34,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     const AiNewsScreen(),
     const ScannerScreen(),
     const AiCopilotScreen(),
+    const AiSentinelScreen(),
     const AiForensicsScreen(),
     const FnoScreen(),
     const OrderBookScreen(),
