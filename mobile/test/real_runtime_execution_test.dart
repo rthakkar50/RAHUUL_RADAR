@@ -17,12 +17,14 @@ void main() {
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
     await ApiConfig.init();
-    debugPrint('[RUN-AUDIT] Initialized ApiConfig. Active Base URL: ${ApiConfig.baseUrl}');
+    debugPrint(
+      '[RUN-AUDIT] Initialized ApiConfig. Active Base URL: ${ApiConfig.baseUrl}',
+    );
   });
 
   test('REAL RUNTIME NETWORK TEST: Repositories with Production Headers', () async {
     debugPrint('\n=== START REAL NETWORK TEST: Repositories ===');
-    
+
     // 1. Dashboard Health Check
     final dashboardRepo = DashboardRepository();
     final healthStatus = await dashboardRepo.checkServerHealth();
@@ -32,19 +34,25 @@ void main() {
     // 2. Scanner Repository
     final scannerRepo = ScannerRepository();
     final scanData = await scannerRepo.getSwingScans();
-    debugPrint('[RUN-AUDIT] Scanner Repository Result: Total Scanned=${scanData.totalScanned}, Qualified=${scanData.qualifiedResults.length}');
+    debugPrint(
+      '[RUN-AUDIT] Scanner Repository Result: Total Scanned=${scanData.totalScanned}, Qualified=${scanData.qualifiedResults.length}',
+    );
     expect(scanData.qualifiedResults.isNotEmpty, isTrue);
 
     // 3. Portfolio Repository
     final portfolioRepo = PortfolioRepository();
     final portfolioData = await portfolioRepo.getPortfolio();
-    debugPrint('[RUN-AUDIT] Portfolio Repository Result: Total Capital=${portfolioData.summary.totalCapital}, Open Positions=${portfolioData.openPositions.length}');
+    debugPrint(
+      '[RUN-AUDIT] Portfolio Repository Result: Total Capital=${portfolioData.summary.totalCapital}, Open Positions=${portfolioData.openPositions.length}',
+    );
     expect(portfolioData.summary.totalCapital, greaterThan(0));
 
     // 4. Journal Repository
     final journalRepo = JournalRepository();
     final journalData = await journalRepo.getJournal();
-    debugPrint('[RUN-AUDIT] Journal Repository Result: Total Trades=${journalData.trades.length}, Win Rate=${journalData.analytics.winRate}%');
+    debugPrint(
+      '[RUN-AUDIT] Journal Repository Result: Total Trades=${journalData.trades.length}, Win Rate=${journalData.analytics.winRate}%',
+    );
     expect(journalData.trades.isNotEmpty, isTrue);
 
     debugPrint('=== END REAL NETWORK TEST: Repositories ===\n');

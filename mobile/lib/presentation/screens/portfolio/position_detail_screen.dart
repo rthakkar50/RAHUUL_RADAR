@@ -6,21 +6,25 @@ class PositionDetailScreen extends StatelessWidget {
 
   const PositionDetailScreen({super.key, required this.position});
 
-  Color get _dirColor =>
-      position.direction.toUpperCase() == 'BUY' ? Colors.greenAccent : Colors.redAccent;
+  Color get _dirColor => position.direction.toUpperCase() == 'BUY'
+      ? Colors.greenAccent
+      : Colors.redAccent;
 
-  Color _pnlColor(double pnl) =>
-      pnl > 0 ? Colors.greenAccent : pnl < 0 ? Colors.redAccent : Colors.grey;
+  Color _pnlColor(double pnl) => pnl > 0
+      ? Colors.greenAccent
+      : pnl < 0
+      ? Colors.redAccent
+      : Colors.grey;
 
   @override
   Widget build(BuildContext context) {
-    final pnl     = position.unrealizedPnl;
-    final entry   = position.entryPrice;
-    final cmp     = position.cmp;
-    final sl      = position.sl;
-    final target  = position.target;
-    final risk    = (entry - sl).abs();
-    final reward  = (target - entry).abs();
+    final pnl = position.unrealizedPnl;
+    final entry = position.entryPrice;
+    final cmp = position.cmp;
+    final sl = position.sl;
+    final target = position.target;
+    final risk = (entry - sl).abs();
+    final reward = (target - entry).abs();
 
     // Approximate position age from entryTime
     String positionAge = 'N/A';
@@ -52,7 +56,11 @@ class PositionDetailScreen extends StatelessWidget {
             ),
             child: Text(
               position.direction,
-              style: TextStyle(color: _dirColor, fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(
+                color: _dirColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
           ),
         ],
@@ -70,10 +78,18 @@ class PositionDetailScreen extends StatelessWidget {
               iconColor: Colors.blueAccent,
               children: [
                 _detailRow('Symbol', position.symbol, Colors.white),
-                _detailRow('Exchange', '${position.exchange} • ${position.direction}', _dirColor),
+                _detailRow(
+                  'Exchange',
+                  '${position.exchange} • ${position.direction}',
+                  _dirColor,
+                ),
                 _detailRow('Quantity', '${position.qty} shares', Colors.white),
                 _detailRow('Position Age', positionAge, Colors.cyanAccent),
-                _detailRow('Entry Time', position.entryTime.isNotEmpty ? position.entryTime : 'N/A', Colors.grey),
+                _detailRow(
+                  'Entry Time',
+                  position.entryTime.isNotEmpty ? position.entryTime : 'N/A',
+                  Colors.grey,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -85,11 +101,26 @@ class PositionDetailScreen extends StatelessWidget {
               icon: Icons.price_change,
               iconColor: Colors.amberAccent,
               children: [
-                _detailRow('Entry Price', '₹${entry.toStringAsFixed(2)}', Colors.blueAccent),
-                _detailRow('Current Price (CMP)', '₹${cmp.toStringAsFixed(2)}',
-                    cmp > entry ? Colors.greenAccent : Colors.redAccent),
-                _detailRow('Stop Loss', '₹${sl.toStringAsFixed(2)}', Colors.redAccent),
-                _detailRow('Target', '₹${target.toStringAsFixed(2)}', Colors.greenAccent),
+                _detailRow(
+                  'Entry Price',
+                  '₹${entry.toStringAsFixed(2)}',
+                  Colors.blueAccent,
+                ),
+                _detailRow(
+                  'Current Price (CMP)',
+                  '₹${cmp.toStringAsFixed(2)}',
+                  cmp > entry ? Colors.greenAccent : Colors.redAccent,
+                ),
+                _detailRow(
+                  'Stop Loss',
+                  '₹${sl.toStringAsFixed(2)}',
+                  Colors.redAccent,
+                ),
+                _detailRow(
+                  'Target',
+                  '₹${target.toStringAsFixed(2)}',
+                  Colors.greenAccent,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -101,13 +132,31 @@ class PositionDetailScreen extends StatelessWidget {
               icon: Icons.analytics,
               iconColor: Colors.purpleAccent,
               children: [
-                _detailRow('Unrealized P&L',
-                    '₹${pnl.toStringAsFixed(2)} (${position.pnlPct.toStringAsFixed(2)}%)',
-                    _pnlColor(pnl)),
-                _detailRow('Margin Used', '₹${position.usedMargin.toStringAsFixed(2)}', Colors.white),
-                _detailRow('Risk (per share)', '₹${risk.toStringAsFixed(2)}', Colors.redAccent),
-                _detailRow('Reward (per share)', '₹${reward.toStringAsFixed(2)}', Colors.greenAccent),
-                _detailRow('Risk : Reward', position.riskReward, Colors.amberAccent),
+                _detailRow(
+                  'Unrealized P&L',
+                  '₹${pnl.toStringAsFixed(2)} (${position.pnlPct.toStringAsFixed(2)}%)',
+                  _pnlColor(pnl),
+                ),
+                _detailRow(
+                  'Margin Used',
+                  '₹${position.usedMargin.toStringAsFixed(2)}',
+                  Colors.white,
+                ),
+                _detailRow(
+                  'Risk (per share)',
+                  '₹${risk.toStringAsFixed(2)}',
+                  Colors.redAccent,
+                ),
+                _detailRow(
+                  'Reward (per share)',
+                  '₹${reward.toStringAsFixed(2)}',
+                  Colors.greenAccent,
+                ),
+                _detailRow(
+                  'Risk : Reward',
+                  position.riskReward,
+                  Colors.amberAccent,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -120,31 +169,36 @@ class PositionDetailScreen extends StatelessWidget {
               iconColor: Colors.greenAccent,
               children: [
                 const SizedBox(height: 4),
-                Builder(builder: (ctx) {
-                  final maxMove = reward > 0 ? reward * position.qty : 1.0;
-                  final progress = (pnl / maxMove).clamp(0.0, 1.0);
-                  return Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 10,
-                          backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                          color: _pnlColor(pnl),
+                Builder(
+                  builder: (ctx) {
+                    final maxMove = reward > 0 ? reward * position.qty : 1.0;
+                    final progress = (pnl / maxMove).clamp(0.0, 1.0);
+                    return Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 10,
+                            backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                            color: _pnlColor(pnl),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          '${(progress * 100).toStringAsFixed(0)}% towards target',
-                          style: TextStyle(fontSize: 11, color: _pnlColor(pnl)),
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '${(progress * 100).toStringAsFixed(0)}% towards target',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _pnlColor(pnl),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                }),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -159,17 +213,45 @@ class PositionDetailScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: _actionButton(context, 'Exit', Icons.exit_to_app, Colors.redAccent)),
+                    Expanded(
+                      child: _actionButton(
+                        context,
+                        'Exit',
+                        Icons.exit_to_app,
+                        Colors.redAccent,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: _actionButton(context, 'Exit Half', Icons.call_split, Colors.orangeAccent)),
+                    Expanded(
+                      child: _actionButton(
+                        context,
+                        'Exit Half',
+                        Icons.call_split,
+                        Colors.orangeAccent,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: _actionButton(context, 'Modify SL', Icons.edit, Colors.blueAccent)),
+                    Expanded(
+                      child: _actionButton(
+                        context,
+                        'Modify SL',
+                        Icons.edit,
+                        Colors.blueAccent,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: _actionButton(context, 'Modify Target', Icons.flag, Colors.greenAccent)),
+                    Expanded(
+                      child: _actionButton(
+                        context,
+                        'Modify Target',
+                        Icons.flag,
+                        Colors.greenAccent,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -203,11 +285,19 @@ class PositionDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Icon(icon, color: iconColor, size: 18),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          ]),
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           const Divider(height: 1),
           const SizedBox(height: 10),
@@ -224,13 +314,25 @@ class PositionDetailScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _actionButton(BuildContext context, String label, IconData icon, Color color) {
+  Widget _actionButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return OutlinedButton.icon(
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -57,7 +57,8 @@ class MarketSentinelMoodModel {
 }
 
 class AiSentinelRepository {
-  static final AiSentinelRepository _instance = AiSentinelRepository._internal();
+  static final AiSentinelRepository _instance =
+      AiSentinelRepository._internal();
   factory AiSentinelRepository() => _instance;
   AiSentinelRepository._internal();
 
@@ -91,7 +92,8 @@ class AiSentinelRepository {
         capitalRequired: 121250.0,
         confidencePct: '94.2%',
         holdingPeriod: '2 - 3 Days',
-        aiRationale: 'FDA approval catalyst paired with 2.8x volume breakout above 20-day EMA.',
+        aiRationale:
+            'FDA approval catalyst paired with 2.8x volume breakout above 20-day EMA.',
       ),
       SentinelOpportunityModel(
         symbol: 'DIXON',
@@ -109,7 +111,8 @@ class AiSentinelRepository {
         capitalRequired: 124500.0,
         confidencePct: '89.5%',
         holdingPeriod: '3 - 5 Days',
-        aiRationale: 'Electronics PLI manufacturing expansion & strong quarterly margin guidance.',
+        aiRationale:
+            'Electronics PLI manufacturing expansion & strong quarterly margin guidance.',
       ),
     ];
   }

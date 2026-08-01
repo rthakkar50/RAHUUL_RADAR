@@ -25,34 +25,38 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObserver {
+class _MainNavigationState extends State<MainNavigation>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
     DashboardScreen(onNavigate: _navigateTo), // Index 0: Home
-    const MarketIntelligenceScreen(),          // Index 1: Market AI
-    const ScannerScreen(),                     // Index 2: Swing Trading Scanner ONLY
-    const AiCopilotScreen(),                   // Index 3: Copilot
-    const FnoScreen(),                         // Index 4: F&O Terminal ONLY
-    const OrderBookScreen(),                   // Index 5: Orders
-    const PortfolioScreen(),                   // Index 6: Portfolio
-    const JournalScreen(),                     // Index 7: Journal
-    const LiveRiskCenterScreen(),              // Index 8: Risk
-    const SettingsScreen(),                    // Index 9: Settings
-    const GlobalMacroScreen(),                 // Index 10: Global Macro
-    const AiNewsScreen(),                      // Index 11: AI News
-    const AiSentinelScreen(),                  // Index 12: AI Sentinel
-    const AiForensicsScreen(),                 // Index 13: AI Forensics
-    const AiPortfolioOptimizerScreen(),        // Index 14: Portfolio Optimizer
-    const AiRiskCommandCenterScreen(),         // Index 15: Risk Command Center
-    const UserProfileScreen(),                 // Index 16: User Profile
+    const MarketIntelligenceScreen(), // Index 1: Market AI
+    const ScannerScreen(), // Index 2: Swing Trading Scanner ONLY
+    const AiCopilotScreen(), // Index 3: Copilot
+    const FnoScreen(), // Index 4: F&O Terminal ONLY
+    const OrderBookScreen(), // Index 5: Orders
+    const PortfolioScreen(), // Index 6: Portfolio
+    const JournalScreen(), // Index 7: Journal
+    const LiveRiskCenterScreen(), // Index 8: Risk
+    const SettingsScreen(), // Index 9: Settings
+    const GlobalMacroScreen(), // Index 10: Global Macro
+    const AiNewsScreen(), // Index 11: AI News
+    const AiSentinelScreen(), // Index 12: AI Sentinel
+    const AiForensicsScreen(), // Index 13: AI Forensics
+    const AiPortfolioOptimizerScreen(), // Index 14: Portfolio Optimizer
+    const AiRiskCommandCenterScreen(), // Index 15: Risk Command Center
+    const UserProfileScreen(), // Index 16: User Profile
   ];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    ApiConfig.logProductionEvent('INFO', 'App initialized and listening to lifecycle events.');
+    ApiConfig.logProductionEvent(
+      'INFO',
+      'App initialized and listening to lifecycle events.',
+    );
   }
 
   @override
@@ -65,7 +69,10 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      ApiConfig.logProductionEvent('INFO', 'App resumed from background. Validating connectivity.');
+      ApiConfig.logProductionEvent(
+        'INFO',
+        'App resumed from background. Validating connectivity.',
+      );
     } else if (state == AppLifecycleState.paused) {
       ApiConfig.logProductionEvent('INFO', 'App paused into background.');
     }
@@ -80,10 +87,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex < 10 ? _currentIndex : 0,
         onDestinationSelected: _navigateTo,

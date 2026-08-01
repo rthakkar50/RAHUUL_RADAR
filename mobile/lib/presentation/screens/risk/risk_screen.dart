@@ -68,36 +68,51 @@ class RiskReport {
   }
 
   factory RiskReport.fromJson(Map<String, dynamic> j) => RiskReport(
-        riskUsed: _toDouble(j['risk_used'], 0.0),
-        riskRemaining: _toDouble(j['risk_remaining'], 5000.0),
-        riskUsedPct: _toDouble(j['risk_used_pct'], 0.0),
-        riskRemainingPct: _toDouble(j['risk_remaining_pct'], 100.0),
-        availableMargin: _toDouble(j['available_margin'], 85000.0),
-        buyingPower: _toDouble(j['buying_power'], 85000.0),
-        dailyLoss: _toDouble(j['daily_loss'], 0.0),
-        dailyProfit: _toDouble(j['daily_profit'], 0.0),
-        dailyLossLimit: _toDouble(j['daily_loss_limit'], 5000.0),
-        dailyProfitTarget: _toDouble(j['daily_profit_target'], 15000.0),
-        capital: _toDouble(j['capital'], 100000.0),
-        totalExposure: _toDouble(j['total_exposure'], 0.0),
-        exposurePct: _toDouble(j['exposure_pct'], 0.0),
-        openTrades: _toInt(j['open_trades'], 0),
-        maxOpenTrades: _toInt(j['max_open_trades'], 5),
-        ordersToday: _toInt(j['orders_today'], 0),
-        maxOrdersPerDay: _toInt(j['max_orders_per_day'], 20),
-        consecutiveLosses: _toInt(j['consecutive_losses'], 0),
-        maxConsecutiveLosses: _toInt(j['max_consecutive_losses'], 3),
-        killSwitch: j['kill_switch'] == true,
-        autoTrading: j['auto_trading'] != false,
-      );
+    riskUsed: _toDouble(j['risk_used'], 0.0),
+    riskRemaining: _toDouble(j['risk_remaining'], 5000.0),
+    riskUsedPct: _toDouble(j['risk_used_pct'], 0.0),
+    riskRemainingPct: _toDouble(j['risk_remaining_pct'], 100.0),
+    availableMargin: _toDouble(j['available_margin'], 85000.0),
+    buyingPower: _toDouble(j['buying_power'], 85000.0),
+    dailyLoss: _toDouble(j['daily_loss'], 0.0),
+    dailyProfit: _toDouble(j['daily_profit'], 0.0),
+    dailyLossLimit: _toDouble(j['daily_loss_limit'], 5000.0),
+    dailyProfitTarget: _toDouble(j['daily_profit_target'], 15000.0),
+    capital: _toDouble(j['capital'], 100000.0),
+    totalExposure: _toDouble(j['total_exposure'], 0.0),
+    exposurePct: _toDouble(j['exposure_pct'], 0.0),
+    openTrades: _toInt(j['open_trades'], 0),
+    maxOpenTrades: _toInt(j['max_open_trades'], 5),
+    ordersToday: _toInt(j['orders_today'], 0),
+    maxOrdersPerDay: _toInt(j['max_orders_per_day'], 20),
+    consecutiveLosses: _toInt(j['consecutive_losses'], 0),
+    maxConsecutiveLosses: _toInt(j['max_consecutive_losses'], 3),
+    killSwitch: j['kill_switch'] == true,
+    autoTrading: j['auto_trading'] != false,
+  );
 
   static const empty = RiskReport(
-    riskUsed: 0, riskRemaining: 0, riskUsedPct: 0, riskRemainingPct: 100,
-    availableMargin: 0, buyingPower: 0, dailyLoss: 0, dailyProfit: 0,
-    dailyLossLimit: 5000, dailyProfitTarget: 15000, capital: 0,
-    totalExposure: 0, exposurePct: 0, openTrades: 0, maxOpenTrades: 5,
-    ordersToday: 0, maxOrdersPerDay: 20, consecutiveLosses: 0,
-    maxConsecutiveLosses: 3, killSwitch: false, autoTrading: true,
+    riskUsed: 0,
+    riskRemaining: 0,
+    riskUsedPct: 0,
+    riskRemainingPct: 100,
+    availableMargin: 0,
+    buyingPower: 0,
+    dailyLoss: 0,
+    dailyProfit: 0,
+    dailyLossLimit: 5000,
+    dailyProfitTarget: 15000,
+    capital: 0,
+    totalExposure: 0,
+    exposurePct: 0,
+    openTrades: 0,
+    maxOpenTrades: 5,
+    ordersToday: 0,
+    maxOrdersPerDay: 20,
+    consecutiveLosses: 0,
+    maxConsecutiveLosses: 3,
+    killSwitch: false,
+    autoTrading: true,
   );
 }
 
@@ -112,14 +127,19 @@ class RiskRepository {
     final uri = Uri.parse('$_base/risk/report');
     try {
       final res = await http
-          .get(uri, headers: {
-            'Bypass-Tunnel-Remainder': 'true',
-            'User-Agent': 'FlutterApp',
-            'Accept': 'application/json'
-          })
+          .get(
+            uri,
+            headers: {
+              'Bypass-Tunnel-Remainder': 'true',
+              'User-Agent': 'FlutterApp',
+              'Accept': 'application/json',
+            },
+          )
           .timeout(const Duration(seconds: 12));
       if (res.statusCode == 200) {
-        return RiskReport.fromJson(json.decode(res.body) as Map<String, dynamic>);
+        return RiskReport.fromJson(
+          json.decode(res.body) as Map<String, dynamic>,
+        );
       }
     } catch (_) {}
     return RiskReport.empty;
@@ -181,9 +201,10 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _pulseAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
     _load();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) => _load());
   }
@@ -203,9 +224,20 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
 
     try {
       final r = await _repo.fetchReport();
-      if (mounted) setState(() { _report = r; _loading = false; _error = null; });
+      if (mounted) {
+        setState(() {
+          _report = r;
+          _loading = false;
+          _error = null;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = e.toString(); });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+      }
     } finally {
       _isFetching = false;
     }
@@ -220,11 +252,20 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-          SizedBox(width: 10),
-          Text('EMERGENCY STOP', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18)),
-        ]),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'EMERGENCY STOP',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
         content: const Text(
           'This will IMMEDIATELY stop all live trading and cancel all pending orders.\n\nAre you absolutely sure?',
           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
@@ -232,12 +273,21 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('STOP ALL TRADING', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'STOP ALL TRADING',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -261,7 +311,9 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
 
   Future<void> _deactivateKillSwitch() async {
     final ok = await _repo.deactivateKillSwitch();
-    if (ok) { await _load(); }
+    if (ok) {
+      await _load();
+    }
   }
 
   Future<void> _toggleAutoTrading() async {
@@ -288,16 +340,27 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
           slivers: [
             _buildAppBar(),
             if (_loading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Color(0xFF7C4DFF))))
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF7C4DFF)),
+                ),
+              )
             else if (_error != null)
               SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.cloud_off_rounded, color: Colors.white30, size: 56),
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        color: Colors.white30,
+                        size: 56,
+                      ),
                       const SizedBox(height: 16),
-                      Text('Failed to load risk data', style: TextStyle(color: Colors.white54, fontSize: 15)),
+                      Text(
+                        'Failed to load risk data',
+                        style: TextStyle(color: Colors.white54, fontSize: 15),
+                      ),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
                         onPressed: _load,
@@ -305,7 +368,9 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
                         label: const Text('Retry'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7C4DFF),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ],
@@ -315,21 +380,26 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             else ...[
               SliverToBoxAdapter(child: _buildKillSwitchBanner()),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                sliver: SliverList(delegate: SliverChildListDelegate([
-                  _buildRiskGauge(),
-                  const SizedBox(height: 16),
-                  _buildCapitalRow(),
-                  const SizedBox(height: 16),
-                  _buildDailyPnlCard(),
-                  const SizedBox(height: 16),
-                  _buildProtectionGrid(),
-                  const SizedBox(height: 16),
-                  _buildExposureCard(),
-                  const SizedBox(height: 16),
-                  _buildControlsCard(),
-                  const SizedBox(height: 32),
-                ])),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildRiskGauge(),
+                    const SizedBox(height: 16),
+                    _buildCapitalRow(),
+                    const SizedBox(height: 16),
+                    _buildDailyPnlCard(),
+                    const SizedBox(height: 16),
+                    _buildProtectionGrid(),
+                    const SizedBox(height: 16),
+                    _buildExposureCard(),
+                    const SizedBox(height: 16),
+                    _buildControlsCard(),
+                    const SizedBox(height: 32),
+                  ]),
+                ),
               ),
             ],
           ],
@@ -350,13 +420,26 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFFE040FB)]),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C4DFF), Color(0xFFE040FB)],
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.shield_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 10),
-            const Text('Risk Engine', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Risk Engine',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
           ],
         ),
         centerTitle: false,
@@ -373,7 +456,7 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.15),
+          color: Colors.red.withValues(alpha: 0.15),
           border: Border.all(color: Colors.red, width: 1.5),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -385,15 +468,32 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('KILL SWITCH ACTIVE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 1)),
+                  Text(
+                    'KILL SWITCH ACTIVE',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      letterSpacing: 1,
+                    ),
+                  ),
                   SizedBox(height: 2),
-                  Text('All trading is halted. Tap to deactivate.', style: TextStyle(color: Colors.red, fontSize: 12)),
+                  Text(
+                    'All trading is halted. Tap to deactivate.',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
                 ],
               ),
             ),
             TextButton(
               onPressed: _deactivateKillSwitch,
-              child: const Text('RESET', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'RESET',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -406,8 +506,8 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
     final color = usedPct < 0.5
         ? const Color(0xFF00E676)
         : usedPct < 0.8
-            ? const Color(0xFFFFAB00)
-            : Colors.red;
+        ? const Color(0xFFFFAB00)
+        : Colors.red;
 
     return _GlassCard(
       child: Column(
@@ -416,9 +516,20 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Daily Risk Budget', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'Daily Risk Budget',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               _PillBadge(
-                label: usedPct < 0.5 ? 'SAFE' : usedPct < 0.8 ? 'CAUTION' : 'DANGER',
+                label: usedPct < 0.5
+                    ? 'SAFE'
+                    : usedPct < 0.8
+                    ? 'CAUTION'
+                    : 'DANGER',
                 color: color,
               ),
             ],
@@ -472,15 +583,28 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(children: [
-                  Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF7986CB), size: 18),
-                  SizedBox(width: 6),
-                  Text('Available Margin', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                ]),
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Color(0xFF7986CB),
+                      size: 18,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Available Margin',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 Text(
                   '₹${_fmt(_report.availableMargin)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -497,15 +621,28 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(children: [
-                  Icon(Icons.bolt_rounded, color: Color(0xFF81C784), size: 18),
-                  SizedBox(width: 6),
-                  Text('Buying Power', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                ]),
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.bolt_rounded,
+                      color: Color(0xFF81C784),
+                      size: 18,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Buying Power',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 Text(
                   '₹${_fmt(_report.buyingPower)}',
-                  style: const TextStyle(color: Color(0xFF00E676), fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Color(0xFF00E676),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -523,27 +660,51 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Daily P&L', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+            'Daily P&L',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _PnlStat(label: 'Profit', value: _report.dailyProfit, target: _report.dailyProfitTarget, isGood: true),
+              _PnlStat(
+                label: 'Profit',
+                value: _report.dailyProfit,
+                target: _report.dailyProfitTarget,
+                isGood: true,
+              ),
               Container(width: 1, height: 50, color: Colors.white12),
-              _PnlStat(label: 'Loss', value: _report.riskUsed, target: _report.dailyLossLimit, isGood: false),
+              _PnlStat(
+                label: 'Loss',
+                value: _report.riskUsed,
+                target: _report.dailyLossLimit,
+                isGood: false,
+              ),
               Container(width: 1, height: 50, color: Colors.white12),
               Column(
                 children: [
                   Text(
-                    isPositive ? '+₹${_fmt(netPnl)}' : '-₹${_fmt(netPnl.abs())}',
+                    isPositive
+                        ? '+₹${_fmt(netPnl)}'
+                        : '-₹${_fmt(netPnl.abs())}',
                     style: TextStyle(
-                      color: isPositive ? const Color(0xFF00E676) : Colors.redAccent,
+                      color: isPositive
+                          ? const Color(0xFF00E676)
+                          : Colors.redAccent,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text('Net P&L', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                  const Text(
+                    'Net P&L',
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
                 ],
               ),
             ],
@@ -557,23 +718,37 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Daily Protection', style: TextStyle(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+        const Text(
+          'Daily Protection',
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _LimitTile(
-            icon: Icons.layers_rounded,
-            label: 'Open Trades',
-            current: _report.openTrades,
-            max: _report.maxOpenTrades,
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: _LimitTile(
-            icon: Icons.receipt_long_rounded,
-            label: 'Orders Today',
-            current: _report.ordersToday,
-            max: _report.maxOrdersPerDay,
-          )),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: _LimitTile(
+                icon: Icons.layers_rounded,
+                label: 'Open Trades',
+                current: _report.openTrades,
+                max: _report.maxOpenTrades,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _LimitTile(
+                icon: Icons.receipt_long_rounded,
+                label: 'Orders Today',
+                current: _report.ordersToday,
+                max: _report.maxOrdersPerDay,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
         _LimitTile(
           icon: Icons.trending_down_rounded,
@@ -591,17 +766,34 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
     final expColor = expFraction < 0.6
         ? const Color(0xFF7C4DFF)
         : expFraction < 0.85
-            ? const Color(0xFFFFAB00)
-            : Colors.red;
+        ? const Color(0xFFFFAB00)
+        : Colors.red;
 
     return _GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Text('Portfolio Exposure', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('${_report.exposurePct.toStringAsFixed(1)}%', style: TextStyle(color: expColor, fontWeight: FontWeight.bold, fontSize: 16)),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Portfolio Exposure',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                '${_report.exposurePct.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  color: expColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
@@ -613,10 +805,19 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 12),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Deployed: ₹${_fmt(_report.totalExposure)}', style: const TextStyle(color: Colors.white70, fontSize: 13)),
-            Text('Capital: ₹${_fmt(_report.capital)}', style: const TextStyle(color: Colors.white54, fontSize: 13)),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Deployed: ₹${_fmt(_report.totalExposure)}',
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              Text(
+                'Capital: ₹${_fmt(_report.capital)}',
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -627,38 +828,62 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Emergency Controls', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+            'Emergency Controls',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 16),
           // Kill Switch
           Row(
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: _report.killSwitch ? _deactivateKillSwitch : _confirmKillSwitch,
+                  onTap: _report.killSwitch
+                      ? _deactivateKillSwitch
+                      : _confirmKillSwitch,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: _report.killSwitch ? Colors.red.withOpacity(0.2) : Colors.red.withOpacity(0.08),
+                      color: _report.killSwitch
+                          ? Colors.red.withValues(alpha: 0.2)
+                          : Colors.red.withValues(alpha: 0.08),
                       border: Border.all(
-                        color: _report.killSwitch ? Colors.red : Colors.red.withOpacity(0.4),
+                        color: _report.killSwitch
+                            ? Colors.red
+                            : Colors.red.withValues(alpha: 0.4),
                         width: _report.killSwitch ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Column(children: [
-                      Icon(
-                        _report.killSwitch ? Icons.stop_circle : Icons.stop_circle_outlined,
-                        color: Colors.red,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _report.killSwitch ? 'KILL SWITCH\nACTIVE' : 'KILL SWITCH\nSTOP ALL',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5),
-                      ),
-                    ]),
+                    child: Column(
+                      children: [
+                        Icon(
+                          _report.killSwitch
+                              ? Icons.stop_circle
+                              : Icons.stop_circle_outlined,
+                          color: Colors.red,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _report.killSwitch
+                              ? 'KILL SWITCH\nACTIVE'
+                              : 'KILL SWITCH\nSTOP ALL',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -671,33 +896,43 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color: _report.autoTrading
-                          ? const Color(0xFF7C4DFF).withOpacity(0.12)
-                          : Colors.orange.withOpacity(0.1),
+                          ? const Color(0xFF7C4DFF).withValues(alpha: 0.12)
+                          : Colors.orange.withValues(alpha: 0.1),
                       border: Border.all(
                         color: _report.autoTrading
-                            ? const Color(0xFF7C4DFF).withOpacity(0.5)
-                            : Colors.orange.withOpacity(0.5),
+                            ? const Color(0xFF7C4DFF).withValues(alpha: 0.5)
+                            : Colors.orange.withValues(alpha: 0.5),
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Column(children: [
-                      Icon(
-                        _report.autoTrading ? Icons.smart_toy_rounded : Icons.smart_toy_outlined,
-                        color: _report.autoTrading ? const Color(0xFF7C4DFF) : Colors.orange,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _report.autoTrading ? 'AUTO TRADING\nENABLED' : 'AUTO TRADING\nDISABLED',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _report.autoTrading ? const Color(0xFF7C4DFF) : Colors.orange,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          letterSpacing: 0.5,
+                    child: Column(
+                      children: [
+                        Icon(
+                          _report.autoTrading
+                              ? Icons.smart_toy_rounded
+                              : Icons.smart_toy_outlined,
+                          color: _report.autoTrading
+                              ? const Color(0xFF7C4DFF)
+                              : Colors.orange,
+                          size: 32,
                         ),
-                      ),
-                    ]),
+                        const SizedBox(height: 6),
+                        Text(
+                          _report.autoTrading
+                              ? 'AUTO TRADING\nENABLED'
+                              : 'AUTO TRADING\nDISABLED',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _report.autoTrading
+                                ? const Color(0xFF7C4DFF)
+                                : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -708,13 +943,17 @@ class _RiskScreenState extends State<RiskScreen> with TickerProviderStateMixin {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Text(
               '⚠️  Cancel Pending Orders is automatically executed when Kill Switch is activated.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 11, height: 1.4),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 11,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -750,8 +989,14 @@ class _GlassCard extends StatelessWidget {
         gradient: gradient,
         color: gradient == null ? const Color(0xFF1A1A2E) : null,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -768,11 +1013,19 @@ class _PillBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        border: Border.all(color: color.withOpacity(0.5)),
+        color: color.withValues(alpha: 0.15),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 }
@@ -781,15 +1034,29 @@ class _StatItem extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _StatItem({required this.label, required this.value, required this.color});
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white38, fontSize: 11)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white38, fontSize: 11),
+        ),
       ],
     );
   }
@@ -800,7 +1067,12 @@ class _PnlStat extends StatelessWidget {
   final double value;
   final double target;
   final bool isGood;
-  const _PnlStat({required this.label, required this.value, required this.target, required this.isGood});
+  const _PnlStat({
+    required this.label,
+    required this.value,
+    required this.target,
+    required this.isGood,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -808,11 +1080,24 @@ class _PnlStat extends StatelessWidget {
     final color = isGood ? const Color(0xFF00E676) : Colors.redAccent;
     return Column(
       children: [
-        Text('₹${_fmt(value)}', style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(
+          '₹${_fmt(value)}',
+          style: TextStyle(
+            color: color,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 11),
+        ),
         const SizedBox(height: 6),
-        Text('${pct.toStringAsFixed(0)}% of target', style: TextStyle(color: Colors.white38, fontSize: 10)),
+        Text(
+          '${pct.toStringAsFixed(0)}% of target',
+          style: TextStyle(color: Colors.white38, fontSize: 10),
+        ),
       ],
     );
   }
@@ -844,54 +1129,106 @@ class _LimitTile extends StatelessWidget {
     final frac = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final isWarning = frac >= 0.75;
     final isDanger = frac >= 1.0;
-    final color = isDanger ? Colors.red : isWarning ? const Color(0xFFFFAB00) : const Color(0xFF7C4DFF);
+    final color = isDanger
+        ? Colors.red
+        : isWarning
+        ? const Color(0xFFFFAB00)
+        : const Color(0xFF7C4DFF);
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: wideMode ? 14 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: wideMode ? 14 : 16,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDanger ? Colors.red.withOpacity(0.5) : Colors.white.withOpacity(0.07)),
+        border: Border.all(
+          color: isDanger
+              ? Colors.red.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.07),
+        ),
       ),
       child: wideMode
-          ? Row(children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: frac, minHeight: 6,
-                      backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                    ),
+          ? Row(
+              children: [
+                Icon(icon, color: color, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: frac,
+                          minHeight: 6,
+                          backgroundColor: Colors.white12,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                        ),
+                      ),
+                    ],
                   ),
-                ]),
-              ),
-              const SizedBox(width: 12),
-              Text('$current / $max', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
-            ])
-          : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Icon(icon, color: color, size: 18),
-                const SizedBox(width: 6),
-                Expanded(child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11), overflow: TextOverflow.ellipsis)),
-              ]),
-              const SizedBox(height: 10),
-              Text('$current / $max', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: frac, minHeight: 6,
-                  backgroundColor: Colors.white12,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
-              ),
-            ]),
+                const SizedBox(width: 12),
+                Text(
+                  '$current / $max',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: color, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '$current / $max',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: frac,
+                    minHeight: 6,
+                    backgroundColor: Colors.white12,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Splash screen should be minimal (2-3 seconds maximum)
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainNavigation()),
@@ -44,10 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             SizedBox(height: 8),
-            Text(
-              'Production Scanner',
-              style: TextStyle(color: Colors.grey),
-            ),
+            Text('Production Scanner', style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),

@@ -45,13 +45,24 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     if (_isFetching) return;
     _isFetching = true;
 
-    debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> LOADING (silent: $silent)');
-    if (!silent) setState(() { _isLoading = true; _error = null; });
+    debugPrint(
+      '[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> LOADING (silent: $silent)',
+    );
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
     try {
       final data = await _repository.getPortfolio();
-      debugPrint('[RUN-AUDIT] [PortfolioScreen] Repository returned SUCCESS. Capital: ${data.summary.totalCapital}');
+      debugPrint(
+        '[RUN-AUDIT] [PortfolioScreen] Repository returned SUCCESS. Capital: ${data.summary.totalCapital}',
+      );
       if (mounted) {
-        debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> SUCCESS');
+        debugPrint(
+          '[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> SUCCESS',
+        );
         setState(() {
           _data = data;
           _lastRefreshTime = DateTime.now();
@@ -60,10 +71,14 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         });
       }
     } catch (e, st) {
-      debugPrint('[RUN-AUDIT] [PortfolioScreen] Repository THREW EXCEPTION: $e');
+      debugPrint(
+        '[RUN-AUDIT] [PortfolioScreen] Repository THREW EXCEPTION: $e',
+      );
       debugPrint('[RUN-AUDIT] [PortfolioScreen] STACKTRACE:\n$st');
       if (mounted) {
-        debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> ERROR (error: $e)');
+        debugPrint(
+          '[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> ERROR (error: $e)',
+        );
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -119,7 +134,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     }
 
     if (_error != null && _data == null) {
-      debugPrint('[RUN-AUDIT] [PortfolioScreen] RENDERING ERROR WIDGET "Cannot Load Portfolio". Current _error value: "$_error"');
+      debugPrint(
+        '[RUN-AUDIT] [PortfolioScreen] RENDERING ERROR WIDGET "Cannot Load Portfolio". Current _error value: "$_error"',
+      );
       return Center(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -129,9 +146,16 @@ class _PortfolioScreenState extends State<PortfolioScreen>
             children: [
               const Icon(Icons.cloud_off, color: Colors.orangeAccent, size: 60),
               const SizedBox(height: 16),
-              Text('Cannot Load Portfolio', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Cannot Load Portfolio',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _fetchPortfolio,
@@ -150,7 +174,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
     return Column(
       children: [
-        if (_isLoading) const LinearProgressIndicator(minHeight: 2, color: Colors.blueAccent),
+        if (_isLoading)
+          const LinearProgressIndicator(minHeight: 2, color: Colors.blueAccent),
         _buildSummarySection(_data!.summary),
         _buildLastUpdatedBar(),
         Expanded(
@@ -177,10 +202,29 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         children: [
           Row(
             children: [
-              Expanded(child: _metricTile('Total Value', '₹${_fmt(s.totalEquity)}', Colors.blueAccent)),
-              Expanded(child: _metricTile('Today P&L', '₹${_fmt(s.todayPnl)}', _pnlColor(s.todayPnl), signed: true)),
-              Expanded(child: _metricTile('Overall P&L', '₹${_fmt(s.unrealizedPnl + s.realizedPnl)}',
-                  _pnlColor(s.unrealizedPnl + s.realizedPnl), signed: true)),
+              Expanded(
+                child: _metricTile(
+                  'Total Value',
+                  '₹${_fmt(s.totalEquity)}',
+                  Colors.blueAccent,
+                ),
+              ),
+              Expanded(
+                child: _metricTile(
+                  'Today P&L',
+                  '₹${_fmt(s.todayPnl)}',
+                  _pnlColor(s.todayPnl),
+                  signed: true,
+                ),
+              ),
+              Expanded(
+                child: _metricTile(
+                  'Overall P&L',
+                  '₹${_fmt(s.unrealizedPnl + s.realizedPnl)}',
+                  _pnlColor(s.unrealizedPnl + s.realizedPnl),
+                  signed: true,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -188,9 +232,27 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _metricTile('Available Cash', '₹${_fmt(s.availableCash)}', Colors.white)),
-              Expanded(child: _metricTile('Margin Used', '₹${_fmt(s.usedMargin)}', Colors.orangeAccent)),
-              Expanded(child: _metricTile('Buying Power', '₹${_fmt(s.buyingPower)}', Colors.cyanAccent)),
+              Expanded(
+                child: _metricTile(
+                  'Available Cash',
+                  '₹${_fmt(s.availableCash)}',
+                  Colors.white,
+                ),
+              ),
+              Expanded(
+                child: _metricTile(
+                  'Margin Used',
+                  '₹${_fmt(s.usedMargin)}',
+                  Colors.orangeAccent,
+                ),
+              ),
+              Expanded(
+                child: _metricTile(
+                  'Buying Power',
+                  '₹${_fmt(s.buyingPower)}',
+                  Colors.cyanAccent,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -216,14 +278,23 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     );
   }
 
-  Widget _metricTile(String label, String value, Color valueColor, {bool signed = false}) {
+  Widget _metricTile(
+    String label,
+    String value,
+    Color valueColor, {
+    bool signed = false,
+  }) {
     return Column(
       children: [
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: valueColor),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -233,7 +304,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   Widget _buildLastUpdatedBar() {
     if (_lastRefreshTime == null) return const SizedBox.shrink();
     final t = _lastRefreshTime!;
-    final ts = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
+    final ts =
+        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
@@ -243,8 +315,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         children: [
           const Icon(Icons.update, size: 12, color: Colors.blueAccent),
           const SizedBox(width: 5),
-          Text('Updated: $ts (Auto-refreshes every 30s)',
-              style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(
+            'Updated: $ts (Auto-refreshes every 30s)',
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -259,15 +333,22 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         children: const [
           SizedBox(height: 80),
           Center(
-            child: Column(children: [
-              Icon(Icons.inbox, size: 48, color: Colors.grey),
-              SizedBox(height: 12),
-              Text('No Open Positions', style: TextStyle(color: Colors.grey, fontSize: 16)),
-              SizedBox(height: 8),
-              Text('Positions opened by the AI scanner\nwill appear here.',
+            child: Column(
+              children: [
+                Icon(Icons.inbox, size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  'No Open Positions',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Positions opened by the AI scanner\nwill appear here.',
                   style: TextStyle(color: Colors.grey, fontSize: 12),
-                  textAlign: TextAlign.center),
-            ]),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -282,7 +363,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   }
 
   Widget _buildPositionCard(BuildContext context, PositionModel pos) {
-    final dirColor = pos.direction.toUpperCase() == 'BUY' ? Colors.greenAccent : Colors.redAccent;
+    final dirColor = pos.direction.toUpperCase() == 'BUY'
+        ? Colors.greenAccent
+        : Colors.redAccent;
     final pnlColor = _pnlColor(pos.unrealizedPnl);
 
     return Card(
@@ -295,7 +378,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => PositionDetailScreen(position: pos)),
+          MaterialPageRoute(
+            builder: (_) => PositionDetailScreen(position: pos),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -306,21 +391,43 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(pos.symbol,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                    Text('${pos.exchange} • Qty: ${pos.qty}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  ]),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pos.symbol,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${pos.exchange} • Qty: ${pos.qty}',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: dirColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: dirColor, width: 1.2),
                     ),
-                    child: Text(pos.direction,
-                        style: TextStyle(color: dirColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(
+                      pos.direction,
+                      style: TextStyle(
+                        color: dirColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -332,9 +439,18 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _cardStat('Avg Price', '₹${pos.entryPrice.toStringAsFixed(2)}', Colors.blueAccent),
-                  _cardStat('CMP', '₹${pos.cmp.toStringAsFixed(2)}',
-                      pos.cmp > pos.entryPrice ? Colors.greenAccent : Colors.redAccent),
+                  _cardStat(
+                    'Avg Price',
+                    '₹${pos.entryPrice.toStringAsFixed(2)}',
+                    Colors.blueAccent,
+                  ),
+                  _cardStat(
+                    'CMP',
+                    '₹${pos.cmp.toStringAsFixed(2)}',
+                    pos.cmp > pos.entryPrice
+                        ? Colors.greenAccent
+                        : Colors.redAccent,
+                  ),
                   _cardStat('R:R', pos.riskReward, Colors.amberAccent),
                 ],
               ),
@@ -342,7 +458,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
               // P&L row
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: pnlColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
@@ -351,10 +470,26 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _cardStat('Today P&L', '₹${pos.unrealizedPnl.toStringAsFixed(2)}', pnlColor),
-                    _cardStat('Overall P&L', '₹${pos.unrealizedPnl.toStringAsFixed(2)}', pnlColor),
-                    _cardStat('Day %', '${pos.pnlPct.toStringAsFixed(2)}%', pnlColor),
-                    _cardStat('Overall %', '${pos.pnlPct.toStringAsFixed(2)}%', pnlColor),
+                    _cardStat(
+                      'Today P&L',
+                      '₹${pos.unrealizedPnl.toStringAsFixed(2)}',
+                      pnlColor,
+                    ),
+                    _cardStat(
+                      'Overall P&L',
+                      '₹${pos.unrealizedPnl.toStringAsFixed(2)}',
+                      pnlColor,
+                    ),
+                    _cardStat(
+                      'Day %',
+                      '${pos.pnlPct.toStringAsFixed(2)}%',
+                      pnlColor,
+                    ),
+                    _cardStat(
+                      'Overall %',
+                      '${pos.pnlPct.toStringAsFixed(2)}%',
+                      pnlColor,
+                    ),
                   ],
                 ),
               ),
@@ -371,9 +506,15 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(value,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
-            overflow: TextOverflow.ellipsis),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
       ],
     );
   }
@@ -399,8 +540,22 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Sector Allocation Breakdown', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-                  Text('Winning Rate: 74.2%', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Sector Allocation Breakdown',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Winning Rate: 74.2%',
+                    style: TextStyle(
+                      color: Colors.greenAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -430,12 +585,29 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Risk Exposure & Heatmap', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-                  Text('Broker Margin: ₹7.23L', style: TextStyle(color: Colors.orangeAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Risk Exposure & Heatmap',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Broker Margin: ₹7.23L',
+                    style: TextStyle(
+                      color: Colors.orangeAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 8),
-              Text('Portfolio Beta: 0.88 • Low Exposure to Market Volatility', style: TextStyle(color: Colors.grey, fontSize: 11)),
+              Text(
+                'Portfolio Beta: 0.88 • Low Exposure to Market Volatility',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
             ],
           ),
         ),
@@ -478,22 +650,39 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(name, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-            Text('${(pct * 100).toStringAsFixed(0)}%', style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 10)),
+            Text(
+              name,
+              style: const TextStyle(color: Colors.grey, fontSize: 10),
+            ),
+            Text(
+              '${(pct * 100).toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: col,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 3),
-        LinearProgressIndicator(value: pct, color: col, backgroundColor: Colors.white10, minHeight: 4),
+        LinearProgressIndicator(
+          value: pct,
+          color: col,
+          backgroundColor: Colors.white10,
+          minHeight: 4,
+        ),
       ],
     );
   }
 
-  Widget _insightCard(BuildContext context,
-      {required String title,
-      required String symbol,
-      required String value,
-      required IconData icon,
-      required Color color}) {
+  Widget _insightCard(
+    BuildContext context, {
+    required String title,
+    required String symbol,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -516,15 +705,29 @@ class _PortfolioScreenState extends State<PortfolioScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  title,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
                 const SizedBox(height: 4),
-                Text(symbol,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  symbol,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(value,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
@@ -539,14 +742,21 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         children: const [
           SizedBox(height: 80),
           Center(
-            child: Column(children: [
-              Icon(Icons.history, size: 48, color: Colors.grey),
-              SizedBox(height: 12),
-              Text('No Closed Positions', style: TextStyle(color: Colors.grey, fontSize: 16)),
-              SizedBox(height: 8),
-              Text('Completed trades will appear here.',
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-            ]),
+            child: Column(
+              children: [
+                Icon(Icons.history, size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  'No Closed Positions',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Completed trades will appear here.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -562,8 +772,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   Widget _buildClosedCard(BuildContext context, ClosedPositionModel pos) {
     final pnlColor = _pnlColor(pos.pnl);
-    final dirColor =
-        pos.direction.toUpperCase() == 'BUY' ? Colors.greenAccent : Colors.redAccent;
+    final dirColor = pos.direction.toUpperCase() == 'BUY'
+        ? Colors.greenAccent
+        : Colors.redAccent;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -576,14 +787,31 @@ class _PortfolioScreenState extends State<PortfolioScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(pos.symbol,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(pos.direction,
-                      style: TextStyle(color: dirColor, fontSize: 12, fontWeight: FontWeight.bold)),
-                ]),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pos.symbol,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      pos.direction,
+                      style: TextStyle(
+                        color: dirColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: pnlColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -591,7 +819,11 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                   ),
                   child: Text(
                     '${pos.pnl >= 0 ? '+' : ''}₹${pos.pnl.toStringAsFixed(2)}',
-                    style: TextStyle(color: pnlColor, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: TextStyle(
+                      color: pnlColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -602,9 +834,21 @@ class _PortfolioScreenState extends State<PortfolioScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _cardStat('Entry', '₹${pos.entryPrice.toStringAsFixed(2)}', Colors.blueAccent),
-                _cardStat('Exit', '₹${pos.exitPrice.toStringAsFixed(2)}', Colors.white),
-                _cardStat('Return', '${pos.returnPct >= 0 ? '+' : ''}${pos.returnPct.toStringAsFixed(2)}%', pnlColor),
+                _cardStat(
+                  'Entry',
+                  '₹${pos.entryPrice.toStringAsFixed(2)}',
+                  Colors.blueAccent,
+                ),
+                _cardStat(
+                  'Exit',
+                  '₹${pos.exitPrice.toStringAsFixed(2)}',
+                  Colors.white,
+                ),
+                _cardStat(
+                  'Return',
+                  '${pos.returnPct >= 0 ? '+' : ''}${pos.returnPct.toStringAsFixed(2)}%',
+                  pnlColor,
+                ),
                 _cardStat('Held', pos.holdingDays, Colors.grey),
               ],
             ),
@@ -625,6 +869,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     return v.toStringAsFixed(2);
   }
 
-  Color _pnlColor(double v) =>
-      v > 0 ? Colors.greenAccent : v < 0 ? Colors.redAccent : Colors.grey;
+  Color _pnlColor(double v) => v > 0
+      ? Colors.greenAccent
+      : v < 0
+      ? Colors.redAccent
+      : Colors.grey;
 }

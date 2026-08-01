@@ -17,7 +17,11 @@ class DashboardDataModel {
     required this.isOnline,
   });
 
-  factory DashboardDataModel.empty({String serverStatus = 'OFFLINE', String lastScan = 'Never', bool online = false}) {
+  factory DashboardDataModel.empty({
+    String serverStatus = 'OFFLINE',
+    String lastScan = 'Never',
+    bool online = false,
+  }) {
     return DashboardDataModel(
       serverStatus: serverStatus,
       marketStatus: '🔴 CLOSED',

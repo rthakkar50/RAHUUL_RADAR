@@ -36,9 +36,12 @@ class WebSocketManager {
   factory WebSocketManager() => _instance;
   WebSocketManager._internal();
 
-  WebSocketConnectionState _connectionState = WebSocketConnectionState.disconnected;
-  final StreamController<WebSocketConnectionState> _stateController = StreamController.broadcast();
-  final StreamController<LiveEventModel> _eventStreamController = StreamController.broadcast();
+  WebSocketConnectionState _connectionState =
+      WebSocketConnectionState.disconnected;
+  final StreamController<WebSocketConnectionState> _stateController =
+      StreamController.broadcast();
+  final StreamController<LiveEventModel> _eventStreamController =
+      StreamController.broadcast();
 
   Timer? _heartbeatTimer;
   Timer? _reconnectTimer;
@@ -52,7 +55,8 @@ class WebSocketManager {
   Stream<LiveEventModel> get eventStream => _eventStreamController.stream;
 
   void connect({String url = 'wss://rahuul-radar.onrender.com/ws/v1'}) {
-    if (_connectionState == WebSocketConnectionState.connected || _connectionState == WebSocketConnectionState.connecting) {
+    if (_connectionState == WebSocketConnectionState.connected ||
+        _connectionState == WebSocketConnectionState.connecting) {
       return;
     }
 
@@ -93,7 +97,8 @@ class WebSocketManager {
   }
 
   void pushEvent(LiveEventModel event) {
-    if (_connectionState == WebSocketConnectionState.connected && _subscribedTopics.contains(event.topic)) {
+    if (_connectionState == WebSocketConnectionState.connected &&
+        _subscribedTopics.contains(event.topic)) {
       _eventStreamController.add(event);
     }
   }

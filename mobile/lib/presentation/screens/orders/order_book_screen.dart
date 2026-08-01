@@ -9,7 +9,8 @@ class OrderBookScreen extends StatefulWidget {
   State<OrderBookScreen> createState() => _OrderBookScreenState();
 }
 
-class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProviderStateMixin {
+class _OrderBookScreenState extends State<OrderBookScreen>
+    with SingleTickerProviderStateMixin {
   final OrderRepository _repository = OrderRepository();
   List<OrderBookItemModel> _orders = [];
   bool _isLoading = false;
@@ -49,7 +50,10 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
       backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0B0E14),
-        title: const Text('Live Order Book & Audit Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'Live Order Book & Audit Log',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchBook),
         ],
@@ -64,7 +68,9 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.blueAccent),
+            )
           : TabBarView(
               controller: _tabController,
               children: [
@@ -79,14 +85,21 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
 
   Widget _buildList(String status) {
     final filtered = _orders.where((o) {
-      if (status == 'EXECUTED') return o.status == 'COMPLETE' || o.status == 'EXECUTED';
-      if (status == 'CANCELLED') return o.status == 'CANCELLED' || o.status == 'REJECTED';
+      if (status == 'EXECUTED') {
+        return o.status == 'COMPLETE' || o.status == 'EXECUTED';
+      }
+      if (status == 'CANCELLED') {
+        return o.status == 'CANCELLED' || o.status == 'REJECTED';
+      }
       return o.status == 'OPEN' || o.status == 'PENDING';
     }).toList();
 
     if (filtered.isEmpty) {
       return Center(
-        child: Text('No $status orders in book.', style: const TextStyle(color: Colors.grey)),
+        child: Text(
+          'No $status orders in book.',
+          style: const TextStyle(color: Colors.grey),
+        ),
       );
     }
 
@@ -101,14 +114,34 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            title: Text('${item.symbol} (${item.action})', style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('Qty: ${item.quantity} • Price: ₹${item.price.toStringAsFixed(2)} • Time: ${item.timestamp}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+            title: Text(
+              '${item.symbol} (${item.action})',
+              style: TextStyle(
+                color: col,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              'Qty: ${item.quantity} • Price: ₹${item.price.toStringAsFixed(2)} • Time: ${item.timestamp}',
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+            ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(item.status, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
-                Text(item.orderId, style: const TextStyle(color: Colors.white38, fontSize: 9)),
+                Text(
+                  item.status,
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  item.orderId,
+                  style: const TextStyle(color: Colors.white38, fontSize: 9),
+                ),
               ],
             ),
           ),
@@ -121,10 +154,30 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _auditTile('16:45:02', 'ORDER PLACED', 'DIVISLAB BUY 25 @ ₹4850.00', 'Paytm Money API (Status: 200 OK)'),
-        _auditTile('16:45:03', 'ORDER EXECUTED', 'DIVISLAB Filled 25 @ ₹4850.00', 'Broker Order ID: PAYTM-99214'),
-        _auditTile('16:30:10', 'SL MODIFIED', 'TVSMOTOR Trailing SL raised to ₹2410', 'Risk Engine V2 Auto-Trigger'),
-        _auditTile('15:15:00', 'ORDER CANCELLED', 'DIXON LIMIT 10 @ ₹12400', 'User Manual Cancellation'),
+        _auditTile(
+          '16:45:02',
+          'ORDER PLACED',
+          'DIVISLAB BUY 25 @ ₹4850.00',
+          'Paytm Money API (Status: 200 OK)',
+        ),
+        _auditTile(
+          '16:45:03',
+          'ORDER EXECUTED',
+          'DIVISLAB Filled 25 @ ₹4850.00',
+          'Broker Order ID: PAYTM-99214',
+        ),
+        _auditTile(
+          '16:30:10',
+          'SL MODIFIED',
+          'TVSMOTOR Trailing SL raised to ₹2410',
+          'Risk Engine V2 Auto-Trigger',
+        ),
+        _auditTile(
+          '15:15:00',
+          'ORDER CANCELLED',
+          'DIXON LIMIT 10 @ ₹12400',
+          'User Manual Cancellation',
+        ),
       ],
     );
   }
@@ -141,19 +194,39 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(
+            time,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(event, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                Text(
+                  event,
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(detail, style: const TextStyle(color: Colors.white, fontSize: 11)),
-                Text(source, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                Text(
+                  detail,
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
+                Text(
+                  source,
+                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

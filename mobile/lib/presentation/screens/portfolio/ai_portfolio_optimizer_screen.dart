@@ -5,10 +5,12 @@ class AiPortfolioOptimizerScreen extends StatefulWidget {
   const AiPortfolioOptimizerScreen({super.key});
 
   @override
-  State<AiPortfolioOptimizerScreen> createState() => _AiPortfolioOptimizerScreenState();
+  State<AiPortfolioOptimizerScreen> createState() =>
+      _AiPortfolioOptimizerScreenState();
 }
 
-class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen> with SingleTickerProviderStateMixin {
+class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
+    with SingleTickerProviderStateMixin {
   final PortfolioOptimizerRepository _repo = PortfolioOptimizerRepository();
   late TabController _tabController;
 
@@ -40,13 +42,22 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.amberAccent, Colors.greenAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.amberAccent, Colors.greenAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.pie_chart_outline, color: Colors.black, size: 18),
+              child: const Icon(
+                Icons.pie_chart_outline,
+                color: Colors.black,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('AI Portfolio Optimizer & Allocator', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            const Text(
+              'AI Portfolio Optimizer & Allocator',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -80,27 +91,64 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: Colors.greenAccent.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('AI Portfolio Health Score', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text('${health.overallScore} / 100', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text(
+                    'AI Portfolio Health Score',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    '${health.overallScore} / 100',
+                    style: const TextStyle(
+                      color: Colors.greenAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              LinearProgressIndicator(value: health.overallScore / 100.0, color: Colors.greenAccent, backgroundColor: Colors.white10, minHeight: 8),
+              LinearProgressIndicator(
+                value: health.overallScore / 100.0,
+                color: Colors.greenAccent,
+                backgroundColor: Colors.white10,
+                minHeight: 8,
+              ),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _tile('Diversification', '${health.diversificationScore}', Colors.cyanAccent),
-                  _tile('Sector Balance', '${health.sectorBalanceScore}', Colors.amberAccent),
-                  _tile('Cash Position', '${health.cashPositionScore}', Colors.greenAccent),
-                  _tile('Risk Usage', '${health.riskUsageScore}', Colors.purpleAccent),
+                  _tile(
+                    'Diversification',
+                    '${health.diversificationScore}',
+                    Colors.cyanAccent,
+                  ),
+                  _tile(
+                    'Sector Balance',
+                    '${health.sectorBalanceScore}',
+                    Colors.amberAccent,
+                  ),
+                  _tile(
+                    'Cash Position',
+                    '${health.cashPositionScore}',
+                    Colors.greenAccent,
+                  ),
+                  _tile(
+                    'Risk Usage',
+                    '${health.riskUsageScore}',
+                    Colors.purpleAccent,
+                  ),
                 ],
               ),
             ],
@@ -117,7 +165,14 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -135,9 +190,20 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb_outline, color: Colors.amberAccent, size: 18),
+              Icon(
+                Icons.lightbulb_outline,
+                color: Colors.amberAccent,
+                size: 18,
+              ),
               SizedBox(width: 8),
-              Text('Module 8 — AI Investment Advisor Summary', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                'Module 8 — AI Investment Advisor Summary',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 10),
@@ -167,14 +233,41 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Module 2 — Capital & Asset Allocation Engine', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text(
+                'Module 2 — Capital & Asset Allocation Engine',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 14),
-              _allocRow('Available Cash Buffer', '${alloc.cashPct}%', Colors.greenAccent),
-              _allocRow('Equity Swing Holdings', '${alloc.equityPct}%', Colors.blueAccent),
-              _allocRow('F&O Options / Futures', '${alloc.fnoPct}%', Colors.purpleAccent),
+              _allocRow(
+                'Available Cash Buffer',
+                '${alloc.cashPct}%',
+                Colors.greenAccent,
+              ),
+              _allocRow(
+                'Equity Swing Holdings',
+                '${alloc.equityPct}%',
+                Colors.blueAccent,
+              ),
+              _allocRow(
+                'F&O Options / Futures',
+                '${alloc.fnoPct}%',
+                Colors.purpleAccent,
+              ),
               const Divider(color: Colors.white10),
-              _allocRow('Swing Trading Strategy', '${alloc.swingPct}%', Colors.cyanAccent),
-              _allocRow('Intraday Strategy', '${alloc.intradayPct}%', Colors.amberAccent),
+              _allocRow(
+                'Swing Trading Strategy',
+                '${alloc.swingPct}%',
+                Colors.cyanAccent,
+              ),
+              _allocRow(
+                'Intraday Strategy',
+                '${alloc.intradayPct}%',
+                Colors.amberAccent,
+              ),
             ],
           ),
         ),
@@ -188,8 +281,18 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          Text(
+            val,
+            style: TextStyle(
+              color: col,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -212,18 +315,55 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Simulated ${st.crashPct}% Market Crash', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(
+                      'Simulated ${st.crashPct}% Market Crash',
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                      child: Text(st.riskGrade, style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        st.riskGrade,
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Estimated Portfolio Loss: -₹${st.estimatedLoss.toStringAsFixed(2)}', style: const TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                Text('Projected Equity After Crash: ₹${st.portfolioEquityAfterCrash.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                Text('Estimated Recovery Time: ${st.estimatedRecoveryTime}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  'Estimated Portfolio Loss: -₹${st.estimatedLoss.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Projected Equity After Crash: ₹${st.portfolioEquityAfterCrash.toStringAsFixed(2)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                Text(
+                  'Estimated Recovery Time: ${st.estimatedRecoveryTime}',
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -243,7 +383,14 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
             leading: const Icon(Icons.sync_alt, color: Colors.amberAccent),
-            title: Text(sug, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            title: Text(
+              sug,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       },

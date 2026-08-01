@@ -26,7 +26,8 @@ class OptionChainStrikeModel {
   final double putOiChange;
   final double putIv;
   final OptionGreekModel putGreeks;
-  final String buildupType; // Long Build-up, Short Build-up, Short Covering, Long Unwinding
+  final String
+  buildupType; // Long Build-up, Short Build-up, Short Covering, Long Unwinding
 
   const OptionChainStrikeModel({
     required this.strike,

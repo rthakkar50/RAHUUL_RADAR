@@ -8,8 +8,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(text: 'rahuul@thakkar.com');
-  final TextEditingController _passwordController = TextEditingController(text: '••••••••••••');
+  final TextEditingController _emailController = TextEditingController(
+    text: 'rahuul@thakkar.com',
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: '••••••••••••',
+  );
   bool _rememberDevice = true;
 
   @override
@@ -32,15 +36,27 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.blueAccent]),
+                  gradient: const LinearGradient(
+                    colors: [Colors.cyanAccent, Colors.blueAccent],
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.radar, color: Colors.black, size: 40),
               ),
               const SizedBox(height: 16),
-              const Text('RAHUUL_RADAR Enterprise', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+              const Text(
+                'RAHUUL_RADAR Enterprise',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
+              ),
               const SizedBox(height: 6),
-              const Text('Institutional SaaS & Cloud Workspace v4.0.0', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              const Text(
+                'Institutional SaaS & Cloud Workspace v4.0.0',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
               const SizedBox(height: 32),
               TextField(
                 controller: _emailController,
@@ -50,8 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: const Color(0xFF161B22),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.cyanAccent),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.cyanAccent,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -64,8 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: const Color(0xFF161B22),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.cyanAccent),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.cyanAccent,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -73,11 +101,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Checkbox(
                     value: _rememberDevice,
-                    onChanged: (val) => setState(() => _rememberDevice = val ?? true),
+                    onChanged: (val) =>
+                        setState(() => _rememberDevice = val ?? true),
                     activeColor: Colors.cyanAccent,
                     checkColor: Colors.black,
                   ),
-                  const Text('Remember This Device (JWT Encrypted)', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const Text(
+                    'Remember This Device (JWT Encrypted)',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -87,19 +119,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: Colors.cyanAccent,
                   foregroundColor: Colors.black,
                   minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('AUTHENTICATE & LAUNCH WORKSPACE', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'AUTHENTICATE & LAUNCH WORKSPACE',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.g_mobiledata, size: 24, color: Colors.white),
-                label: const Text('Sign in with Google Enterprise SSO', style: TextStyle(color: Colors.white)),
+                icon: const Icon(
+                  Icons.g_mobiledata,
+                  size: 24,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Sign in with Google Enterprise SSO',
+                  style: TextStyle(color: Colors.white),
+                ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
                   side: const BorderSide(color: Colors.white24),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],

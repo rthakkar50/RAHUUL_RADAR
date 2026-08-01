@@ -28,9 +28,7 @@ class OrderEntrySheet extends StatefulWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: OrderEntrySheet(
           symbol: symbol,
           initialPrice: initialPrice,
@@ -63,7 +61,9 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
     super.initState();
     _action = widget.defaultAction;
     _priceController = TextEditingController(
-      text: widget.initialPrice > 0 ? widget.initialPrice.toStringAsFixed(2) : '',
+      text: widget.initialPrice > 0
+          ? widget.initialPrice.toStringAsFixed(2)
+          : '',
     );
     _triggerPriceController = TextEditingController();
     _fetchPreview();
@@ -83,7 +83,8 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
     });
 
     try {
-      final priceVal = double.tryParse(_priceController.text) ?? widget.initialPrice;
+      final priceVal =
+          double.tryParse(_priceController.text) ?? widget.initialPrice;
       final triggerVal = double.tryParse(_triggerPriceController.text) ?? 0.0;
 
       final previewData = await _repository.getOrderPreview(
@@ -119,7 +120,8 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
     });
 
     try {
-      final priceVal = double.tryParse(_priceController.text) ?? widget.initialPrice;
+      final priceVal =
+          double.tryParse(_priceController.text) ?? widget.initialPrice;
       final triggerVal = double.tryParse(_triggerPriceController.text) ?? 0.0;
 
       final result = await _repository.executeOrder(
@@ -137,7 +139,9 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Order Placed Successfully! Order ID: ${result.orderId}'),
+            content: Text(
+              'Order Placed Successfully! Order ID: ${result.orderId}',
+            ),
             backgroundColor: Colors.green.shade800,
             duration: const Duration(seconds: 4),
           ),
@@ -210,15 +214,22 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isBuy ? Colors.green : Colors.grey.shade900,
+                    backgroundColor: isBuy
+                        ? Colors.green
+                        : Colors.grey.shade900,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () {
                     setState(() => _action = 'BUY');
                     _fetchPreview();
                   },
-                  child: const Text('BUY', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'BUY',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -227,13 +238,18 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: !isBuy ? Colors.red : Colors.grey.shade900,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () {
                     setState(() => _action = 'SELL');
                     _fetchPreview();
                   },
-                  child: const Text('SELL', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'SELL',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -297,10 +313,16 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
           // Quantity Field
           Row(
             children: [
-              const Text('Quantity', style: TextStyle(color: Colors.grey, fontSize: 14)),
+              const Text(
+                'Quantity',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.blue),
+                icon: const Icon(
+                  Icons.remove_circle_outline,
+                  color: Colors.blue,
+                ),
                 onPressed: () {
                   if (_quantity > 1) {
                     setState(() => _quantity--);
@@ -313,10 +335,15 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
                 child: TextField(
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                   decoration: const InputDecoration(border: InputBorder.none),
                   controller: TextEditingController(text: '$_quantity')
-                    ..selection = TextSelection.collapsed(offset: '$_quantity'.length),
+                    ..selection = TextSelection.collapsed(
+                      offset: '$_quantity'.length,
+                    ),
                   onChanged: (val) {
                     final n = int.tryParse(val);
                     if (n != null && n > 0) {
@@ -348,7 +375,9 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
                 labelStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: const Color(0xFF0D1117),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onChanged: (_) => _fetchPreview(),
             ),
@@ -366,7 +395,9 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
                 labelStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: const Color(0xFF0D1117),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onChanged: (_) => _fetchPreview(),
             ),
@@ -384,12 +415,18 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.redAccent,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -413,13 +450,34 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
                       _previewRow('Symbol', _preview?.symbol ?? widget.symbol),
                       _previewRow('Exchange', _preview?.exchange ?? 'NSE'),
                       _previewRow('Product', _preview?.product ?? 'INTRADAY'),
-                      _previewRow('Order Type', _preview?.orderType ?? _orderType),
-                      _previewRow('Quantity', '${_preview?.quantity ?? _quantity}'),
-                      _previewRow('Price', '₹${(_preview?.price ?? widget.initialPrice).toStringAsFixed(2)}'),
+                      _previewRow(
+                        'Order Type',
+                        _preview?.orderType ?? _orderType,
+                      ),
+                      _previewRow(
+                        'Quantity',
+                        '${_preview?.quantity ?? _quantity}',
+                      ),
+                      _previewRow(
+                        'Price',
+                        '₹${(_preview?.price ?? widget.initialPrice).toStringAsFixed(2)}',
+                      ),
                       const Divider(color: Colors.grey),
-                      _previewRow('Estimated Margin', '₹${(_preview?.estimatedMargin ?? 0.0).toStringAsFixed(2)}', isHighlight: true),
-                      _previewRow('Brokerage & Taxes', '₹${(_preview?.taxesAndCharges ?? 0.0).toStringAsFixed(2)}'),
-                      _previewRow('Total Cost', '₹${(_preview?.totalCost ?? 0.0).toStringAsFixed(2)}', isHighlight: true, isBold: true),
+                      _previewRow(
+                        'Estimated Margin',
+                        '₹${(_preview?.estimatedMargin ?? 0.0).toStringAsFixed(2)}',
+                        isHighlight: true,
+                      ),
+                      _previewRow(
+                        'Brokerage & Taxes',
+                        '₹${(_preview?.taxesAndCharges ?? 0.0).toStringAsFixed(2)}',
+                      ),
+                      _previewRow(
+                        'Total Cost',
+                        '₹${(_preview?.totalCost ?? 0.0).toStringAsFixed(2)}',
+                        isHighlight: true,
+                        isBold: true,
+                      ),
                     ],
                   ),
           ),
@@ -431,18 +489,26 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
               backgroundColor: actionColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: _isExecuting ? null : _executeOrder,
             child: _isExecuting
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
                   )
                 : Text(
                     'CONFIRM & PLACE $_action ORDER',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
         ],
@@ -450,17 +516,30 @@ class _OrderEntrySheetState extends State<OrderEntrySheet> {
     );
   }
 
-  Widget _previewRow(String label, String value, {bool isHighlight = false, bool isBold = false}) {
+  Widget _previewRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+    bool isBold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: isBold ? Colors.white : Colors.grey.shade400, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: isBold ? Colors.white : Colors.grey.shade400,
+              fontSize: 13,
+            ),
+          ),
           Text(
             value,
             style: TextStyle(
-              color: isHighlight ? (isBold ? Colors.amberAccent : Colors.white) : Colors.grey.shade300,
+              color: isHighlight
+                  ? (isBold ? Colors.amberAccent : Colors.white)
+                  : Colors.grey.shade300,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               fontSize: isBold ? 14 : 13,
             ),

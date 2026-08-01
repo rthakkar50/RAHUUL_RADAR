@@ -1,4 +1,5 @@
 enum BrokerType { paytmMoney, zerodhaKite, angelOne, dhan, upstox }
+
 enum BrokerConnectionStatus { connected, disconnected, degraded, reconnecting }
 
 class BrokerInfoModel {

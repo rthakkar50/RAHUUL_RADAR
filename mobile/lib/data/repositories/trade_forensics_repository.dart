@@ -55,7 +55,8 @@ class AiEvolutionMetricsModel {
 }
 
 class TradeForensicsRepository {
-  static final TradeForensicsRepository _instance = TradeForensicsRepository._internal();
+  static final TradeForensicsRepository _instance =
+      TradeForensicsRepository._internal();
   factory TradeForensicsRepository() => _instance;
   TradeForensicsRepository._internal();
 
@@ -78,7 +79,8 @@ class TradeForensicsRepository {
         masterAiScore: 92.5,
         outcome: 'WIN',
         failureRootCause: 'None (Perfect Target Hit)',
-        lessonLearned: 'Volume confirmation > 1.5x increases swing win rate to 88%.',
+        lessonLearned:
+            'Volume confirmation > 1.5x increases swing win rate to 88%.',
       ),
       TradeForensicRecordModel(
         tradeId: 'TATAMOTORS-14',
@@ -97,7 +99,8 @@ class TradeForensicsRepository {
         masterAiScore: 82.0,
         outcome: 'WIN',
         failureRootCause: 'None (Partial Exit)',
-        lessonLearned: 'Trailing SL preserved 1.0R profit prior to sector pull-back.',
+        lessonLearned:
+            'Trailing SL preserved 1.0R profit prior to sector pull-back.',
       ),
       TradeForensicRecordModel(
         tradeId: 'INFY-88',
@@ -116,17 +119,42 @@ class TradeForensicsRepository {
         masterAiScore: 74.0,
         outcome: 'LOSS',
         failureRootCause: 'Market Regime Mismatch (High VIX Whipsaw)',
-        lessonLearned: 'Reduce position allocation by 50% when India VIX > 16.5.',
+        lessonLearned:
+            'Reduce position allocation by 50% when India VIX > 16.5.',
       ),
     ];
   }
 
   List<AiEvolutionMetricsModel> getEvolutionTimeline() {
     return const [
-      AiEvolutionMetricsModel(version: 'AI Engine v1.0', accuracyPct: 62.4, profitFactor: 1.45, maxDrawdownPct: 8.2, avgLatencyMs: 42),
-      AiEvolutionMetricsModel(version: 'AI Engine v2.0', accuracyPct: 74.2, profitFactor: 1.88, maxDrawdownPct: 5.4, avgLatencyMs: 18),
-      AiEvolutionMetricsModel(version: 'AI Engine v3.0', accuracyPct: 82.5, profitFactor: 2.15, maxDrawdownPct: 3.8, avgLatencyMs: 8),
-      AiEvolutionMetricsModel(version: 'AI Engine v3.2 (AMD)', accuracyPct: 88.4, profitFactor: 2.45, maxDrawdownPct: 2.1, avgLatencyMs: 2),
+      AiEvolutionMetricsModel(
+        version: 'AI Engine v1.0',
+        accuracyPct: 62.4,
+        profitFactor: 1.45,
+        maxDrawdownPct: 8.2,
+        avgLatencyMs: 42,
+      ),
+      AiEvolutionMetricsModel(
+        version: 'AI Engine v2.0',
+        accuracyPct: 74.2,
+        profitFactor: 1.88,
+        maxDrawdownPct: 5.4,
+        avgLatencyMs: 18,
+      ),
+      AiEvolutionMetricsModel(
+        version: 'AI Engine v3.0',
+        accuracyPct: 82.5,
+        profitFactor: 2.15,
+        maxDrawdownPct: 3.8,
+        avgLatencyMs: 8,
+      ),
+      AiEvolutionMetricsModel(
+        version: 'AI Engine v3.2 (AMD)',
+        accuracyPct: 88.4,
+        profitFactor: 2.45,
+        maxDrawdownPct: 2.1,
+        avgLatencyMs: 2,
+      ),
     ];
   }
 }

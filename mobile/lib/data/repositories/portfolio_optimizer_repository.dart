@@ -51,7 +51,8 @@ class StressTestResultModel {
 }
 
 class PortfolioOptimizerRepository {
-  static final PortfolioOptimizerRepository _instance = PortfolioOptimizerRepository._internal();
+  static final PortfolioOptimizerRepository _instance =
+      PortfolioOptimizerRepository._internal();
   factory PortfolioOptimizerRepository() => _instance;
   PortfolioOptimizerRepository._internal();
 
@@ -79,9 +80,27 @@ class PortfolioOptimizerRepository {
 
   List<StressTestResultModel> getStressTestSimulations() {
     return const [
-      StressTestResultModel(crashPct: 5.0, estimatedLoss: 14850.0, portfolioEquityAfterCrash: 978251.13, estimatedRecoveryTime: '3 - 5 Days', riskGrade: 'LOW RISK'),
-      StressTestResultModel(crashPct: 10.0, estimatedLoss: 31200.0, portfolioEquityAfterCrash: 961901.13, estimatedRecoveryTime: '7 - 10 Days', riskGrade: 'MODERATE RISK'),
-      StressTestResultModel(crashPct: 15.0, estimatedLoss: 48900.0, portfolioEquityAfterCrash: 944201.13, estimatedRecoveryTime: '12 - 18 Days', riskGrade: 'MANAGED RISK'),
+      StressTestResultModel(
+        crashPct: 5.0,
+        estimatedLoss: 14850.0,
+        portfolioEquityAfterCrash: 978251.13,
+        estimatedRecoveryTime: '3 - 5 Days',
+        riskGrade: 'LOW RISK',
+      ),
+      StressTestResultModel(
+        crashPct: 10.0,
+        estimatedLoss: 31200.0,
+        portfolioEquityAfterCrash: 961901.13,
+        estimatedRecoveryTime: '7 - 10 Days',
+        riskGrade: 'MODERATE RISK',
+      ),
+      StressTestResultModel(
+        crashPct: 15.0,
+        estimatedLoss: 48900.0,
+        portfolioEquityAfterCrash: 944201.13,
+        estimatedRecoveryTime: '12 - 18 Days',
+        riskGrade: 'MANAGED RISK',
+      ),
     ];
   }
 

@@ -25,7 +25,9 @@ class ScanResponseModel {
 
   factory ScanResponseModel.fromJson(Map<String, dynamic> json) {
     var list = json['qualified_results'] as List? ?? [];
-    List<ScanResultModel> results = list.map((i) => ScanResultModel.fromJson(i)).toList();
+    List<ScanResultModel> results = list
+        .map((i) => ScanResultModel.fromJson(i))
+        .toList();
 
     return ScanResponseModel(
       totalScanned: json['total_scanned'] ?? 0,
@@ -36,7 +38,8 @@ class ScanResponseModel {
       marketQuality: json['market_quality']?.toString() ?? 'Unknown',
       execTime: (json['exec_time'] as num?)?.toDouble() ?? 0.0,
       qualifiedResults: results,
-      lastUpdated: DateTime.now().toString(), // Storing client side time of fetch
+      lastUpdated: DateTime.now()
+          .toString(), // Storing client side time of fetch
     );
   }
 }

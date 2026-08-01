@@ -8,7 +8,8 @@ class GlobalMacroScreen extends StatefulWidget {
   State<GlobalMacroScreen> createState() => _GlobalMacroScreenState();
 }
 
-class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTickerProviderStateMixin {
+class _GlobalMacroScreenState extends State<GlobalMacroScreen>
+    with SingleTickerProviderStateMixin {
   final GlobalMacroRepository _repo = GlobalMacroRepository();
   late TabController _tabController;
 
@@ -40,13 +41,18 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTicker
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.blueAccent, Colors.cyanAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.blueAccent, Colors.cyanAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.public, color: Colors.black, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text('Global Macro Intelligence Hub', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            const Text(
+              'Global Macro Intelligence Hub',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -87,16 +93,36 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTicker
             children: [
               const Row(
                 children: [
-                  Icon(Icons.wb_sunny_outlined, color: Colors.amberAccent, size: 20),
+                  Icon(
+                    Icons.wb_sunny_outlined,
+                    color: Colors.amberAccent,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
-                  Text('Module 9 — AI Morning Daily Briefing', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text(
+                    'Module 9 — AI Morning Daily Briefing',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              ...briefing.map((b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text('• $b', style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
-                  )),
+              ...briefing.map(
+                (b) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    '• $b',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -115,9 +141,26 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTicker
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            title: Text(item.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(item.value, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            trailing: Text(item.change, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+            title: Text(
+              item.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              item.value,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            trailing: Text(
+              item.change,
+              style: TextStyle(
+                color: col,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ),
         );
       },
@@ -135,9 +178,26 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTicker
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            title: Text(item.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(item.value, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            trailing: Text(item.change, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+            title: Text(
+              item.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              item.value,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            trailing: Text(
+              item.change,
+              style: TextStyle(
+                color: col,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ),
         );
       },
@@ -161,18 +221,48 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen> with SingleTicker
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${ev.country} — ${ev.event}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(
+                      '${ev.country} — ${ev.event}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: Text(ev.impact, style: const TextStyle(color: Colors.redAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        ev.impact,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text('Time: ${ev.date} • Forecast: ${ev.forecast} • Previous: ${ev.previous}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                Text(
+                  'Time: ${ev.date} • Forecast: ${ev.forecast} • Previous: ${ev.previous}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 11),
+                ),
                 const Divider(color: Colors.white10),
-                Text('AI Event Impact Verdict: ${ev.aiVerdict}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(
+                  'AI Event Impact Verdict: ${ev.aiVerdict}',
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),

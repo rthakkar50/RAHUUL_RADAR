@@ -4,7 +4,8 @@ import '../models/scan_result_model.dart';
 class MasterDecisionModel {
   final String symbol;
   final double masterAiScore; // 0 - 100
-  final String masterSignal; // STRONG BUY, BUY, WATCH, REDUCE, SELL, STRONG SELL
+  final String
+  masterSignal; // STRONG BUY, BUY, WATCH, REDUCE, SELL, STRONG SELL
   final double confidencePct;
   final double suggestedCapitalPct;
   final int recommendedQty;
@@ -40,7 +41,8 @@ class MasterDecisionModel {
 }
 
 class AiMasterDecisionEngine {
-  static final AiMasterDecisionEngine _instance = AiMasterDecisionEngine._internal();
+  static final AiMasterDecisionEngine _instance =
+      AiMasterDecisionEngine._internal();
   factory AiMasterDecisionEngine() => _instance;
   AiMasterDecisionEngine._internal();
 
@@ -48,16 +50,20 @@ class AiMasterDecisionEngine {
     // Module 1: Master AI Score synthesis
     final trendScore = scan.score * 0.95;
     final momentumScore = min(100.0, scan.score * 1.02);
-    final volumeScore = scan.volume.contains('1.5') || scan.volume.contains('HIGH') ? 92.0 : 75.0;
+    final volumeScore =
+        scan.volume.contains('1.5') || scan.volume.contains('HIGH')
+        ? 92.0
+        : 75.0;
     final structureScore = 88.0;
     final riskSafetyScore = scan.riskReward.contains('2') ? 90.0 : 78.0;
 
-    final masterScore = (trendScore * 0.25 +
-            momentumScore * 0.25 +
-            volumeScore * 0.20 +
-            structureScore * 0.15 +
-            riskSafetyScore * 0.15)
-        .clamp(0.0, 100.0);
+    final masterScore =
+        (trendScore * 0.25 +
+                momentumScore * 0.25 +
+                volumeScore * 0.20 +
+                structureScore * 0.15 +
+                riskSafetyScore * 0.15)
+            .clamp(0.0, 100.0);
 
     // Module 2: Master Signal Determination
     String signal;
@@ -85,7 +91,9 @@ class AiMasterDecisionEngine {
 
     // Module 7: AI Self Check
     final passesSelfCheck = masterScore >= 65;
-    final selfCheckReason = passesSelfCheck ? 'All 6 Safety Checks Passed (Market Quality, Risk, News, Broker)' : 'BLOCKED: Master Score threshold not met';
+    final selfCheckReason = passesSelfCheck
+        ? 'All 6 Safety Checks Passed (Market Quality, Risk, News, Broker)'
+        : 'BLOCKED: Master Score threshold not met';
 
     return MasterDecisionModel(
       symbol: scan.symbol,

@@ -7,6 +7,7 @@ import '../../widgets/scanner_loading_shimmer.dart';
 import '../../widgets/scanner_result_card.dart';
 
 enum ScannerFilter { all, buy, sell, watch, highConfidence, highScore }
+
 enum ScannerSort { scoreDesc, confidenceDesc, rrDesc, symbolAsc }
 
 class ScannerScreen extends StatefulWidget {
@@ -28,8 +29,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   ScannerFilter _selectedFilter = ScannerFilter.all;
-  ScannerSort _selectedSort = ScannerSort.scoreDesc;
-  String _selectedSector = 'ALL';
+  final ScannerSort _selectedSort = ScannerSort.scoreDesc;
+  final String _selectedSector = 'ALL';
 
   @override
   void initState() {
@@ -54,7 +55,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (_isFetching) return;
     _isFetching = true;
 
-    debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> LOADING (isAutoRefresh: $isAutoRefresh)');
+    debugPrint(
+      '[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> LOADING (isAutoRefresh: $isAutoRefresh)',
+    );
     setState(() {
       _isLoading = true;
       if (!isAutoRefresh) _error = null;
@@ -62,7 +65,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     try {
       final response = await _repository.getSwingScans();
-      debugPrint('[RUN-AUDIT] [ScannerScreen] Repository returned SUCCESS. Qualified count: ${response.qualifiedResults.length}');
+      debugPrint(
+        '[RUN-AUDIT] [ScannerScreen] Repository returned SUCCESS. Qualified count: ${response.qualifiedResults.length}',
+      );
       if (mounted) {
         debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> SUCCESS');
         setState(() {
@@ -76,7 +81,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
       debugPrint('[RUN-AUDIT] [ScannerScreen] Repository THREW EXCEPTION: $e');
       debugPrint('[RUN-AUDIT] [ScannerScreen] STACKTRACE:\n$st');
       if (mounted) {
-        debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> ERROR (error: $e)');
+        debugPrint(
+          '[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> ERROR (error: $e)',
+        );
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -89,7 +96,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   List<ScanResultModel> _getFilteredResults() {
     if (_response == null) return [];
-    
+
     final query = _searchQuery.trim().toLowerCase();
 
     final list = _response!.qualifiedResults.where((item) {
@@ -103,10 +110,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
           matchesFilter = item.signal.toUpperCase().contains('SELL');
           break;
         case ScannerFilter.watch:
-          matchesFilter = item.signal.toUpperCase().contains('WATCH') ||
-                          item.signal.toUpperCase().contains('HOLD') ||
-                          item.signal.toUpperCase().contains('NEUTRAL') ||
-                          item.confidence >= 70.0;
+          matchesFilter =
+              item.signal.toUpperCase().contains('WATCH') ||
+              item.signal.toUpperCase().contains('HOLD') ||
+              item.signal.toUpperCase().contains('NEUTRAL') ||
+              item.confidence >= 70.0;
           break;
         case ScannerFilter.highConfidence:
           matchesFilter = item.confidence >= 70.0;
@@ -122,7 +130,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
       if (!matchesFilter) return false;
 
       // 2. Sector Filter
-      if (_selectedSector != 'ALL' && item.sector.toUpperCase() != _selectedSector) {
+      if (_selectedSector != 'ALL' &&
+          item.sector.toUpperCase() != _selectedSector) {
         return false;
       }
 
@@ -165,14 +174,21 @@ class _ScannerScreenState extends State<ScannerScreen> {
               padding: const EdgeInsets.only(right: 16.0, left: 8.0),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blueAccent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     '${_response!.execTime.toStringAsFixed(2)}s',
-                    style: const TextStyle(color: Colors.blueAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -186,7 +202,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
             _buildSearchBar(),
             _buildFilterChips(),
             if (_isLoading && _response != null)
-              const LinearProgressIndicator(minHeight: 2.5, color: Colors.blueAccent),
+              const LinearProgressIndicator(
+                minHeight: 2.5,
+                color: Colors.blueAccent,
+              ),
             Expanded(child: _buildBody()),
           ],
         ),
@@ -251,7 +270,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   },
                 )
               : null,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           filled: true,
           fillColor: Theme.of(context).cardColor,
@@ -308,7 +330,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
 
     if (_error != null && _response == null) {
-      debugPrint('[RUN-AUDIT] [ScannerScreen] RENDERING ERROR WIDGET "API Unavailable". Current _error value: "$_error"');
+      debugPrint(
+        '[RUN-AUDIT] [ScannerScreen] RENDERING ERROR WIDGET "API Unavailable". Current _error value: "$_error"',
+      );
       return Center(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -317,11 +341,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off, color: Colors.orangeAccent, size: 60),
+                const Icon(
+                  Icons.cloud_off,
+                  color: Colors.orangeAccent,
+                  size: 60,
+                ),
                 const SizedBox(height: 16),
-                Text('API Unavailable', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'API Unavailable',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
-                Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () => _fetchScans(isAutoRefresh: false),
@@ -381,7 +416,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              if (_selectedFilter != ScannerFilter.all || _searchQuery.isNotEmpty)
+              if (_selectedFilter != ScannerFilter.all ||
+                  _searchQuery.isNotEmpty)
                 TextButton.icon(
                   onPressed: () {
                     _searchController.clear();
@@ -410,7 +446,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildSummaryItem('Scanned', '${_response!.totalScanned}'),
-              _buildSummaryItem('Qualified', '${_response!.qualifiedResults.length}'),
+              _buildSummaryItem(
+                'Qualified',
+                '${_response!.qualifiedResults.length}',
+              ),
               _buildSummaryItem('Market Quality', _response!.marketQuality),
             ],
           ),
@@ -440,7 +479,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
       children: [
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
       ],
     );
   }

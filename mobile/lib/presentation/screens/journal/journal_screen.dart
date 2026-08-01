@@ -16,7 +16,14 @@ class _JournalScreenState extends State<JournalScreen> {
   String? _error;
   String _selectedFilter = 'ALL'; // ALL, BUY, SELL, WIN, LOSS
 
-  final List<String> _filters = ['ALL', 'TODAY', 'WEEK', 'MONTH', 'WIN', 'LOSS'];
+  final List<String> _filters = [
+    'ALL',
+    'TODAY',
+    'WEEK',
+    'MONTH',
+    'WIN',
+    'LOSS',
+  ];
 
   @override
   void initState() {
@@ -38,7 +45,9 @@ class _JournalScreenState extends State<JournalScreen> {
 
     try {
       final data = await _repository.getJournal();
-      debugPrint('[RUN-AUDIT] [JournalScreen] Repository returned SUCCESS. Trades count: ${data.trades.length}');
+      debugPrint(
+        '[RUN-AUDIT] [JournalScreen] Repository returned SUCCESS. Trades count: ${data.trades.length}',
+      );
       if (mounted) {
         debugPrint('[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> SUCCESS');
         setState(() {
@@ -51,7 +60,9 @@ class _JournalScreenState extends State<JournalScreen> {
       debugPrint('[RUN-AUDIT] [JournalScreen] Repository THREW EXCEPTION: $e');
       debugPrint('[RUN-AUDIT] [JournalScreen] STACKTRACE:\n$st');
       if (mounted) {
-        debugPrint('[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> ERROR (error: $e)');
+        debugPrint(
+          '[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> ERROR (error: $e)',
+        );
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -69,8 +80,11 @@ class _JournalScreenState extends State<JournalScreen> {
 
     switch (_selectedFilter) {
       case 'TODAY':
-        final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-        final filtered = all.where((t) => t.tradeDate.startsWith(todayStr)).toList();
+        final todayStr =
+            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        final filtered = all
+            .where((t) => t.tradeDate.startsWith(todayStr))
+            .toList();
         return filtered.isNotEmpty ? filtered : all.take(5).toList();
       case 'WEEK':
         final sevenDaysAgo = now.subtract(const Duration(days: 7));
@@ -90,9 +104,13 @@ class _JournalScreenState extends State<JournalScreen> {
       case 'SELL':
         return all.where((t) => t.signal.toUpperCase() == 'SELL').toList();
       case 'WIN':
-        return all.where((t) => t.pnl > 0 || t.result.toUpperCase() == 'WIN').toList();
+        return all
+            .where((t) => t.pnl > 0 || t.result.toUpperCase() == 'WIN')
+            .toList();
       case 'LOSS':
-        return all.where((t) => t.pnl < 0 || t.result.toUpperCase() == 'LOSS').toList();
+        return all
+            .where((t) => t.pnl < 0 || t.result.toUpperCase() == 'LOSS')
+            .toList();
       case 'ALL':
       default:
         return all;
@@ -163,18 +181,28 @@ class _JournalScreenState extends State<JournalScreen> {
     }
 
     if (_error != null && _data == null) {
-      debugPrint('[RUN-AUDIT] [JournalScreen] RENDERING ERROR WIDGET "Failed to load journal". Current _error value: "$_error"');
+      debugPrint(
+        '[RUN-AUDIT] [JournalScreen] RENDERING ERROR WIDGET "Failed to load journal". Current _error value: "$_error"',
+      );
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cloud_off_rounded, color: Colors.white30, size: 56),
+              const Icon(
+                Icons.cloud_off_rounded,
+                color: Colors.white30,
+                size: 56,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load journal',
-                style: TextStyle(color: Colors.red.shade300, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.red.shade300,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -189,7 +217,9 @@ class _JournalScreenState extends State<JournalScreen> {
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2196F3),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -239,13 +269,13 @@ class _JournalScreenState extends State<JournalScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -276,7 +306,9 @@ class _JournalScreenState extends State<JournalScreen> {
                   label: 'Win Rate',
                   value: '${analytics.winRate.toStringAsFixed(1)}%',
                   icon: Icons.pie_chart_rounded,
-                  color: analytics.winRate >= 50 ? const Color(0xFF00E676) : Colors.orangeAccent,
+                  color: analytics.winRate >= 50
+                      ? const Color(0xFF00E676)
+                      : Colors.orangeAccent,
                 ),
               ),
             ],
@@ -313,8 +345,14 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   Widget _buildPnLOverviewCard(JournalAnalyticsModel analytics) {
-    final dailyTotal = analytics.dailyPnl.fold<double>(0.0, (sum, item) => sum + item.pnl);
-    final monthlyTotal = analytics.monthlyPnl.fold<double>(0.0, (sum, item) => sum + item.pnl);
+    final dailyTotal = analytics.dailyPnl.fold<double>(
+      0.0,
+      (sum, item) => sum + item.pnl,
+    );
+    final monthlyTotal = analytics.monthlyPnl.fold<double>(
+      0.0,
+      (sum, item) => sum + item.pnl,
+    );
 
     return Row(
       children: [
@@ -400,7 +438,7 @@ class _JournalScreenState extends State<JournalScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF131326),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -455,7 +493,7 @@ class _JournalScreenState extends State<JournalScreen> {
               side: BorderSide(
                 color: isSelected
                     ? const Color(0xFF2196F3)
-                    : Colors.white.withOpacity(0.1),
+                    : Colors.white.withValues(alpha: 0.1),
               ),
               onSelected: (val) {
                 if (val) setState(() => _selectedFilter = f);
@@ -481,7 +519,9 @@ class _JournalScreenState extends State<JournalScreen> {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isWin ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+          color: isWin
+              ? Colors.green.withValues(alpha: 0.2)
+              : Colors.red.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -503,8 +543,8 @@ class _JournalScreenState extends State<JournalScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: isBuy
-                      ? Colors.green.withOpacity(0.2)
-                      : Colors.red.withOpacity(0.2),
+                      ? Colors.green.withValues(alpha: 0.2)
+                      : Colors.red.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -520,9 +560,9 @@ class _JournalScreenState extends State<JournalScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: pnlColor.withOpacity(0.15),
+                  color: pnlColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: pnlColor.withOpacity(0.5)),
+                  border: Border.all(color: pnlColor.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   '${isWin ? '+' : ''}₹${_fmt(trade.pnl)} (${trade.pnlPct.toStringAsFixed(1)}%)',
@@ -541,8 +581,14 @@ class _JournalScreenState extends State<JournalScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailItem('Entry', '₹${trade.entryPrice.toStringAsFixed(1)}'),
-              _buildDetailItem('Exit', '₹${trade.exitPrice.toStringAsFixed(1)}'),
+              _buildDetailItem(
+                'Entry',
+                '₹${trade.entryPrice.toStringAsFixed(1)}',
+              ),
+              _buildDetailItem(
+                'Exit',
+                '₹${trade.exitPrice.toStringAsFixed(1)}',
+              ),
               _buildDetailItem('Qty', '${trade.qty}'),
               _buildDetailItem('R-Mult', trade.rMultiple),
             ],
@@ -557,7 +603,11 @@ class _JournalScreenState extends State<JournalScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.auto_awesome, color: Color(0xFF00BCD4), size: 14),
+                  const Icon(
+                    Icons.auto_awesome,
+                    color: Color(0xFF00BCD4),
+                    size: 14,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'AI Score: ${trade.aiScore.toStringAsFixed(1)}',

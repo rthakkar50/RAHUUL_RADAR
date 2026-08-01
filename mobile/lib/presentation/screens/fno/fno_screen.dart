@@ -59,20 +59,29 @@ class _FnoScreenState extends State<FnoScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.purpleAccent, Colors.deepPurple]),
+                gradient: const LinearGradient(
+                  colors: [Colors.purpleAccent, Colors.deepPurple],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.show_chart, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.show_chart,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('F&O Derivatives Engine', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'F&O Derivatives Engine',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _isLoading ? null : _fetchFno,
-          )
+          ),
         ],
       ),
       body: _buildBody(),
@@ -81,7 +90,9 @@ class _FnoScreenState extends State<FnoScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _data == null) {
-      return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.purpleAccent),
+      );
     }
 
     if (_error != null && _data == null) {
@@ -91,9 +102,17 @@ class _FnoScreenState extends State<FnoScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+              const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 48,
+              ),
               const SizedBox(height: 12),
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70),
+              ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _fetchFno,
@@ -125,8 +144,22 @@ class _FnoScreenState extends State<FnoScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Option Chain Matrix', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text('Expiry: ${d.expiryDate}', style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Option Chain Matrix',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Expiry: ${d.expiryDate}',
+                  style: const TextStyle(
+                    color: Colors.purpleAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -148,7 +181,10 @@ class _FnoScreenState extends State<FnoScreen> {
             selected: isSel,
             selectedColor: Colors.purpleAccent,
             backgroundColor: const Color(0xFF161B22),
-            labelStyle: TextStyle(color: isSel ? Colors.white : Colors.white70, fontWeight: isSel ? FontWeight.bold : FontWeight.normal),
+            labelStyle: TextStyle(
+              color: isSel ? Colors.white : Colors.white70,
+              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+            ),
             onSelected: (val) {
               if (val) {
                 setState(() => _selectedSymbol = sym);
@@ -174,9 +210,21 @@ class _FnoScreenState extends State<FnoScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _metricTile('Spot Price', '₹${d.spotPrice.toStringAsFixed(2)}', Colors.cyanAccent),
-              _metricTile('PCR Ratio', '${d.pcr}', d.pcr >= 1.0 ? Colors.greenAccent : Colors.redAccent),
-              _metricTile('Max Pain', '₹${d.maxPain.toStringAsFixed(0)}', Colors.amberAccent),
+              _metricTile(
+                'Spot Price',
+                '₹${d.spotPrice.toStringAsFixed(2)}',
+                Colors.cyanAccent,
+              ),
+              _metricTile(
+                'PCR Ratio',
+                '${d.pcr}',
+                d.pcr >= 1.0 ? Colors.greenAccent : Colors.redAccent,
+              ),
+              _metricTile(
+                'Max Pain',
+                '₹${d.maxPain.toStringAsFixed(0)}',
+                Colors.amberAccent,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -186,8 +234,16 @@ class _FnoScreenState extends State<FnoScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _metricTile('IV Rank', '${d.ivRank}%', Colors.purpleAccent),
-              _metricTile('IV Percentile', '${d.ivPercentile}%', Colors.deepPurpleAccent),
-              _metricTile('Margin / Lot', '₹${(d.marginRequired / 1000).toStringAsFixed(0)}K', Colors.white),
+              _metricTile(
+                'IV Percentile',
+                '${d.ivPercentile}%',
+                Colors.deepPurpleAccent,
+              ),
+              _metricTile(
+                'Margin / Lot',
+                '₹${(d.marginRequired / 1000).toStringAsFixed(0)}K',
+                Colors.white,
+              ),
             ],
           ),
         ],
@@ -200,7 +256,14 @@ class _FnoScreenState extends State<FnoScreen> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -220,7 +283,11 @@ class _FnoScreenState extends State<FnoScreen> {
           Expanded(
             child: Text(
               'Bullish Long Build-up in ATM Calls. Put writing active at Max Pain strike.',
-              style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.greenAccent,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -245,30 +312,156 @@ class _FnoScreenState extends State<FnoScreen> {
           columnSpacing: 16,
           headingRowColor: WidgetStateProperty.all(const Color(0xFF21262D)),
           columns: const [
-            DataColumn(label: Text('CALL OI', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('CALL LTP', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('STRIKE', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('PUT LTP', style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('PUT OI', style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('DELTA', style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('BUILDUP', style: TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold))),
+            DataColumn(
+              label: Text(
+                'CALL OI',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'CALL LTP',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'STRIKE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'PUT LTP',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'PUT OI',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'DELTA',
+                style: TextStyle(
+                  color: Colors.cyanAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'BUILDUP',
+                style: TextStyle(
+                  color: Colors.amberAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
           rows: d.optionChain.map((item) {
             final isAtm = (item.strike - d.spotPrice).abs() < 50;
             return DataRow(
-              color: isAtm ? WidgetStateProperty.all(Colors.purpleAccent.withValues(alpha: 0.15)) : null,
+              color: isAtm
+                  ? WidgetStateProperty.all(
+                      Colors.purpleAccent.withValues(alpha: 0.15),
+                    )
+                  : null,
               cells: [
-                DataCell(Text('${(item.callOi / 1000).toStringAsFixed(0)}K', style: const TextStyle(fontSize: 11, color: Colors.white70))),
-                DataCell(Text(item.callPrice.toStringAsFixed(1), style: const TextStyle(fontSize: 11, color: Colors.greenAccent, fontWeight: FontWeight.bold))),
-                DataCell(Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: isAtm ? Colors.purpleAccent : Colors.transparent, borderRadius: BorderRadius.circular(4)),
-                  child: Text(item.strike.toStringAsFixed(0), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isAtm ? Colors.white : Colors.white)),
-                )),
-                DataCell(Text('₹${item.putPrice.toStringAsFixed(1)}', style: const TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.bold))),
-                DataCell(Text('${(item.putOi / 1000).toStringAsFixed(0)}K', style: const TextStyle(fontSize: 11, color: Colors.white70))),
-                DataCell(Text('${item.callGreeks.delta.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: Colors.cyanAccent))),
-                DataCell(Text(item.buildupType, style: const TextStyle(fontSize: 10, color: Colors.amberAccent))),
+                DataCell(
+                  Text(
+                    '${(item.callOi / 1000).toStringAsFixed(0)}K',
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    item.callPrice.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.greenAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isAtm ? Colors.purpleAccent : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item.strike.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isAtm ? Colors.white : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    '₹${item.putPrice.toStringAsFixed(1)}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    '${(item.putOi / 1000).toStringAsFixed(0)}K',
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    item.callGreeks.delta.toStringAsFixed(2),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.cyanAccent,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    item.buildupType,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.amberAccent,
+                    ),
+                  ),
+                ),
               ],
             );
           }).toList(),

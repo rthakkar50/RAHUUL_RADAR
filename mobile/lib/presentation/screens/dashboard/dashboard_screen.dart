@@ -14,7 +14,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   final DashboardRepository _repository = DashboardRepository();
   DashboardDataModel? _data;
   bool _isLoading = false;
@@ -105,7 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: AppDesignSystem.surface.withValues(alpha: 0.95),
-          border: const Border(bottom: BorderSide(color: AppDesignSystem.border, width: 1)),
+          border: const Border(
+            bottom: BorderSide(color: AppDesignSystem.border, width: 1),
+          ),
         ),
         child: Column(
           children: [
@@ -117,12 +120,19 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppDesignSystem.primary, width: 1.5),
+                      border: Border.all(
+                        color: AppDesignSystem.primary,
+                        width: 1.5,
+                      ),
                     ),
                     child: const CircleAvatar(
                       radius: 18,
                       backgroundColor: Color(0xFF1F2937),
-                      child: Icon(Icons.person, color: AppDesignSystem.primary, size: 20),
+                      child: Icon(
+                        Icons.person,
+                        color: AppDesignSystem.primary,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
@@ -144,10 +154,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           ),
                           SizedBox(width: 6),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Color(0xFF1E293B),
-                              borderRadius: BorderRadius.all(Radius.circular(4)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
                             ),
                             child: Text(
                               'INSTITUTIONAL PRO',
@@ -167,7 +182,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           const SizedBox(width: 8),
                           Text(
                             'Broker: Connected (Zerodha Direct)',
-                            style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
@@ -175,13 +193,26 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: AppDesignSystem.textPrimary, size: 22),
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppDesignSystem.textPrimary,
+                    size: 22,
+                  ),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationScreen(),
+                      ),
+                    );
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.refresh, color: AppDesignSystem.primary, size: 22),
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: AppDesignSystem.primary,
+                    size: 22,
+                  ),
                   onPressed: _isLoading ? null : () => _fetchDashboard(),
                 ),
               ],
@@ -198,11 +229,31 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _headerStatItem('PORTFOLIO EQUITY', '₹9,93,101.13', AppDesignSystem.textPrimary),
-                  Container(height: 20, width: 1, color: AppDesignSystem.border),
-                  _headerStatItem('TODAY P&L', '+₹1,450.00 (+0.15%)', AppDesignSystem.success),
-                  Container(height: 20, width: 1, color: AppDesignSystem.border),
-                  _headerStatItem('MARGIN CASH', '₹2,76,405.13', AppDesignSystem.primary),
+                  _headerStatItem(
+                    'PORTFOLIO EQUITY',
+                    '₹9,93,101.13',
+                    AppDesignSystem.textPrimary,
+                  ),
+                  Container(
+                    height: 20,
+                    width: 1,
+                    color: AppDesignSystem.border,
+                  ),
+                  _headerStatItem(
+                    'TODAY P&L',
+                    '+₹1,450.00 (+0.15%)',
+                    AppDesignSystem.success,
+                  ),
+                  Container(
+                    height: 20,
+                    width: 1,
+                    color: AppDesignSystem.border,
+                  ),
+                  _headerStatItem(
+                    'MARGIN CASH',
+                    '₹2,76,405.13',
+                    AppDesignSystem.primary,
+                  ),
                 ],
               ),
             ),
@@ -216,9 +267,23 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 9, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -230,9 +295,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: (isOnline ? AppDesignSystem.success : AppDesignSystem.danger).withValues(alpha: 0.15),
+          color: (isOnline ? AppDesignSystem.success : AppDesignSystem.danger)
+              .withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger, width: 0.8),
+          border: Border.all(
+            color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+            width: 0.8,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -241,7 +310,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               width: 5,
               height: 5,
               decoration: BoxDecoration(
-                color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+                color: isOnline
+                    ? AppDesignSystem.success
+                    : AppDesignSystem.danger,
                 shape: BoxShape.circle,
               ),
             ),
@@ -249,7 +320,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             Text(
               isOnline ? 'LIVE WS' : 'OFFLINE',
               style: TextStyle(
-                color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+                color: isOnline
+                    ? AppDesignSystem.success
+                    : AppDesignSystem.danger,
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
@@ -268,7 +341,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           children: [
             CircularProgressIndicator(color: AppDesignSystem.primary),
             SizedBox(height: 16),
-            Text('Initializing Institutional Terminal...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+            Text(
+              'Initializing Institutional Terminal...',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
           ],
         ),
       );
@@ -279,17 +355,35 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, color: AppDesignSystem.warning, size: 54),
+            const Icon(
+              Icons.cloud_off,
+              color: AppDesignSystem.warning,
+              size: 54,
+            ),
             const SizedBox(height: 16),
-            const Text('Terminal Data Connection Interrupted', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'Terminal Data Connection Interrupted',
+              style: TextStyle(
+                color: AppDesignSystem.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: _fetchDashboard,
               icon: const Icon(Icons.refresh),
               label: const Text('Reconnect Terminal'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppDesignSystem.primary, foregroundColor: Colors.black),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppDesignSystem.primary,
+                foregroundColor: Colors.black,
+              ),
             ),
           ],
         ),
@@ -332,11 +426,18 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       child: TextField(
         controller: _searchController,
         onChanged: (val) => setState(() => _searchQuery = val),
-        style: const TextStyle(color: AppDesignSystem.textPrimary, fontSize: 13),
+        style: const TextStyle(
+          color: AppDesignSystem.textPrimary,
+          fontSize: 13,
+        ),
         decoration: InputDecoration(
           hintText: 'Search Stock, Index, Option Strike, or AI Signal...',
           hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-          prefixIcon: const Icon(Icons.search, color: AppDesignSystem.primary, size: 20),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppDesignSystem.primary,
+            size: 20,
+          ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
@@ -347,7 +448,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 )
               : const Icon(Icons.tune, color: Colors.grey, size: 18),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
@@ -362,7 +466,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           children: [
             Row(
               children: [
-                Icon(Icons.show_chart, color: AppDesignSystem.primary, size: 18),
+                Icon(
+                  Icons.show_chart,
+                  color: AppDesignSystem.primary,
+                  size: 18,
+                ),
                 SizedBox(width: 6),
                 Text(
                   'LIVE MARKET OVERVIEW',
@@ -375,7 +483,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ],
             ),
-            Text('NSE/BSE LIVE', style: TextStyle(color: AppDesignSystem.success, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text(
+              'NSE/BSE LIVE',
+              style: TextStyle(
+                color: AppDesignSystem.success,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -383,15 +498,45 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildIndexSparklineCard('NIFTY 50', '24,850.40', '+184.20 (+0.75%)', AppDesignSystem.success, [24600, 24650, 24710, 24680, 24790, 24850]),
+              _buildIndexSparklineCard(
+                'NIFTY 50',
+                '24,850.40',
+                '+184.20 (+0.75%)',
+                AppDesignSystem.success,
+                [24600, 24650, 24710, 24680, 24790, 24850],
+              ),
               const SizedBox(width: 10),
-              _buildIndexSparklineCard('BANK NIFTY', '52,450.15', '+410.50 (+0.79%)', AppDesignSystem.success, [51900, 52100, 52050, 52300, 52450]),
+              _buildIndexSparklineCard(
+                'BANK NIFTY',
+                '52,450.15',
+                '+410.50 (+0.79%)',
+                AppDesignSystem.success,
+                [51900, 52100, 52050, 52300, 52450],
+              ),
               const SizedBox(width: 10),
-              _buildIndexSparklineCard('FINNIFTY', '23,150.80', '+142.10 (+0.62%)', AppDesignSystem.success, [22950, 23010, 23050, 23100, 23150]),
+              _buildIndexSparklineCard(
+                'FINNIFTY',
+                '23,150.80',
+                '+142.10 (+0.62%)',
+                AppDesignSystem.success,
+                [22950, 23010, 23050, 23100, 23150],
+              ),
               const SizedBox(width: 10),
-              _buildIndexSparklineCard('SENSEX', '81,332.90', '+602.40 (+0.75%)', AppDesignSystem.success, [80600, 80850, 81100, 81332]),
+              _buildIndexSparklineCard(
+                'SENSEX',
+                '81,332.90',
+                '+602.40 (+0.75%)',
+                AppDesignSystem.success,
+                [80600, 80850, 81100, 81332],
+              ),
               const SizedBox(width: 10),
-              _buildIndexSparklineCard('INDIA VIX', '12.45', '-0.45 (-3.48%)', AppDesignSystem.primary, [13.8, 13.5, 13.1, 12.8, 12.45]),
+              _buildIndexSparklineCard(
+                'INDIA VIX',
+                '12.45',
+                '-0.45 (-3.48%)',
+                AppDesignSystem.primary,
+                [13.8, 13.5, 13.1, 12.8, 12.45],
+              ),
             ],
           ),
         ),
@@ -399,7 +544,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildIndexSparklineCard(String title, String price, String change, Color color, List<double> sparkPoints) {
+  Widget _buildIndexSparklineCard(
+    String title,
+    String price,
+    String change,
+    Color color,
+    List<double> sparkPoints,
+  ) {
     return Container(
       width: 155,
       padding: const EdgeInsets.all(12),
@@ -410,14 +561,41 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: TextStyle(color: Colors.grey.shade400, fontSize: 10, fontWeight: FontWeight.bold)),
-              Icon(color == AppDesignSystem.success ? Icons.trending_up : Icons.trending_down, color: color, size: 14),
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Icon(
+                color == AppDesignSystem.success
+                    ? Icons.trending_up
+                    : Icons.trending_down,
+                color: color,
+                size: 14,
+              ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(price, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(
+            price,
+            style: const TextStyle(
+              color: AppDesignSystem.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(change, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+          Text(
+            change,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           SizedBox(
             height: 24,
@@ -434,7 +612,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget _buildPortfolioSnapshotCard(DashboardDataModel d) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: AppDesignSystem.glassCard(borderColor: AppDesignSystem.primary.withValues(alpha: 0.3)),
+      decoration: AppDesignSystem.glassCard(
+        borderColor: AppDesignSystem.primary.withValues(alpha: 0.3),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -443,11 +623,20 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             children: [
               const Row(
                 children: [
-                  Icon(Icons.pie_chart, color: AppDesignSystem.primary, size: 18),
+                  Icon(
+                    Icons.pie_chart,
+                    color: AppDesignSystem.primary,
+                    size: 18,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'PORTFOLIO SNAPSHOT',
-                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ],
               ),
@@ -456,9 +645,19 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 decoration: BoxDecoration(
                   color: AppDesignSystem.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppDesignSystem.success, width: 0.8),
+                  border: Border.all(
+                    color: AppDesignSystem.success,
+                    width: 0.8,
+                  ),
                 ),
-                child: const Text('RISK: LOW (0.69%)', style: TextStyle(color: AppDesignSystem.success, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'RISK: LOW (0.69%)',
+                  style: TextStyle(
+                    color: AppDesignSystem.success,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -469,17 +668,37 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Total Portfolio Capital', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  Text(
+                    'Total Portfolio Capital',
+                    style: TextStyle(color: Colors.grey, fontSize: 10),
+                  ),
                   SizedBox(height: 4),
-                  Text('₹9,99,649.32', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(
+                    '₹9,99,649.32',
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Current Equity Value', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  Text(
+                    'Current Equity Value',
+                    style: TextStyle(color: Colors.grey, fontSize: 10),
+                  ),
                   SizedBox(height: 4),
-                  Text('₹9,93,101.13', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(
+                    '₹9,93,101.13',
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -490,9 +709,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _metricItem('Available Cash', '₹2,76,405.13', AppDesignSystem.primary),
+              _metricItem(
+                'Available Cash',
+                '₹2,76,405.13',
+                AppDesignSystem.primary,
+              ),
               _metricItem('Used Margin', '₹7,23,244.20', Colors.purpleAccent),
-              _metricItem('Open Positions', '5 Active', AppDesignSystem.textPrimary),
+              _metricItem(
+                'Open Positions',
+                '5 Active',
+                AppDesignSystem.textPrimary,
+              ),
               _metricItem('Overall Return', '-0.69%', AppDesignSystem.warning),
             ],
           ),
@@ -507,7 +734,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+          ),
+        ),
       ],
     );
   }
@@ -528,7 +762,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   SizedBox(width: 6),
                   Text(
                     'AI SWING SCANNER WIDGET',
-                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ],
               ),
@@ -537,11 +776,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppDesignSystem.primary,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('Open Scanner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Open Scanner',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -549,9 +794,21 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _scannerStat('Scanned', '${d.totalScanned}', AppDesignSystem.textPrimary),
-              _scannerStat('Qualified', '${d.qualifiedSignals}', AppDesignSystem.success),
-              _scannerStat('Market Quality', d.marketQuality, AppDesignSystem.primary),
+              _scannerStat(
+                'Scanned',
+                '${d.totalScanned}',
+                AppDesignSystem.textPrimary,
+              ),
+              _scannerStat(
+                'Qualified',
+                '${d.qualifiedSignals}',
+                AppDesignSystem.success,
+              ),
+              _scannerStat(
+                'Market Quality',
+                d.marketQuality,
+                AppDesignSystem.primary,
+              ),
               _scannerStat('Last Scan', d.lastScanTime, Colors.cyanAccent),
             ],
           ),
@@ -570,12 +827,22 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 const Expanded(
                   child: Text(
                     'TOP PICK: DIVISLAB (BUY) — Score: 88.5/100 | Target: ₹6,500',
-                    style: TextStyle(color: AppDesignSystem.textPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 TextButton(
                   onPressed: () => widget.onNavigate(2),
-                  child: const Text('Details', style: TextStyle(color: AppDesignSystem.primary, fontSize: 11)),
+                  child: const Text(
+                    'Details',
+                    style: TextStyle(
+                      color: AppDesignSystem.primary,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -590,7 +857,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 4),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -608,7 +882,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           end: Alignment.bottomRight,
         ),
         borderRadius: AppDesignSystem.radiusMedium,
-        border: Border.all(color: AppDesignSystem.secondary.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: AppDesignSystem.secondary.withValues(alpha: 0.4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,11 +898,23 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   SizedBox(width: 6),
                   Text(
                     'AI MARKET INTELLIGENCE PANEL',
-                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                    style: TextStyle(
+                      color: AppDesignSystem.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ],
               ),
-              Text('BULLISH / ACCUMULATION', style: TextStyle(color: AppDesignSystem.success, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text(
+                'BULLISH / ACCUMULATION',
+                style: TextStyle(
+                  color: AppDesignSystem.success,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -635,10 +923,22 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _aiIntelItem('Trend Strength', '88.4 / 100', AppDesignSystem.primary),
-              _aiIntelItem('Market Breadth', '132 Adv / 44 Dec', AppDesignSystem.success),
+              _aiIntelItem(
+                'Trend Strength',
+                '88.4 / 100',
+                AppDesignSystem.primary,
+              ),
+              _aiIntelItem(
+                'Market Breadth',
+                '132 Adv / 44 Dec',
+                AppDesignSystem.success,
+              ),
               _aiIntelItem('AI Confidence', '94.2%', Colors.amberAccent),
-              _aiIntelItem('Risk Verdict', 'SAFE TO ENTER', AppDesignSystem.success),
+              _aiIntelItem(
+                'Risk Verdict',
+                'SAFE TO ENTER',
+                AppDesignSystem.success,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -647,7 +947,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             decoration: BoxDecoration(
               color: Colors.purple.withValues(alpha: 0.15),
               borderRadius: AppDesignSystem.radiusSmall,
-              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: Colors.purpleAccent.withValues(alpha: 0.3),
+              ),
             ),
             child: const Row(
               children: [
@@ -656,7 +958,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 Expanded(
                   child: Text(
                     'INSTITUTIONAL BRIEF: Accumulate Pharma & IT on pullbacks. Banking index testing 52,500 resistance.',
-                    style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.purpleAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -673,7 +979,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+          ),
+        ),
       ],
     );
   }
@@ -688,7 +1001,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             SizedBox(width: 6),
             Text(
               'INSTITUTIONAL QUICK ACTIONS',
-              style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+              style: TextStyle(
+                color: AppDesignSystem.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                letterSpacing: 0.8,
+              ),
             ),
           ],
         ),
@@ -701,28 +1019,80 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           mainAxisSpacing: 10,
           childAspectRatio: 1.45,
           children: [
-            _quickActionCard('Scanner', Icons.radar, AppDesignSystem.primary, () => widget.onNavigate(2)),
-            _quickActionCard('F&O Terminal', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(4)),
-            _quickActionCard('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(6)),
-            _quickActionCard('Orders', Icons.receipt_long, AppDesignSystem.primary, () => widget.onNavigate(5)),
-            _quickActionCard('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(7)),
-            _quickActionCard('Risk Center', Icons.shield, AppDesignSystem.danger, () => widget.onNavigate(8)),
-            _quickActionCard('AI Copilot', Icons.psychology, Colors.cyanAccent, () => widget.onNavigate(3)),
-            _quickActionCard('AI Sentinel', Icons.security, Colors.orangeAccent, () => widget.onNavigate(12)),
-            _quickActionCard('Global Macro', Icons.public, Colors.tealAccent, () => widget.onNavigate(10)),
+            _quickActionCard(
+              'Scanner',
+              Icons.radar,
+              AppDesignSystem.primary,
+              () => widget.onNavigate(2),
+            ),
+            _quickActionCard(
+              'F&O Terminal',
+              Icons.show_chart,
+              Colors.purpleAccent,
+              () => widget.onNavigate(4),
+            ),
+            _quickActionCard(
+              'Portfolio',
+              Icons.pie_chart,
+              Colors.cyanAccent,
+              () => widget.onNavigate(6),
+            ),
+            _quickActionCard(
+              'Orders',
+              Icons.receipt_long,
+              AppDesignSystem.primary,
+              () => widget.onNavigate(5),
+            ),
+            _quickActionCard(
+              'Journal',
+              Icons.menu_book,
+              Colors.amberAccent,
+              () => widget.onNavigate(7),
+            ),
+            _quickActionCard(
+              'Risk Center',
+              Icons.shield,
+              AppDesignSystem.danger,
+              () => widget.onNavigate(8),
+            ),
+            _quickActionCard(
+              'AI Copilot',
+              Icons.psychology,
+              Colors.cyanAccent,
+              () => widget.onNavigate(3),
+            ),
+            _quickActionCard(
+              'AI Sentinel',
+              Icons.security,
+              Colors.orangeAccent,
+              () => widget.onNavigate(12),
+            ),
+            _quickActionCard(
+              'Global Macro',
+              Icons.public,
+              Colors.tealAccent,
+              () => widget.onNavigate(10),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _quickActionCard(String label, IconData icon, Color col, VoidCallback onTap) {
+  Widget _quickActionCard(
+    String label,
+    IconData icon,
+    Color col,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: AppDesignSystem.radiusSmall,
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: AppDesignSystem.glassCard(borderColor: col.withValues(alpha: 0.3)),
+        decoration: AppDesignSystem.glassCard(
+          borderColor: col.withValues(alpha: 0.3),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -730,7 +1100,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(color: AppDesignSystem.textPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppDesignSystem.textPrimary,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -743,10 +1117,42 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   Widget _buildWatchlistWidget() {
     final watchlist = [
-      {'symbol': 'DIVISLAB', 'name': "Divi's Laboratories", 'price': '₹6,240.50', 'change': '+3.4%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '88.5%'},
-      {'symbol': 'DIXON', 'name': 'Dixon Technologies', 'price': '₹14,850.00', 'change': '+2.1%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '86.2%'},
-      {'symbol': 'PAYTM', 'name': 'One97 Communications', 'price': '₹895.40', 'change': '+5.88%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '91.0%'},
-      {'symbol': 'TATASTEEL', 'name': 'Tata Steel Ltd.', 'price': '₹154.20', 'change': '-1.2%', 'signal': 'WATCH', 'color': AppDesignSystem.warning, 'conf': '72.0%'},
+      {
+        'symbol': 'DIVISLAB',
+        'name': "Divi's Laboratories",
+        'price': '₹6,240.50',
+        'change': '+3.4%',
+        'signal': 'BUY',
+        'color': AppDesignSystem.success,
+        'conf': '88.5%',
+      },
+      {
+        'symbol': 'DIXON',
+        'name': 'Dixon Technologies',
+        'price': '₹14,850.00',
+        'change': '+2.1%',
+        'signal': 'BUY',
+        'color': AppDesignSystem.success,
+        'conf': '86.2%',
+      },
+      {
+        'symbol': 'PAYTM',
+        'name': 'One97 Communications',
+        'price': '₹895.40',
+        'change': '+5.88%',
+        'signal': 'BUY',
+        'color': AppDesignSystem.success,
+        'conf': '91.0%',
+      },
+      {
+        'symbol': 'TATASTEEL',
+        'name': 'Tata Steel Ltd.',
+        'price': '₹154.20',
+        'change': '-1.2%',
+        'signal': 'WATCH',
+        'color': AppDesignSystem.warning,
+        'conf': '72.0%',
+      },
     ];
 
     return Column(
@@ -757,15 +1163,31 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           children: [
             Row(
               children: [
-                Icon(Icons.remove_red_eye_outlined, color: AppDesignSystem.primary, size: 18),
+                Icon(
+                  Icons.remove_red_eye_outlined,
+                  color: AppDesignSystem.primary,
+                  size: 18,
+                ),
                 SizedBox(width: 6),
                 Text(
                   'INSTITUTIONAL WATCHLIST',
-                  style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                  style: TextStyle(
+                    color: AppDesignSystem.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ],
             ),
-            Text('4 STOCKS', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text(
+              '4 STOCKS',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -786,29 +1208,66 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['symbol'] as String, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text(
+                        item['symbol'] as String,
+                        style: const TextStyle(
+                          color: AppDesignSystem.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text(item['name'] as String, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      Text(
+                        item['name'] as String,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 10,
+                        ),
+                      ),
                     ],
                   ),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: col.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(color: col, width: 0.6),
                         ),
-                        child: Text('${item['signal']} (${item['conf']})', style: TextStyle(color: col, fontSize: 9, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          '${item['signal']} (${item['conf']})',
+                          style: TextStyle(
+                            color: col,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(item['price'] as String, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(
+                            item['price'] as String,
+                            style: const TextStyle(
+                              color: AppDesignSystem.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(item['change'] as String, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
+                          Text(
+                            item['change'] as String,
+                            style: TextStyle(
+                              color: col,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ],

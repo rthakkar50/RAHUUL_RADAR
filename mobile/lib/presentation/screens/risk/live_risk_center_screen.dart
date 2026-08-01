@@ -19,7 +19,14 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
           children: [
             Icon(Icons.warning_amber, color: Colors.redAccent),
             SizedBox(width: 8),
-            Text('EMERGENCY KILL SWITCH', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              'EMERGENCY KILL SWITCH',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         content: const Text(
@@ -27,16 +34,30 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
           style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('EMERGENCY KILL SWITCH ACTIVATED — All Positions Squaring Off!'), backgroundColor: Colors.redAccent),
+                const SnackBar(
+                  content: Text(
+                    'EMERGENCY KILL SWITCH ACTIVATED — All Positions Squaring Off!',
+                  ),
+                  backgroundColor: Colors.redAccent,
+                ),
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('EXECUTE KILL SWITCH', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'EXECUTE KILL SWITCH',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -54,13 +75,22 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.redAccent, Colors.orangeAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.redAccent, Colors.orangeAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shield_outlined, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.shield_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Live Risk Command Center', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Live Risk Command Center',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
       ),
@@ -81,8 +111,16 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
               child: ElevatedButton.icon(
                 onPressed: _triggerEmergencyKillSwitch,
                 icon: const Icon(Icons.cancel, color: Colors.white),
-                label: const Text('EMERGENCY KILL SWITCH (SQUARE OFF ALL)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade900),
+                label: const Text(
+                  'EMERGENCY KILL SWITCH (SQUARE OFF ALL)',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade900,
+                ),
               ),
             ),
           ],
@@ -104,12 +142,31 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Portfolio Risk Meter', style: TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic, color: Colors.white)),
-              Text('STATUS: SAFE (0.69%)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Portfolio Risk Meter',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'STATUS: SAFE (0.69%)',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          const LinearProgressIndicator(value: 0.25, color: Colors.greenAccent, backgroundColor: Colors.white10, minHeight: 8),
+          const LinearProgressIndicator(
+            value: 0.25,
+            color: Colors.greenAccent,
+            backgroundColor: Colors.white10,
+            minHeight: 8,
+          ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -129,7 +186,14 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -145,21 +209,48 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Circuit Breaker & Loss Limits', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          Text(
+            'Circuit Breaker & Loss Limits',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
           SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Daily Max Loss Limit: ₹25,000', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('Current: -₹6,548', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Daily Max Loss Limit: ₹25,000',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                'Current: -₹6,548',
+                style: TextStyle(
+                  color: Colors.orangeAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Weekly Max Loss Limit: ₹75,000', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('Current: -₹6,548', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Weekly Max Loss Limit: ₹75,000',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                'Current: -₹6,548',
+                style: TextStyle(
+                  color: Colors.orangeAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -176,8 +267,18 @@ class _LiveRiskCenterScreenState extends State<LiveRiskCenterScreen> {
         border: Border.all(color: Colors.white10),
       ),
       child: SwitchListTile(
-        title: const Text('Autonomous Execution Engine', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-        subtitle: const Text('Auto-place orders when AI score > 85.0', style: TextStyle(color: Colors.grey, fontSize: 11)),
+        title: const Text(
+          'Autonomous Execution Engine',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+        subtitle: const Text(
+          'Auto-place orders when AI score > 85.0',
+          style: TextStyle(color: Colors.grey, fontSize: 11),
+        ),
         value: _autoTradingEnabled,
         onChanged: (v) => setState(() => _autoTradingEnabled = v),
       ),

@@ -5,10 +5,12 @@ class AiRiskCommandCenterScreen extends StatefulWidget {
   const AiRiskCommandCenterScreen({super.key});
 
   @override
-  State<AiRiskCommandCenterScreen> createState() => _AiRiskCommandCenterScreenState();
+  State<AiRiskCommandCenterScreen> createState() =>
+      _AiRiskCommandCenterScreenState();
 }
 
-class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> with SingleTickerProviderStateMixin {
+class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen>
+    with SingleTickerProviderStateMixin {
   final RiskCommandCenterRepository _repo = RiskCommandCenterRepository();
   late TabController _tabController;
 
@@ -40,13 +42,22 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.redAccent, Colors.orangeAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.redAccent, Colors.orangeAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shield_outlined, color: Colors.black, size: 18),
+              child: const Icon(
+                Icons.shield_outlined,
+                color: Colors.black,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('AI Risk Command Center', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'AI Risk Command Center',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -80,25 +91,57 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: Colors.greenAccent.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('AI Risk Executive Verdict', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text(overview.riskGrade, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const Text(
+                    'AI Risk Executive Verdict',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    overview.riskGrade,
+                    style: const TextStyle(
+                      color: Colors.greenAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _tile('Portfolio Risk', '${overview.portfolioRiskPct}%', Colors.greenAccent),
-                  _tile('Capital Utilization', '${overview.capitalUtilizationPct}%', Colors.cyanAccent),
-                  _tile('Margin Used', '${overview.marginUtilizationPct}%', Colors.amberAccent),
-                  _tile('Max Drawdown', '${overview.maxDrawdownPct}%', Colors.purpleAccent),
+                  _tile(
+                    'Portfolio Risk',
+                    '${overview.portfolioRiskPct}%',
+                    Colors.greenAccent,
+                  ),
+                  _tile(
+                    'Capital Utilization',
+                    '${overview.capitalUtilizationPct}%',
+                    Colors.cyanAccent,
+                  ),
+                  _tile(
+                    'Margin Used',
+                    '${overview.marginUtilizationPct}%',
+                    Colors.amberAccent,
+                  ),
+                  _tile(
+                    'Max Drawdown',
+                    '${overview.maxDrawdownPct}%',
+                    Colors.purpleAccent,
+                  ),
                 ],
               ),
             ],
@@ -115,7 +158,14 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -133,9 +183,20 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.amberAccent,
+                size: 18,
+              ),
               SizedBox(width: 8),
-              Text('Module 7 — AI Live Risk Monitor Alerts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                'Module 7 — AI Live Risk Monitor Alerts',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 10),
@@ -166,14 +227,40 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: col.withValues(alpha: 0.2),
-              child: Icon(isGreen ? Icons.check_circle_outline : Icons.warning_amber_rounded, color: col, size: 18),
+              child: Icon(
+                isGreen
+                    ? Icons.check_circle_outline
+                    : Icons.warning_amber_rounded,
+                color: col,
+                size: 18,
+              ),
             ),
-            title: Text('${item.symbol} (${item.sector})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('Exposure: ${item.exposurePct}% of Portfolio', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+            title: Text(
+              '${item.symbol} (${item.sector})',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            subtitle: Text(
+              'Exposure: ${item.exposurePct}% of Portfolio',
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+            ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: col.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-              child: Text(item.riskLevel, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                color: col.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                item.riskLevel,
+                style: TextStyle(
+                  color: col,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         );
@@ -198,17 +285,50 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(st.scenarioName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(
+                      st.scenarioName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: Text('Survival: ${st.portfolioSurvivalPct}%', style: const TextStyle(color: Colors.greenAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Survival: ${st.portfolioSurvivalPct}%',
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text('Estimated Impact Loss: -₹${st.estimatedLossAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                Text('Expected Recovery Duration: ${st.recoveryTimeDays}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                Text(
+                  'Estimated Impact Loss: -₹${st.estimatedLossAmount.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Expected Recovery Duration: ${st.recoveryTimeDays}',
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
@@ -227,7 +347,14 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen> w
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
             leading: const Icon(Icons.security, color: Colors.cyanAccent),
-            title: Text(hedging[i], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            title: Text(
+              hedging[i],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       },

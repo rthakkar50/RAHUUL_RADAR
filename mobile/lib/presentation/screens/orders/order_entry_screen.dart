@@ -14,10 +14,18 @@ class OrderEntryScreen extends StatefulWidget {
 class _OrderEntryScreenState extends State<OrderEntryScreen> {
   final OrderRepository _orderRepo = OrderRepository();
   final TextEditingController _symbolController = TextEditingController();
-  final TextEditingController _qtyController = TextEditingController(text: '25');
-  final TextEditingController _priceController = TextEditingController(text: '0.00');
-  final TextEditingController _slController = TextEditingController(text: '0.00');
-  final TextEditingController _targetController = TextEditingController(text: '0.00');
+  final TextEditingController _qtyController = TextEditingController(
+    text: '25',
+  );
+  final TextEditingController _priceController = TextEditingController(
+    text: '0.00',
+  );
+  final TextEditingController _slController = TextEditingController(
+    text: '0.00',
+  );
+  final TextEditingController _targetController = TextEditingController(
+    text: '0.00',
+  );
 
   String _side = 'BUY'; // BUY / SELL
   String _orderType = 'LIMIT'; // MARKET, LIMIT, STOP, STOP_LIMIT
@@ -28,7 +36,9 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
     super.initState();
     if (widget.scanResult != null) {
       _symbolController.text = widget.scanResult!.symbol;
-      _side = widget.scanResult!.signal.toUpperCase().contains('BUY') ? 'BUY' : 'SELL';
+      _side = widget.scanResult!.signal.toUpperCase().contains('BUY')
+          ? 'BUY'
+          : 'SELL';
       _priceController.text = widget.scanResult!.price.toStringAsFixed(2);
       _slController.text = widget.scanResult!.stopLoss.toStringAsFixed(2);
       _targetController.text = widget.scanResult!.target1.toStringAsFixed(2);
@@ -64,9 +74,18 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
         backgroundColor: const Color(0xFF161B22),
         title: Row(
           children: [
-            Icon(_side == 'BUY' ? Icons.arrow_upward : Icons.arrow_downward, color: _side == 'BUY' ? Colors.greenAccent : Colors.redAccent),
+            Icon(
+              _side == 'BUY' ? Icons.arrow_upward : Icons.arrow_downward,
+              color: _side == 'BUY' ? Colors.greenAccent : Colors.redAccent,
+            ),
             const SizedBox(width: 8),
-            Text('Confirm $_side Order', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(
+              'Confirm $_side Order',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -76,13 +95,37 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
             _confRow('Symbol', _symbolController.text, Colors.white),
             _confRow('Order Type', _orderType, Colors.cyanAccent),
             _confRow('Quantity', '$qty', Colors.white),
-            _confRow('Price', '₹${price.toStringAsFixed(2)}', Colors.blueAccent),
-            _confRow('Stop Loss', '₹${sl.toStringAsFixed(2)}', Colors.redAccent),
-            _confRow('Target', '₹${target.toStringAsFixed(2)}', Colors.greenAccent),
+            _confRow(
+              'Price',
+              '₹${price.toStringAsFixed(2)}',
+              Colors.blueAccent,
+            ),
+            _confRow(
+              'Stop Loss',
+              '₹${sl.toStringAsFixed(2)}',
+              Colors.redAccent,
+            ),
+            _confRow(
+              'Target',
+              '₹${target.toStringAsFixed(2)}',
+              Colors.greenAccent,
+            ),
             const Divider(color: Colors.white10),
-            _confRow('Margin Required', '₹${margin.toStringAsFixed(2)}', Colors.amberAccent),
-            _confRow('Total Max Risk', '₹${risk.toStringAsFixed(2)}', Colors.redAccent),
-            _confRow('Estimated Charges', '₹20.00 (Flat Brokerage)', Colors.grey),
+            _confRow(
+              'Margin Required',
+              '₹${margin.toStringAsFixed(2)}',
+              Colors.amberAccent,
+            ),
+            _confRow(
+              'Total Max Risk',
+              '₹${risk.toStringAsFixed(2)}',
+              Colors.redAccent,
+            ),
+            _confRow(
+              'Estimated Charges',
+              '₹20.00 (Flat Brokerage)',
+              Colors.grey,
+            ),
           ],
         ),
         actions: [
@@ -95,8 +138,18 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
               Navigator.pop(ctx);
               _executeOrder();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: _side == 'BUY' ? Colors.greenAccent : Colors.redAccent),
-            child: const Text('Confirm & Submit', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _side == 'BUY'
+                  ? Colors.greenAccent
+                  : Colors.redAccent,
+            ),
+            child: const Text(
+              'Confirm & Submit',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -122,7 +175,12 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
       if (mounted) {
         setState(() => _isExecuting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order Submitted Successfully! Order ID: ${res.orderId}'), backgroundColor: Colors.greenAccent),
+          SnackBar(
+            content: Text(
+              'Order Submitted Successfully! Order ID: ${res.orderId}',
+            ),
+            backgroundColor: Colors.greenAccent,
+          ),
         );
         Navigator.pop(context);
       }
@@ -130,7 +188,10 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
       if (mounted) {
         setState(() => _isExecuting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order Execution Error: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('Order Execution Error: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }
@@ -143,7 +204,14 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            val,
+            style: TextStyle(
+              color: col,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
@@ -155,7 +223,10 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
       backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0B0E14),
-        title: const Text('Order Execution Terminal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'Order Execution Terminal',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -176,12 +247,23 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
               child: ElevatedButton(
                 onPressed: _isExecuting ? null : _showOrderConfirmation,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _side == 'BUY' ? Colors.greenAccent : Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: _side == 'BUY'
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: _isExecuting
                     ? const CircularProgressIndicator(color: Colors.black)
-                    : Text('SUBMIT $_side ORDER', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
+                    : Text(
+                        'SUBMIT $_side ORDER',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -199,12 +281,20 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: _side == 'BUY' ? Colors.greenAccent : const Color(0xFF161B22),
+                color: _side == 'BUY'
+                    ? Colors.greenAccent
+                    : const Color(0xFF161B22),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.greenAccent),
               ),
               child: Center(
-                child: Text('BUY / LONG', style: TextStyle(color: _side == 'BUY' ? Colors.black : Colors.greenAccent, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'BUY / LONG',
+                  style: TextStyle(
+                    color: _side == 'BUY' ? Colors.black : Colors.greenAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -216,12 +306,20 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: _side == 'SELL' ? Colors.redAccent : const Color(0xFF161B22),
+                color: _side == 'SELL'
+                    ? Colors.redAccent
+                    : const Color(0xFF161B22),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.redAccent),
               ),
               child: Center(
-                child: Text('SELL / SHORT', style: TextStyle(color: _side == 'SELL' ? Colors.white : Colors.redAccent, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'SELL / SHORT',
+                  style: TextStyle(
+                    color: _side == 'SELL' ? Colors.white : Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -239,7 +337,13 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2.0),
             child: ChoiceChip(
-              label: Text(t, style: TextStyle(fontSize: 10, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
+              label: Text(
+                t,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
               selected: isSel,
               selectedColor: Colors.blueAccent,
               backgroundColor: const Color(0xFF161B22),
@@ -277,16 +381,27 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
     );
   }
 
-  Widget _field(String label, TextEditingController ctrl, {bool isNum = false}) {
+  Widget _field(
+    String label,
+    TextEditingController ctrl, {
+    bool isNum = false,
+  }) {
     return TextField(
       controller: ctrl,
       keyboardType: isNum ? TextInputType.number : TextInputType.text,
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 13,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
         border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
     );
   }
@@ -310,24 +425,54 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Margin Required:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-              Text('₹${margin.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text(
+                'Margin Required:',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              Text(
+                '₹${margin.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.amberAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Est. Risk Amount:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-              Text('₹${risk.toStringAsFixed(2)}', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text(
+                'Est. Risk Amount:',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              Text(
+                '₹${risk.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('AI Recommendation:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-              Text('Optimal Size • R:R 1:2.5', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text(
+                'AI Recommendation:',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              Text(
+                'Optimal Size • R:R 1:2.5',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
         ],

@@ -50,18 +50,31 @@ class ScanResultModel {
       price: p,
       signal: (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY',
       score: (json['Score'] ?? json['score'] as num?)?.toDouble() ?? 80.0,
-      rawScore: (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
-      confidence: (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ?? 85.0,
+      rawScore:
+          (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
+      confidence:
+          (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ??
+          85.0,
       trend: (json['Trend'] ?? json['trend'])?.toString() ?? 'BULLISH',
       volume: (json['Volume'] ?? json['volume'])?.toString() ?? '1.5x',
-      riskReward: (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? '1:2.0',
-      rsScore: (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 75.0,
+      riskReward:
+          (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? '1:2.0',
+      rsScore:
+          (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 75.0,
       entry: (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p,
-      stopLoss: (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? (p > 0 ? p * 0.98 : 0.0),
-      target1: (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? (p > 0 ? p * 1.04 : 0.0),
-      target2: (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? (p > 0 ? p * 1.08 : 0.0),
-      tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
-      riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
+      stopLoss:
+          (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ??
+          (p > 0 ? p * 0.98 : 0.0),
+      target1:
+          (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ??
+          (p > 0 ? p * 1.04 : 0.0),
+      target2:
+          (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ??
+          (p > 0 ? p * 1.08 : 0.0),
+      tradeGrade:
+          (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
+      riskGrade:
+          (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
       timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? '',
     );
   }

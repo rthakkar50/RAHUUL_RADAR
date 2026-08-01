@@ -33,7 +33,8 @@ class CloudBackupRecordModel {
 }
 
 class CloudWorkspaceRepository {
-  static final CloudWorkspaceRepository _instance = CloudWorkspaceRepository._internal();
+  static final CloudWorkspaceRepository _instance =
+      CloudWorkspaceRepository._internal();
   factory CloudWorkspaceRepository() => _instance;
   CloudWorkspaceRepository._internal();
 
@@ -51,8 +52,18 @@ class CloudWorkspaceRepository {
 
   List<CloudBackupRecordModel> getBackupHistory() {
     return const [
-      CloudBackupRecordModel(backupId: 'BK-20260801-01', timestamp: '2026-08-01 17:45', deviceName: 'iPhone 15 Pro', sizeKb: '142 KB'),
-      CloudBackupRecordModel(backupId: 'BK-20260731-04', timestamp: '2026-07-31 23:10', deviceName: 'MacBook Pro', sizeKb: '138 KB'),
+      CloudBackupRecordModel(
+        backupId: 'BK-20260801-01',
+        timestamp: '2026-08-01 17:45',
+        deviceName: 'iPhone 15 Pro',
+        sizeKb: '142 KB',
+      ),
+      CloudBackupRecordModel(
+        backupId: 'BK-20260731-04',
+        timestamp: '2026-07-31 23:10',
+        deviceName: 'MacBook Pro',
+        sizeKb: '138 KB',
+      ),
     ];
   }
 

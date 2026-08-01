@@ -22,11 +22,13 @@ class ApiConfig {
     'odd-vans-shave.loca.lt',
     '140.238.161.80',
     '10.0.2.2',
-    '127.0.0.1'
+    '127.0.0.1',
   ];
   static List<String> get candidateIps => _candidateIps;
 
-  static Map<String, String> defaultHeaders({Map<String, String>? extraHeaders}) {
+  static Map<String, String> defaultHeaders({
+    Map<String, String>? extraHeaders,
+  }) {
     final headers = <String, String>{
       'User-Agent': 'FlutterApp',
       'Accept': 'application/json',
@@ -56,7 +58,7 @@ class ApiConfig {
       'odd-vans-shave.loca.lt',
       '140.238.161.80',
       '10.0.2.2',
-      '127.0.0.1'
+      '127.0.0.1',
     ].where((ip) => ip.trim().isNotEmpty).toSet().toList();
 
     final completer = Completer<String>();
@@ -65,25 +67,37 @@ class ApiConfig {
       unawaited(() async {
         try {
           final isHttps = ip.startsWith('https://');
-          final isTunnel = isHttps || ip.contains('loca.lt') || ip.contains('ngrok') || ip.contains('lhr.life') || ip.contains('onrender.com');
+          final isTunnel =
+              isHttps ||
+              ip.contains('loca.lt') ||
+              ip.contains('ngrok') ||
+              ip.contains('lhr.life') ||
+              ip.contains('onrender.com');
           final scheme = isTunnel ? 'https' : 'http';
           var cleanIp = ip.replaceFirst(RegExp(r'https?://'), '');
-          if (cleanIp.endsWith('/')) cleanIp = cleanIp.substring(0, cleanIp.length - 1);
+          if (cleanIp.endsWith('/')) {
+            cleanIp = cleanIp.substring(0, cleanIp.length - 1);
+          }
           final portStr = isTunnel ? '' : ':$_port';
           final uri = Uri.parse('$scheme://$cleanIp$portStr/api/v1/health');
 
-          final response = await http.get(
-            uri,
-            headers: {
-              'Bypass-Tunnel-Remainder': 'true',
-              'User-Agent': 'FlutterApp',
-              'Accept': 'application/json'
-            },
-          ).timeout(const Duration(milliseconds: 1800));
+          final response = await http
+              .get(
+                uri,
+                headers: {
+                  'Bypass-Tunnel-Remainder': 'true',
+                  'User-Agent': 'FlutterApp',
+                  'Accept': 'application/json',
+                },
+              )
+              .timeout(const Duration(milliseconds: 1800));
 
           if (response.statusCode == 200 && !completer.isCompleted) {
             _activeIp = ip;
-            logProductionEvent('INFO', 'Auto-discovered working active server: $_activeIp');
+            logProductionEvent(
+              'INFO',
+              'Auto-discovered working active server: $_activeIp',
+            );
             completer.complete(_activeIp);
           }
         } catch (_) {}
@@ -110,7 +124,11 @@ class ApiConfig {
       if (target.endsWith('/api/v1')) return target;
       return '$target/api/v1';
     }
-    final isTunnel = target.contains('loca.lt') || target.contains('ngrok') || target.contains('lhr.life') || target.contains('onrender.com');
+    final isTunnel =
+        target.contains('loca.lt') ||
+        target.contains('ngrok') ||
+        target.contains('lhr.life') ||
+        target.contains('onrender.com');
     final scheme = isTunnel ? 'https' : 'http';
     final portStr = isTunnel ? '' : ':$_port';
     return '$scheme://$target$portStr/api/v1';
@@ -118,7 +136,10 @@ class ApiConfig {
 
   static bool validateConfig() {
     if (_activeIp.trim().isEmpty || _port.trim().isEmpty) {
-      logProductionEvent('WARNING', 'Invalid configuration: IP or Port is empty.');
+      logProductionEvent(
+        'WARNING',
+        'Invalid configuration: IP or Port is empty.',
+      );
       return false;
     }
     return true;
@@ -129,7 +150,11 @@ class ApiConfig {
     debugPrint('[$now] [$level] [RAHUUL_RADAR_MOBILE] $message');
   }
 
-  static Future<void> saveSettings(String ip, String p, String environment) async {
+  static Future<void> saveSettings(
+    String ip,
+    String p,
+    String environment,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(keyIp, ip);
     await prefs.setString(keyPort, p);
@@ -139,7 +164,10 @@ class ApiConfig {
     _activeIp = ip.trim();
     _port = p.trim();
     _env = environment.trim();
-    logProductionEvent('INFO', 'Configuration updated: IP=$_localIp, Port=$_port, Env=$_env');
+    logProductionEvent(
+      'INFO',
+      'Configuration updated: IP=$_localIp, Port=$_port, Env=$_env',
+    );
 
     // Auto-verify reachable candidate
     unawaited(autoDiscoverReachableServer());

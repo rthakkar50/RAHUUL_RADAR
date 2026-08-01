@@ -4,7 +4,8 @@ class NewsItemModel {
   final String source;
   final String timeAgo;
   final String category; // BREAKING, HIGH IMPACT, MEDIUM, LOW
-  final String sentiment; // VERY BULLISH, BULLISH, NEUTRAL, BEARISH, VERY BEARISH
+  final String
+  sentiment; // VERY BULLISH, BULLISH, NEUTRAL, BEARISH, VERY BEARISH
   final double confidencePct;
   final String affectedSymbol;
   final String sector;
@@ -39,7 +40,8 @@ class NewsRepository {
     return const [
       NewsItemModel(
         id: 'NEWS-101',
-        title: 'Divi\'s Laboratories Receives US FDA Approval for Generic Active Ingredient',
+        title:
+            'Divi\'s Laboratories Receives US FDA Approval for Generic Active Ingredient',
         source: 'CNBC-TV18 / Exchange Filing',
         timeAgo: '12 mins ago',
         category: 'BREAKING',
@@ -47,7 +49,8 @@ class NewsRepository {
         confidencePct: 96.5,
         affectedSymbol: 'DIVISLAB',
         sector: 'PHARMA',
-        summary: 'FDA approves key oncology drug master file without any inspection observations.',
+        summary:
+            'FDA approves key oncology drug master file without any inspection observations.',
         keyPoints: [
           'Unconditional approval received for Vizag manufacturing unit 2.',
           'Expected revenue accretion of \$45M annually from Q3.',
@@ -57,7 +60,8 @@ class NewsRepository {
       ),
       NewsItemModel(
         id: 'NEWS-102',
-        title: 'Reliance Industries Partners with Global Tech Giant for AI Data Center Expansion',
+        title:
+            'Reliance Industries Partners with Global Tech Giant for AI Data Center Expansion',
         source: 'Economic Times',
         timeAgo: '45 mins ago',
         category: 'HIGH IMPACT',
@@ -65,7 +69,8 @@ class NewsRepository {
         confidencePct: 91.0,
         affectedSymbol: 'RELIANCE',
         sector: 'ENERGY',
-        summary: 'Strategic 50:50 joint venture announced for 1GW green data center infrastructure.',
+        summary:
+            'Strategic 50:50 joint venture announced for 1GW green data center infrastructure.',
         keyPoints: [
           'Investment commitment of ₹25,000 Cr over 3 years.',
           'Zero net debt expansion due to partner equity contribution.',
@@ -75,7 +80,8 @@ class NewsRepository {
       ),
       NewsItemModel(
         id: 'NEWS-103',
-        title: 'US Fed Signals Rate Cut Expectations as Inflation Cools to 2.8%',
+        title:
+            'US Fed Signals Rate Cut Expectations as Inflation Cools to 2.8%',
         source: 'Bloomberg',
         timeAgo: '2 hours ago',
         category: 'HIGH IMPACT',
@@ -83,7 +89,8 @@ class NewsRepository {
         confidencePct: 88.0,
         affectedSymbol: 'NIFTY50',
         sector: 'MACRO',
-        summary: 'Federal Reserve Chairman Powell hints at policy easing in upcoming September meeting.',
+        summary:
+            'Federal Reserve Chairman Powell hints at policy easing in upcoming September meeting.',
         keyPoints: [
           'Cooling labor market and lower PCE deflator support 25bps cut.',
           'Emerging market capital inflows expected to surge.',

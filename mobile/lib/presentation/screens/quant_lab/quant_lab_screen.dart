@@ -19,13 +19,22 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.indigoAccent, Colors.blue]),
+                gradient: const LinearGradient(
+                  colors: [Colors.indigoAccent, Colors.blue],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.science_outlined, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.science_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Quant Research Lab', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Quant Research Lab',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
       ),
@@ -56,7 +65,14 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Statistical Risk & Performance Engine', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+          const Text(
+            'Statistical Risk & Performance Engine',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -87,7 +103,14 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 3),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -107,23 +130,50 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
             children: [
               Icon(Icons.auto_graph, color: Colors.indigoAccent, size: 18),
               SizedBox(width: 6),
-              Text('Monte Carlo & Walk Forward Robustness', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+              Text(
+                'Monte Carlo & Walk Forward Robustness',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Monte Carlo (10,000 Sims):', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('99.2% Survival', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Monte Carlo (10,000 Sims):',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                '99.2% Survival',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Walk Forward Out-Of-Sample:', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('89.5% Consistency', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Walk Forward Out-Of-Sample:',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                '89.5% Consistency',
+                style: TextStyle(
+                  color: Colors.cyanAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -142,14 +192,28 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Cumulative Equity Waterfall', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+          Text(
+            'Cumulative Equity Waterfall',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
           SizedBox(height: 12),
           Center(
-            child: Icon(Icons.stacked_line_chart, color: Colors.cyanAccent, size: 56),
+            child: Icon(
+              Icons.stacked_line_chart,
+              color: Colors.cyanAccent,
+              size: 56,
+            ),
           ),
           SizedBox(height: 8),
           Center(
-            child: Text('Smooth Upward Slope • Alpha Outperformance vs NIFTY 50', style: TextStyle(color: Colors.white54, fontSize: 11)),
+            child: Text(
+              'Smooth Upward Slope • Alpha Outperformance vs NIFTY 50',
+              style: TextStyle(color: Colors.white54, fontSize: 11),
+            ),
           ),
         ],
       ),

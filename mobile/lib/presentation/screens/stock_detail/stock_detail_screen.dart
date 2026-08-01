@@ -19,7 +19,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     final result = widget.result;
     final isBuy = result.signal.toUpperCase().contains('BUY');
     final sigColor = isBuy ? Colors.greenAccent : Colors.redAccent;
-    final target3 = result.entry > 0 ? (isBuy ? result.entry * 1.25 : result.entry * 0.75) : 0.0;
+    final target3 = result.entry > 0
+        ? (isBuy ? result.entry * 1.25 : result.entry * 0.75)
+        : 0.0;
 
     final trendScore = (result.score * 0.9).clamp(60.0, 98.0);
     final momentumScore = (result.confidence * 0.95).clamp(65.0, 99.0);
@@ -34,8 +36,14 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(result.symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text(result.company, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(
+              result.symbol,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            Text(
+              result.company,
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
           ],
         ),
         actions: [
@@ -47,8 +55,15 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: sigColor),
             ),
-            child: Text(result.signal.toUpperCase(), style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 12)),
-          )
+            child: Text(
+              result.signal.toUpperCase(),
+              style: TextStyle(
+                color: sigColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -63,21 +78,45 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Current Market Price', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                    const Text(
+                      'Current Market Price',
+                      style: TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
                     const SizedBox(height: 2),
-                    Text('₹${result.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(
+                      '₹${result.price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('AI Score / Confidence', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                    const Text(
+                      'AI Score / Confidence',
+                      style: TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 16),
+                        const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.cyanAccent,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
-                        Text('${result.score.toStringAsFixed(1)} / ${result.confidence.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+                        Text(
+                          '${result.score.toStringAsFixed(1)} / ${result.confidence.toStringAsFixed(1)}%',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.cyanAccent,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -104,20 +143,40 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                         children: _timeframes.map((tf) {
                           final isSel = _selectedTimeframe == tf;
                           return GestureDetector(
-                            onTap: () => setState(() => _selectedTimeframe = tf),
+                            onTap: () =>
+                                setState(() => _selectedTimeframe = tf),
                             child: Container(
                               margin: const EdgeInsets.only(right: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSel ? Colors.blueAccent : Colors.transparent,
+                                color: isSel
+                                    ? Colors.blueAccent
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text(tf, style: TextStyle(color: isSel ? Colors.white : Colors.grey, fontSize: 11, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                tf,
+                                style: TextStyle(
+                                  color: isSel ? Colors.white : Colors.grey,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           );
                         }).toList(),
                       ),
-                      const Text('EMA 20/50 • RSI 64.2', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'EMA 20/50 • RSI 64.2',
+                        style: TextStyle(
+                          color: Colors.cyanAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -139,22 +198,39 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF161B22),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Colors.purpleAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.psychology, color: Colors.purpleAccent, size: 20),
+                      Icon(
+                        Icons.psychology,
+                        color: Colors.purpleAccent,
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
-                      Text('XAI Signal Reasoning Engine', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                      Text(
+                        'XAI Signal Reasoning Engine',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'WHY THIS SIGNAL GENERATED: ${result.symbol} triggered an A-Grade ${result.signal} setup based on multi-factor convergence: 20/50 EMA bullish crossover, relative strength outperformance vs NIFTY 50 (RS Score ${result.rsScore.toStringAsFixed(1)}), and volume expansion of ${result.volume}.',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   const Divider(color: Colors.white10, height: 1),
@@ -165,7 +241,11 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                       _scoreBox('Trend', trendScore, Colors.blueAccent),
                       _scoreBox('Momentum', momentumScore, Colors.cyanAccent),
                       _scoreBox('Volume', volumeScore, Colors.amberAccent),
-                      _scoreBox('Structure', structureScore, Colors.greenAccent),
+                      _scoreBox(
+                        'Structure',
+                        structureScore,
+                        Colors.greenAccent,
+                      ),
                       _scoreBox('Risk Safety', riskScore, Colors.purpleAccent),
                     ],
                   ),
@@ -185,14 +265,33 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Trading Plan & Targets', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                  const Text(
+                    'Trading Plan & Targets',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _levelTile('Entry', '₹${result.entry.toStringAsFixed(2)}', Colors.blueAccent),
-                      _levelTile('Stop Loss', '₹${result.stopLoss.toStringAsFixed(2)}', Colors.redAccent),
-                      _levelTile('Target 1', '₹${result.target1.toStringAsFixed(2)}', Colors.greenAccent),
+                      _levelTile(
+                        'Entry',
+                        '₹${result.entry.toStringAsFixed(2)}',
+                        Colors.blueAccent,
+                      ),
+                      _levelTile(
+                        'Stop Loss',
+                        '₹${result.stopLoss.toStringAsFixed(2)}',
+                        Colors.redAccent,
+                      ),
+                      _levelTile(
+                        'Target 1',
+                        '₹${result.target1.toStringAsFixed(2)}',
+                        Colors.greenAccent,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -201,8 +300,16 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _levelTile('Target 2', '₹${result.target2.toStringAsFixed(2)}', Colors.greenAccent),
-                      _levelTile('Target 3', '₹${target3.toStringAsFixed(2)}', Colors.amberAccent),
+                      _levelTile(
+                        'Target 2',
+                        '₹${result.target2.toStringAsFixed(2)}',
+                        Colors.greenAccent,
+                      ),
+                      _levelTile(
+                        'Target 3',
+                        '₹${target3.toStringAsFixed(2)}',
+                        Colors.amberAccent,
+                      ),
                       _levelTile('R : R', result.riskReward, Colors.cyanAccent),
                     ],
                   ),
@@ -222,8 +329,18 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          decoration: BoxDecoration(color: col.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-          child: Text(val.toStringAsFixed(0), style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+          decoration: BoxDecoration(
+            color: col.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            val.toStringAsFixed(0),
+            style: TextStyle(
+              color: col,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
         ),
       ],
     );
@@ -235,7 +352,14 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 2),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -248,8 +372,12 @@ class CandlestickChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paintUp = Paint()..color = Colors.greenAccent..strokeWidth = 2.0;
-    final paintDown = Paint()..color = Colors.redAccent..strokeWidth = 2.0;
+    final paintUp = Paint()
+      ..color = Colors.greenAccent
+      ..strokeWidth = 2.0;
+    final paintDown = Paint()
+      ..color = Colors.redAccent
+      ..strokeWidth = 2.0;
 
     final widthStep = size.width / 12;
 
@@ -267,8 +395,18 @@ class CandlestickChartPainter extends CustomPainter {
       canvas.drawLine(Offset(x, high), Offset(x, low), p);
 
       // Body
-      final bodyPaint = Paint()..color = isGreen ? Colors.greenAccent : Colors.redAccent..style = PaintingStyle.fill;
-      canvas.drawRect(Rect.fromLTRB(x - 4, open < close ? open : close, x + 4, open < close ? close : open), bodyPaint);
+      final bodyPaint = Paint()
+        ..color = isGreen ? Colors.greenAccent : Colors.redAccent
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(
+        Rect.fromLTRB(
+          x - 4,
+          open < close ? open : close,
+          x + 4,
+          open < close ? close : open,
+        ),
+        bodyPaint,
+      );
     }
   }
 

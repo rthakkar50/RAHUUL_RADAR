@@ -8,7 +8,8 @@ class UserProfileScreen extends StatefulWidget {
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
+class _UserProfileScreenState extends State<UserProfileScreen>
+    with SingleTickerProviderStateMixin {
   final CloudWorkspaceRepository _repo = CloudWorkspaceRepository();
   late TabController _tabController;
 
@@ -39,13 +40,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.blueAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.cyanAccent, Colors.blueAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.cloud_done, color: Colors.black, size: 18),
+              child: const Icon(
+                Icons.cloud_done,
+                color: Colors.black,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Cloud Workspace & Profile Hub', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            const Text(
+              'Cloud Workspace & Profile Hub',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -92,13 +102,36 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(user.email, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    user.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    user.email,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.purpleAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                    child: Text(user.planTier, style: const TextStyle(color: Colors.purpleAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.purpleAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      user.planTier,
+                      style: const TextStyle(
+                        color: Colors.purpleAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -119,7 +152,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
             leading: const Icon(Icons.devices, color: Colors.cyanAccent),
-            title: Text(devices[i], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            title: Text(
+              devices[i],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       },
@@ -136,9 +176,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            title: Text('${bk.backupId} (${bk.sizeKb})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            subtitle: Text('Device: ${bk.deviceName} • Saved: ${bk.timestamp}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
-            trailing: const Icon(Icons.cloud_download_outlined, color: Colors.greenAccent),
+            title: Text(
+              '${bk.backupId} (${bk.sizeKb})',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            subtitle: Text(
+              'Device: ${bk.deviceName} • Saved: ${bk.timestamp}',
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+            ),
+            trailing: const Icon(
+              Icons.cloud_download_outlined,
+              color: Colors.greenAccent,
+            ),
           ),
         );
       },
@@ -154,19 +207,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: Colors.purpleAccent.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Module 6 — Active License: ${user.planTier}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                'Module 6 — Active License: ${user.planTier}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 10),
               const Text(
                 '• Unlimited Multi-Broker Connections.\n'
                 '• AI Master Decision Engine AMD v1 Enabled.\n'
                 '• Real-time Encrypted Cloud Sync across 5 devices.\n'
                 '• 24/7 Priority SLA & Dedicated Cloud Instance.',
-                style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
               ),
             ],
           ),

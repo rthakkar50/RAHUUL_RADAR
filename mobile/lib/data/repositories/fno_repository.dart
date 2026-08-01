@@ -7,17 +7,22 @@ import '../models/fno_model.dart';
 class FnoRepository {
   Future<FnoOverviewModel> getFnoOverview({String symbol = 'NIFTY'}) async {
     final url = '${ApiConfig.baseUrl}/scanner/swing';
-    debugPrint('[RUN-AUDIT] [FnoRepository] Fetching F&O overview for $symbol from: $url');
+    debugPrint(
+      '[RUN-AUDIT] [FnoRepository] Fetching F&O overview for $symbol from: $url',
+    );
 
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: ApiConfig.defaultHeaders(),
-      ).timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+      final response = await http
+          .get(Uri.parse(url), headers: ApiConfig.defaultHeaders())
+          .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
 
-      debugPrint('[RUN-AUDIT] [FnoRepository] Response status: ${response.statusCode}');
+      debugPrint(
+        '[RUN-AUDIT] [FnoRepository] Response status: ${response.statusCode}',
+      );
 
-      double spotPrice = symbol == 'BANKNIFTY' ? 52450.0 : (symbol == 'FINNIFTY' ? 23150.0 : 24850.0);
+      double spotPrice = symbol == 'BANKNIFTY'
+          ? 52450.0
+          : (symbol == 'FINNIFTY' ? 23150.0 : 24850.0);
       double strikeStep = symbol == 'BANKNIFTY' ? 100.0 : 50.0;
 
       List<OptionChainStrikeModel> strikes = [];
@@ -26,7 +31,9 @@ class FnoRepository {
         strikes.add(
           OptionChainStrikeModel(
             strike: st,
-            callPrice: (spotPrice - st > 0 ? spotPrice - st : 0.0) + (140.0 - (i.abs() * 18)),
+            callPrice:
+                (spotPrice - st > 0 ? spotPrice - st : 0.0) +
+                (140.0 - (i.abs() * 18)),
             callOi: 1250000 - (i.abs() * 85000),
             callOiChange: i % 2 == 0 ? 45000 : -12000,
             callIv: 14.5 + (i * 0.4),
@@ -37,7 +44,9 @@ class FnoRepository {
               vega: 18.2,
               rho: 0.05,
             ),
-            putPrice: (st - spotPrice > 0 ? st - spotPrice : 0.0) + (135.0 - (i.abs() * 16)),
+            putPrice:
+                (st - spotPrice > 0 ? st - spotPrice : 0.0) +
+                (135.0 - (i.abs() * 16)),
             putOi: 1420000 - (i.abs() * 90000),
             putOiChange: i % 2 == 0 ? 68000 : -5000,
             putIv: 15.2 + (i * 0.3),
@@ -48,7 +57,9 @@ class FnoRepository {
               vega: 17.8,
               rho: -0.04,
             ),
-            buildupType: i < 0 ? 'Long Build-up' : (i == 0 ? 'Short Covering' : 'Short Build-up'),
+            buildupType: i < 0
+                ? 'Long Build-up'
+                : (i == 0 ? 'Short Covering' : 'Short Build-up'),
           ),
         );
       }

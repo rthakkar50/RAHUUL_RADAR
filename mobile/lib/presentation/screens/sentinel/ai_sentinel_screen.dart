@@ -8,7 +8,8 @@ class AiSentinelScreen extends StatefulWidget {
   State<AiSentinelScreen> createState() => _AiSentinelScreenState();
 }
 
-class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerProviderStateMixin {
+class _AiSentinelScreenState extends State<AiSentinelScreen>
+    with SingleTickerProviderStateMixin {
   final AiSentinelRepository _repo = AiSentinelRepository();
   late TabController _tabController;
 
@@ -39,13 +40,18 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.purpleAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.cyanAccent, Colors.purpleAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.radar, color: Colors.black, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text('AI Market Sentinel & Assistant', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            const Text(
+              'AI Market Sentinel & Assistant',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -87,16 +93,42 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('AI Market Mood Verdict', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text('${mood.overallMood} (${mood.confidencePct}%)', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text(
+                    'AI Market Mood Verdict',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    '${mood.overallMood} (${mood.confidencePct}%)',
+                    style: const TextStyle(
+                      color: Colors.greenAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               _moodRow('FII Net Flow', mood.fiiFlow, Colors.greenAccent),
               _moodRow('DII Net Flow', mood.diiFlow, Colors.greenAccent),
-              _moodRow('India VIX', '${mood.indiaVix} (Low Volatility)', Colors.cyanAccent),
-              _moodRow('PCR Index', '${mood.pcr} (Bullish)', Colors.amberAccent),
-              _moodRow('Market Breadth', mood.marketBreadth, Colors.purpleAccent),
+              _moodRow(
+                'India VIX',
+                '${mood.indiaVix} (Low Volatility)',
+                Colors.cyanAccent,
+              ),
+              _moodRow(
+                'PCR Index',
+                '${mood.pcr} (Bullish)',
+                Colors.amberAccent,
+              ),
+              _moodRow(
+                'Market Breadth',
+                mood.marketBreadth,
+                Colors.purpleAccent,
+              ),
             ],
           ),
         ),
@@ -113,7 +145,14 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-          Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            val,
+            style: TextStyle(
+              color: col,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
@@ -134,7 +173,14 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
             children: [
               Icon(Icons.gavel, color: Colors.greenAccent, size: 18),
               SizedBox(width: 8),
-              Text('Module 10 — Safety Gate Guarantee', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                'Module 10 — Safety Gate Guarantee',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 10),
@@ -167,19 +213,51 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${opp.symbol} — ${opp.signal}', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(
+                      '${opp.symbol} — ${opp.signal}',
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.purpleAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                      child: Text('Priority: ${opp.priorityScore}', style: const TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.purpleAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Priority: ${opp.priorityScore}',
+                        style: const TextStyle(
+                          color: Colors.purpleAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Entry: ₹${opp.entryPrice} • Target 1: ₹${opp.target1} • SL: ₹${opp.stopLoss}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                Text('Expected Return: +${opp.expectedReturnPct}% • Hold: ${opp.holdingPeriod}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                Text(
+                  'Entry: ₹${opp.entryPrice} • Target 1: ₹${opp.target1} • SL: ₹${opp.stopLoss}',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                Text(
+                  'Expected Return: +${opp.expectedReturnPct}% • Hold: ${opp.holdingPeriod}',
+                  style: const TextStyle(
+                    color: Colors.cyanAccent,
+                    fontSize: 11,
+                  ),
+                ),
                 const Divider(color: Colors.white10),
-                Text('AI Rationale: ${opp.aiRationale}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                Text(
+                  'AI Rationale: ${opp.aiRationale}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                ),
               ],
             ),
           ),
@@ -197,22 +275,59 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: Colors.purpleAccent.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Module 4 — Prepared Trade Plan: ${opp.symbol}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                'Module 4 — Prepared Trade Plan: ${opp.symbol}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 12),
               _planRow('Signal', opp.signal, Colors.greenAccent),
-              _planRow('Entry Limit Price', '₹${opp.entryPrice.toStringAsFixed(2)}', Colors.white),
-              _planRow('Stop Loss (SL)', '₹${opp.stopLoss.toStringAsFixed(2)}', Colors.redAccent),
-              _planRow('Target 1 (T1)', '₹${opp.target1.toStringAsFixed(2)}', Colors.greenAccent),
-              _planRow('Target 2 (T2)', '₹${opp.target2.toStringAsFixed(2)}', Colors.greenAccent),
-              _planRow('Target 3 (T3)', '₹${opp.target3.toStringAsFixed(2)}', Colors.greenAccent),
+              _planRow(
+                'Entry Limit Price',
+                '₹${opp.entryPrice.toStringAsFixed(2)}',
+                Colors.white,
+              ),
+              _planRow(
+                'Stop Loss (SL)',
+                '₹${opp.stopLoss.toStringAsFixed(2)}',
+                Colors.redAccent,
+              ),
+              _planRow(
+                'Target 1 (T1)',
+                '₹${opp.target1.toStringAsFixed(2)}',
+                Colors.greenAccent,
+              ),
+              _planRow(
+                'Target 2 (T2)',
+                '₹${opp.target2.toStringAsFixed(2)}',
+                Colors.greenAccent,
+              ),
+              _planRow(
+                'Target 3 (T3)',
+                '₹${opp.target3.toStringAsFixed(2)}',
+                Colors.greenAccent,
+              ),
               const Divider(color: Colors.white10),
-              _planRow('Recommended Quantity', '${opp.recommendedQty} shares', Colors.cyanAccent),
-              _planRow('Capital Required', '₹${opp.capitalRequired.toStringAsFixed(2)}', Colors.amberAccent),
+              _planRow(
+                'Recommended Quantity',
+                '${opp.recommendedQty} shares',
+                Colors.cyanAccent,
+              ),
+              _planRow(
+                'Capital Required',
+                '₹${opp.capitalRequired.toStringAsFixed(2)}',
+                Colors.amberAccent,
+              ),
               _planRow('Est. Brokerage & Taxes', '~₹42.50', Colors.grey),
               const SizedBox(height: 12),
               ElevatedButton.icon(
@@ -239,7 +354,14 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-          Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            val,
+            style: TextStyle(
+              color: col,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
@@ -254,8 +376,18 @@ class _AiSentinelScreenState extends State<AiSentinelScreen> with SingleTickerPr
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            leading: const Icon(Icons.assignment_outlined, color: Colors.cyanAccent),
-            title: Text(mission[i], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            leading: const Icon(
+              Icons.assignment_outlined,
+              color: Colors.cyanAccent,
+            ),
+            title: Text(
+              mission[i],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       },

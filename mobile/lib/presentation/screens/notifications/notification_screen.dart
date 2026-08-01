@@ -29,35 +29,40 @@ class _NotificationScreenState extends State<NotificationScreen> {
   final List<NotificationItem> _notifications = const [
     NotificationItem(
       title: 'Target 1 Reached — DIVISLAB',
-      message: 'DIVISLAB hit Target 1 at ₹9,673.00 (+20.78%). AI trailing stop activated.',
+      message:
+          'DIVISLAB hit Target 1 at ₹9,673.00 (+20.78%). AI trailing stop activated.',
       time: '10 mins ago',
       type: 'TARGET',
       color: Colors.greenAccent,
     ),
     NotificationItem(
       title: 'AI High Confidence BUY — TVSMOTOR',
-      message: 'AI Engine V2 registered A-Grade BUY Signal on TVSMOTOR (Confidence 93.4%).',
+      message:
+          'AI Engine V2 registered A-Grade BUY Signal on TVSMOTOR (Confidence 93.4%).',
       time: '25 mins ago',
       type: 'BUY',
       color: Colors.cyanAccent,
     ),
     NotificationItem(
       title: 'Paytm Money API Connected',
-      message: 'Broker WebSocket feed connected successfully. Zero order latency detected.',
+      message:
+          'Broker WebSocket feed connected successfully. Zero order latency detected.',
       time: '1 hour ago',
       type: 'BROKER',
       color: Colors.blueAccent,
     ),
     NotificationItem(
       title: 'Risk Engine Circuit Breaker Safe',
-      message: 'Live risk limits validated. Portfolio exposure is 0.69% (Limit 1.0%).',
+      message:
+          'Live risk limits validated. Portfolio exposure is 0.69% (Limit 1.0%).',
       time: '2 hours ago',
       type: 'RISK',
       color: Colors.purpleAccent,
     ),
     NotificationItem(
       title: 'Stop Loss Alert — DRREDDY',
-      message: 'DRREDDY hit trailing Stop Loss at ₹1,249.10. Position closed with controlled loss.',
+      message:
+          'DRREDDY hit trailing Stop Loss at ₹1,249.10. Position closed with controlled loss.',
       time: '3 hours ago',
       type: 'SL',
       color: Colors.redAccent,
@@ -75,7 +80,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
       backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0B0E14),
-        title: const Text('Notification Center', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'Notification Center',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
       body: Column(
         children: [
@@ -107,7 +115,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
               selected: isSel,
               selectedColor: Colors.blueAccent,
               backgroundColor: const Color(0xFF161B22),
-              labelStyle: TextStyle(color: isSel ? Colors.white : Colors.white70, fontSize: 11),
+              labelStyle: TextStyle(
+                color: isSel ? Colors.white : Colors.white70,
+                fontSize: 11,
+              ),
               onSelected: (val) {
                 if (val) setState(() => _filter = f);
               },
@@ -136,7 +147,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
               color: item.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.notifications_active, color: item.color, size: 18),
+            child: Icon(
+              Icons.notifications_active,
+              color: item.color,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -146,12 +161,31 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: Text(item.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))),
-                    Text(item.time, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      item.time,
+                      style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(item.message, style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.3)),
+                Text(
+                  item.message,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
               ],
             ),
           ),

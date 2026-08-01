@@ -8,7 +8,8 @@ class AiNewsScreen extends StatefulWidget {
   State<AiNewsScreen> createState() => _AiNewsScreenState();
 }
 
-class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderStateMixin {
+class _AiNewsScreenState extends State<AiNewsScreen>
+    with SingleTickerProviderStateMixin {
   final NewsRepository _repo = NewsRepository();
   late TabController _tabController;
 
@@ -37,13 +38,22 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.tealAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.cyanAccent, Colors.tealAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.newspaper_outlined, color: Colors.black, size: 18),
+              child: const Icon(
+                Icons.newspaper_outlined,
+                color: Colors.black,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('AI News & Sentiment Engine', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'AI News & Sentiment Engine',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
         bottom: TabBar(
@@ -87,17 +97,43 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: Text(item.category, style: const TextStyle(color: Colors.redAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item.category,
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    Text(item.timeAgo, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    Text(
+                      item.timeAgo,
+                      style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(item.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('Source: ${item.source} • Stock: ${item.affectedSymbol}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                Text(
+                  'Source: ${item.source} • Stock: ${item.affectedSymbol}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -112,14 +148,41 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('AI Sentiment: ${item.sentiment}', style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
-                          Text('Confidence: ${item.confidencePct}%', style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text(
+                            'AI Sentiment: ${item.sentiment}',
+                            style: TextStyle(
+                              color: col,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Confidence: ${item.confidencePct}%',
+                            style: TextStyle(
+                              color: col,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('Summary: ${item.summary}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                      Text(
+                        'Summary: ${item.summary}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Action: ${item.suggestedAction}', style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+                      Text(
+                        'Action: ${item.suggestedAction}',
+                        style: const TextStyle(
+                          color: Colors.amberAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -140,26 +203,63 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: Colors.greenAccent.withValues(alpha: 0.4),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.greenAccent, size: 20),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.greenAccent,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
-                  Text('Module 6 — Portfolio Holding News Impact Alert', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'Module 6 — Portfolio Holding News Impact Alert',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text('Matched Holding: ${item.affectedSymbol} (Qty: 25 shares)', style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                'Matched Holding: ${item.affectedSymbol} (Qty: 25 shares)',
+                style: const TextStyle(
+                  color: Colors.cyanAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text('Breaking Event: ${item.title}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                'Breaking Event: ${item.title}',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
               const SizedBox(height: 8),
-              const Text('AI Expected Impact: POSITIVE (+3.5% to +5.0% price expansion)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text(
+                'AI Expected Impact: POSITIVE (+3.5% to +5.0% price expansion)',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('Suggested Action: ${item.suggestedAction}', style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                'Suggested Action: ${item.suggestedAction}',
+                style: const TextStyle(
+                  color: Colors.amberAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
@@ -169,11 +269,27 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
 
   Widget _buildSentimentHeatmapTab() {
     final heatmap = [
-      {'sector': 'PHARMA', 'sentiment': 'VERY BULLISH (94%)', 'col': Colors.greenAccent},
+      {
+        'sector': 'PHARMA',
+        'sentiment': 'VERY BULLISH (94%)',
+        'col': Colors.greenAccent,
+      },
       {'sector': 'IT', 'sentiment': 'BULLISH (86%)', 'col': Colors.greenAccent},
-      {'sector': 'ENERGY', 'sentiment': 'BULLISH (82%)', 'col': Colors.cyanAccent},
-      {'sector': 'AUTO', 'sentiment': 'NEUTRAL (55%)', 'col': Colors.amberAccent},
-      {'sector': 'METALS', 'sentiment': 'BEARISH (32%)', 'col': Colors.redAccent},
+      {
+        'sector': 'ENERGY',
+        'sentiment': 'BULLISH (82%)',
+        'col': Colors.cyanAccent,
+      },
+      {
+        'sector': 'AUTO',
+        'sentiment': 'NEUTRAL (55%)',
+        'col': Colors.amberAccent,
+      },
+      {
+        'sector': 'METALS',
+        'sentiment': 'BEARISH (32%)',
+        'col': Colors.redAccent,
+      },
     ];
 
     return ListView.builder(
@@ -185,8 +301,22 @@ class _AiNewsScreenState extends State<AiNewsScreen> with SingleTickerProviderSt
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            title: Text(item['sector'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            trailing: Text(item['sentiment'] as String, style: TextStyle(color: item['col'] as Color, fontWeight: FontWeight.bold, fontSize: 12)),
+            title: Text(
+              item['sector'] as String,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            trailing: Text(
+              item['sentiment'] as String,
+              style: TextStyle(
+                color: item['col'] as Color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ),
         );
       },

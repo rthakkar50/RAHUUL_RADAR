@@ -10,8 +10,24 @@ class BrokerOrchestrator {
   final BrokerType _secondaryBroker = BrokerType.zerodhaKite;
 
   final List<BrokerAuditLogModel> _auditLogs = [
-    BrokerAuditLogModel(timestamp: DateTime.now().subtract(const Duration(minutes: 10)).toIso8601String(), brokerName: 'Paytm Money', action: 'CONNECT', details: 'OAuth2 Session Authorized', status: 'SUCCESS'),
-    BrokerAuditLogModel(timestamp: DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String(), brokerName: 'Paytm Money', action: 'HEARTBEAT', details: 'Latency 18ms', status: 'SUCCESS'),
+    BrokerAuditLogModel(
+      timestamp: DateTime.now()
+          .subtract(const Duration(minutes: 10))
+          .toIso8601String(),
+      brokerName: 'Paytm Money',
+      action: 'CONNECT',
+      details: 'OAuth2 Session Authorized',
+      status: 'SUCCESS',
+    ),
+    BrokerAuditLogModel(
+      timestamp: DateTime.now()
+          .subtract(const Duration(minutes: 5))
+          .toIso8601String(),
+      brokerName: 'Paytm Money',
+      action: 'HEARTBEAT',
+      details: 'Latency 18ms',
+      status: 'SUCCESS',
+    ),
   ];
 
   BrokerType get activeBroker => _activeBroker;
@@ -84,19 +100,34 @@ class BrokerOrchestrator {
 
   List<BrokerAuditLogModel> getAuditLogs() => List.unmodifiable(_auditLogs);
 
-  void logAction(String brokerName, String action, String details, String status) {
-    _auditLogs.insert(0, BrokerAuditLogModel(
-      timestamp: DateTime.now().toIso8601String(),
-      brokerName: brokerName,
-      action: action,
-      details: details,
-      status: status,
-    ));
-    debugPrint('[BROKER-ORCHESTRATOR] [$action] $brokerName: $details ($status)');
+  void logAction(
+    String brokerName,
+    String action,
+    String details,
+    String status,
+  ) {
+    _auditLogs.insert(
+      0,
+      BrokerAuditLogModel(
+        timestamp: DateTime.now().toIso8601String(),
+        brokerName: brokerName,
+        action: action,
+        details: details,
+        status: status,
+      ),
+    );
+    debugPrint(
+      '[BROKER-ORCHESTRATOR] [$action] $brokerName: $details ($status)',
+    );
   }
 
   void switchActiveBroker(BrokerType newBroker) {
     _activeBroker = newBroker;
-    logAction(newBroker.name, 'SWITCH_BROKER', 'Active broker switched to ${newBroker.name}', 'SUCCESS');
+    logAction(
+      newBroker.name,
+      'SWITCH_BROKER',
+      'Active broker switched to ${newBroker.name}',
+      'SUCCESS',
+    );
   }
 }

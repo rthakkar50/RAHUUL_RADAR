@@ -15,7 +15,10 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final brokers = _orchestrator.getAvailableBrokers();
-    final active = brokers.firstWhere((b) => b.isDefault, orElse: () => brokers.first);
+    final active = brokers.firstWhere(
+      (b) => b.isDefault,
+      orElse: () => brokers.first,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -26,13 +29,22 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Colors.amberAccent, Colors.orangeAccent]),
+                gradient: const LinearGradient(
+                  colors: [Colors.amberAccent, Colors.orangeAccent],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.hub_outlined, color: Colors.black, size: 18),
+              child: const Icon(
+                Icons.hub_outlined,
+                color: Colors.black,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Broker Orchestrator Hub', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Broker Orchestrator Hub',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
       ),
@@ -62,7 +74,10 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF161B22),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4), width: 1.2),
+        border: Border.all(
+          color: Colors.amberAccent.withValues(alpha: 0.4),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,15 +87,36 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.verified, color: Colors.amberAccent, size: 20),
+                  const Icon(
+                    Icons.verified,
+                    color: Colors.amberAccent,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
-                  Text(active.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    active.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                child: const Text('CONNECTED', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'CONNECTED',
+                  style: TextStyle(
+                    color: Colors.greenAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -105,7 +141,14 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         const SizedBox(height: 2),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(
+          val,
+          style: TextStyle(
+            color: col,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -121,21 +164,56 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Module 4 — Unified Account Manager', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          Text(
+            'Module 4 — Unified Account Manager',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
           SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Account Balance: ₹9,93,101.13', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-              Text('Margin Used: ₹7,23,244.20', style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(
+                'Account Balance: ₹9,93,101.13',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Margin Used: ₹7,23,244.20',
+                style: TextStyle(
+                  color: Colors.amberAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Buying Power: ₹2,76,405.13', style: TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-              Text('Open Positions: 5', style: TextStyle(color: Colors.greenAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(
+                'Buying Power: ₹2,76,405.13',
+                style: TextStyle(
+                  color: Colors.cyanAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Open Positions: 5',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],
@@ -154,21 +232,48 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Module 6 — Failover Readiness Framework', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          Text(
+            'Module 6 — Failover Readiness Framework',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
           SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Primary Broker:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-              Text('Paytm Money API v2 (ACTIVE)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text(
+                'Primary Broker:',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              Text(
+                'Paytm Money API v2 (ACTIVE)',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Secondary Standby:', style: TextStyle(color: Colors.grey, fontSize: 11)),
-              Text('Zerodha Kite Connect v3 (READY)', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text(
+                'Secondary Standby:',
+                style: TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              Text(
+                'Zerodha Kite Connect v3 (READY)',
+                style: TextStyle(
+                  color: Colors.cyanAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ],
           ),
         ],
@@ -187,20 +292,52 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Module 2 — Multi-Broker Connector Registry', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          const Text(
+            'Module 2 — Multi-Broker Connector Registry',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 10),
           ...brokers.map((b) {
             return ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: Text(b.name, style: TextStyle(color: b.isActive ? Colors.white : Colors.white60, fontWeight: FontWeight.bold, fontSize: 13)),
-              subtitle: Text(b.isActive ? 'Active Primary Connection' : 'Inactive Connector (Future Ready)', style: TextStyle(color: b.isActive ? Colors.greenAccent : Colors.grey, fontSize: 10)),
+              title: Text(
+                b.name,
+                style: TextStyle(
+                  color: b.isActive ? Colors.white : Colors.white60,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              subtitle: Text(
+                b.isActive
+                    ? 'Active Primary Connection'
+                    : 'Inactive Connector (Future Ready)',
+                style: TextStyle(
+                  color: b.isActive ? Colors.greenAccent : Colors.grey,
+                  fontSize: 10,
+                ),
+              ),
               trailing: b.isActive
-                  ? const Icon(Icons.check_circle, color: Colors.greenAccent, size: 18)
+                  ? const Icon(
+                      Icons.check_circle,
+                      color: Colors.greenAccent,
+                      size: 18,
+                    )
                   : ElevatedButton(
                       onPressed: null,
-                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), visualDensity: VisualDensity.compact),
-                      child: const Text('Connect', style: TextStyle(fontSize: 10)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text(
+                        'Connect',
+                        style: TextStyle(fontSize: 10),
+                      ),
                     ),
             );
           }),
@@ -221,7 +358,14 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Module 7 — Broker Action Audit Logs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+          const Text(
+            'Module 7 — Broker Action Audit Logs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 10),
           ...logs.take(3).map((l) {
             return Padding(
@@ -229,8 +373,18 @@ class _BrokerSettingsScreenState extends State<BrokerSettingsScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('[${l.action}] ${l.brokerName}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
-                  Text(l.details, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                  Text(
+                    '[${l.action}] ${l.brokerName}',
+                    style: const TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    l.details,
+                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                  ),
                 ],
               ),
             );

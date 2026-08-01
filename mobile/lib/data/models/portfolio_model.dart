@@ -23,14 +23,15 @@ class PortfolioSummaryModel {
 
   factory PortfolioSummaryModel.fromJson(Map<String, dynamic> j) =>
       PortfolioSummaryModel(
-        startingCapital:  (j['starting_capital']  as num?)?.toDouble() ?? 1000000.0,
-        totalCapital:     (j['total_capital']      as num?)?.toDouble() ?? 1000000.0,
-        availableCash:    (j['available_cash']     as num?)?.toDouble() ?? 1000000.0,
-        usedMargin:       (j['used_margin']        as num?)?.toDouble() ?? 0.0,
-        unrealizedPnl:    (j['unrealized_pnl']     as num?)?.toDouble() ?? 0.0,
-        realizedPnl:      (j['realized_pnl']       as num?)?.toDouble() ?? 0.0,
-        todayPnl:         (j['today_pnl']          as num?)?.toDouble() ?? 0.0,
-        totalEquity:      (j['total_equity']       as num?)?.toDouble() ?? 1000000.0,
+        startingCapital:
+            (j['starting_capital'] as num?)?.toDouble() ?? 1000000.0,
+        totalCapital: (j['total_capital'] as num?)?.toDouble() ?? 1000000.0,
+        availableCash: (j['available_cash'] as num?)?.toDouble() ?? 1000000.0,
+        usedMargin: (j['used_margin'] as num?)?.toDouble() ?? 0.0,
+        unrealizedPnl: (j['unrealized_pnl'] as num?)?.toDouble() ?? 0.0,
+        realizedPnl: (j['realized_pnl'] as num?)?.toDouble() ?? 0.0,
+        todayPnl: (j['today_pnl'] as num?)?.toDouble() ?? 0.0,
+        totalEquity: (j['total_equity'] as num?)?.toDouble() ?? 1000000.0,
         overallReturnPct: (j['overall_return_pct'] as num?)?.toDouble() ?? 0.0,
       );
 
@@ -71,21 +72,21 @@ class PositionModel {
   });
 
   factory PositionModel.fromJson(Map<String, dynamic> j) => PositionModel(
-        id:            j['id']?.toString()        ?? '',
-        symbol:        j['symbol']?.toString()    ?? '',
-        direction:     j['direction']?.toString() ?? 'BUY',
-        exchange:      j['exchange']?.toString()  ?? 'NSE',
-        qty:           (j['qty'] as num?)?.toInt() ?? 0,
-        entryPrice:    (j['entry_price'] as num?)?.toDouble() ?? 0.0,
-        cmp:           (j['cmp']         as num?)?.toDouble() ?? 0.0,
-        sl:            (j['sl']          as num?)?.toDouble() ?? 0.0,
-        target:        (j['target']      as num?)?.toDouble() ?? 0.0,
-        unrealizedPnl: (j['unrealized_pnl'] as num?)?.toDouble() ?? 0.0,
-        usedMargin:    (j['used_margin']    as num?)?.toDouble() ?? 0.0,
-        entryTime:     j['entry_time']?.toString() ?? '',
-        riskReward:    j['risk_reward']?.toString() ?? 'N/A',
-        status:        j['status']?.toString() ?? 'OPEN',
-      );
+    id: j['id']?.toString() ?? '',
+    symbol: j['symbol']?.toString() ?? '',
+    direction: j['direction']?.toString() ?? 'BUY',
+    exchange: j['exchange']?.toString() ?? 'NSE',
+    qty: (j['qty'] as num?)?.toInt() ?? 0,
+    entryPrice: (j['entry_price'] as num?)?.toDouble() ?? 0.0,
+    cmp: (j['cmp'] as num?)?.toDouble() ?? 0.0,
+    sl: (j['sl'] as num?)?.toDouble() ?? 0.0,
+    target: (j['target'] as num?)?.toDouble() ?? 0.0,
+    unrealizedPnl: (j['unrealized_pnl'] as num?)?.toDouble() ?? 0.0,
+    usedMargin: (j['used_margin'] as num?)?.toDouble() ?? 0.0,
+    entryTime: j['entry_time']?.toString() ?? '',
+    riskReward: j['risk_reward']?.toString() ?? 'N/A',
+    status: j['status']?.toString() ?? 'OPEN',
+  );
 
   double get pnlPct =>
       entryPrice > 0 ? (unrealizedPnl / (entryPrice * qty) * 100) : 0.0;
@@ -116,15 +117,15 @@ class ClosedPositionModel {
 
   factory ClosedPositionModel.fromJson(Map<String, dynamic> j) =>
       ClosedPositionModel(
-        id:         j['id']?.toString()        ?? '',
-        symbol:     j['symbol']?.toString()    ?? '',
-        direction:  j['direction']?.toString() ?? 'BUY',
+        id: j['id']?.toString() ?? '',
+        symbol: j['symbol']?.toString() ?? '',
+        direction: j['direction']?.toString() ?? 'BUY',
         entryPrice: (j['entry_price'] as num?)?.toDouble() ?? 0.0,
-        exitPrice:  (j['exit_price']  as num?)?.toDouble() ?? 0.0,
-        pnl:        (j['pnl']         as num?)?.toDouble() ?? 0.0,
-        entryTime:  j['entry_time']?.toString() ?? '',
-        exitTime:   j['exit_time']?.toString()  ?? '',
-        returnPct:  (j['return_pct'] as num?)?.toDouble() ?? 0.0,
+        exitPrice: (j['exit_price'] as num?)?.toDouble() ?? 0.0,
+        pnl: (j['pnl'] as num?)?.toDouble() ?? 0.0,
+        entryTime: j['entry_time']?.toString() ?? '',
+        exitTime: j['exit_time']?.toString() ?? '',
+        returnPct: (j['return_pct'] as num?)?.toDouble() ?? 0.0,
       );
 
   String get holdingDays {
@@ -150,7 +151,7 @@ class InsightItemModel {
     if (j == null) return const InsightItemModel(symbol: '--', value: 0.0);
     return InsightItemModel(
       symbol: j['symbol']?.toString() ?? '--',
-      value:  (j[valueKey] as num?)?.toDouble() ?? 0.0,
+      value: (j[valueKey] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -172,11 +173,26 @@ class PortfolioInsightsModel {
 
   factory PortfolioInsightsModel.fromJson(Map<String, dynamic> j) =>
       PortfolioInsightsModel(
-        topWinner:       InsightItemModel.fromJson(j['top_winner']       as Map<String, dynamic>?, 'pnl'),
-        topLoser:        InsightItemModel.fromJson(j['top_loser']        as Map<String, dynamic>?, 'pnl'),
-        largestPosition: InsightItemModel.fromJson(j['largest_position'] as Map<String, dynamic>?, 'margin'),
-        highestProfit:   InsightItemModel.fromJson(j['highest_profit']   as Map<String, dynamic>?, 'pnl'),
-        highestLoss:     InsightItemModel.fromJson(j['highest_loss']     as Map<String, dynamic>?, 'pnl'),
+        topWinner: InsightItemModel.fromJson(
+          j['top_winner'] as Map<String, dynamic>?,
+          'pnl',
+        ),
+        topLoser: InsightItemModel.fromJson(
+          j['top_loser'] as Map<String, dynamic>?,
+          'pnl',
+        ),
+        largestPosition: InsightItemModel.fromJson(
+          j['largest_position'] as Map<String, dynamic>?,
+          'margin',
+        ),
+        highestProfit: InsightItemModel.fromJson(
+          j['highest_profit'] as Map<String, dynamic>?,
+          'pnl',
+        ),
+        highestLoss: InsightItemModel.fromJson(
+          j['highest_loss'] as Map<String, dynamic>?,
+          'pnl',
+        ),
       );
 }
 
@@ -196,7 +212,8 @@ class PortfolioResponseModel {
   factory PortfolioResponseModel.fromJson(Map<String, dynamic> j) =>
       PortfolioResponseModel(
         summary: PortfolioSummaryModel.fromJson(
-            (j['summary'] as Map<String, dynamic>?) ?? {}),
+          (j['summary'] as Map<String, dynamic>?) ?? {},
+        ),
         openPositions: ((j['open_positions'] as List?) ?? [])
             .map((e) => PositionModel.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -204,6 +221,7 @@ class PortfolioResponseModel {
             .map((e) => ClosedPositionModel.fromJson(e as Map<String, dynamic>))
             .toList(),
         insights: PortfolioInsightsModel.fromJson(
-            (j['insights'] as Map<String, dynamic>?) ?? {}),
+          (j['insights'] as Map<String, dynamic>?) ?? {},
+        ),
       );
 }

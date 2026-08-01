@@ -135,11 +135,13 @@ class JournalAnalyticsModel {
       averageLoss: (json['average_loss'] as num?)?.toDouble() ?? 0.0,
       profitFactor: (json['profit_factor'] as num?)?.toDouble() ?? 0.0,
       averageHoldTime: json['average_hold_time']?.toString() ?? 'N/A',
-      dailyPnl: (json['daily_pnl'] as List<dynamic>?)
+      dailyPnl:
+          (json['daily_pnl'] as List<dynamic>?)
               ?.map((e) => DailyPnlPoint.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      monthlyPnl: (json['monthly_pnl'] as List<dynamic>?)
+      monthlyPnl:
+          (json['monthly_pnl'] as List<dynamic>?)
               ?.map((e) => MonthlyPnlPoint.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -160,12 +162,16 @@ class JournalResponseModel {
 
   factory JournalResponseModel.fromJson(Map<String, dynamic> json) {
     return JournalResponseModel(
-      trades: (json['trades'] as List<dynamic>?)
-              ?.map((e) => JournalTradeModel.fromJson(e as Map<String, dynamic>))
+      trades:
+          (json['trades'] as List<dynamic>?)
+              ?.map(
+                (e) => JournalTradeModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       analytics: JournalAnalyticsModel.fromJson(
-          json['analytics'] as Map<String, dynamic>? ?? {}),
+        json['analytics'] as Map<String, dynamic>? ?? {},
+      ),
       timestamp: (json['timestamp'] as num?)?.toDouble() ?? 0.0,
     );
   }
