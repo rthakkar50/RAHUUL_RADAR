@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 18),
                   SizedBox(width: 6),
-                  Text('AI Market Bias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                  Text('AI Market Intelligence Panel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
                 ],
               ),
               Text('BULLISH / ACCUMULATION', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
@@ -236,6 +236,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _biasItem('AI Confidence', '94.2%', Colors.amberAccent),
             ],
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3))),
+            child: const Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.purpleAccent, size: 16),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text('AI RECOMMENDATION: Prefer Pharma & Auto. Avoid Fresh Shorts in Banking.', style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );

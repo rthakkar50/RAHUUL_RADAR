@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/api_config.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
+import '../screens/copilot/ai_copilot_screen.dart';
 import '../screens/fno/fno_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
 import '../screens/journal/journal_screen.dart';
@@ -21,6 +22,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   late final List<Widget> _screens = [
     DashboardScreen(onNavigate: _navigateTo),
     const ScannerScreen(),
+    const AiCopilotScreen(),
     const FnoScreen(),
     const PortfolioScreen(),
     const JournalScreen(),
@@ -79,6 +81,11 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
             icon: Icon(Icons.radar_outlined),
             selectedIcon: Icon(Icons.radar, color: Colors.blueAccent),
             label: 'Scanner',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.psychology_outlined),
+            selectedIcon: Icon(Icons.psychology, color: Colors.cyanAccent),
+            label: 'Copilot',
           ),
           NavigationDestination(
             icon: Icon(Icons.show_chart_outlined),
