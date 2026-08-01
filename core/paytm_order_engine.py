@@ -213,11 +213,13 @@ class PaytmOrderEngine:
         Execute Live Order with Paytm API.
         Risk Engine validation is mandatory before any order reaches the broker.
         No simulated trading, no fake order IDs. Surface actual Paytm errors.
+        Guarantees dedup_lock release in finally block on any broker exception.
         """
         start_time = time.time()
         symbol_clean = symbol.upper().replace(".NS", "")
         action_clean = action.upper()
         order_type_clean = order_type_str.upper()
+        dedup_lock = None
 
         # ── MANDATORY: Risk Engine Gate (Sprint M6) ───────────────────────────
         try:
@@ -282,9 +284,6 @@ class PaytmOrderEngine:
             ot_enum = OrderType.MARKET
 
         order_no = None
-        http_status = 200
-        status_str = "SUCCESS"
-        err_message = None
 
         try:
             order_no = self.broker.place_order(
@@ -296,18 +295,14 @@ class PaytmOrderEngine:
             )
             latency_ms = (time.time() - start_time) * 1000.0
 
-            # Register with risk tracker on success (Task 4 dedup release + exposure tracking)
+            # Register with risk tracker on success
             try:
                 from core.live_risk_engine import LiveRiskEngine
                 risk_engine = LiveRiskEngine.get_instance()
                 risk_engine.tracker.register_order_executed(
                     symbol=symbol_clean, action=action_clean, qty=quantity,
-                    price=price, sl=stop_loss if 'stop_loss' in dir() else 0.0,
-                    sector=sector if 'sector' in dir() else "GENERAL",
-                    product=product
+                    price=price, sl=stop_loss, sector=sector, product=product
                 )
-                if dedup_lock:
-                    risk_engine.tracker.release_order_lock(dedup_lock)
             except Exception as track_err:
                 self.logger.debug(f"Risk tracker update skipped: {track_err}")
 
@@ -378,6 +373,19 @@ class PaytmOrderEngine:
                            req_payload, {"error": str(e)}, 408, latency_ms, "TIMEOUT", error_message=err_message)
             self._dispatch_telegram_order_event("ORDER_REJECTED", {"symbol": symbol_clean, "reason": err_message})
             raise e
+        except Exception as e:
+            latency_ms = (time.time() - start_time) * 1000.0
+            err_message = str(e)
+            self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
+                           req_payload, {"error": str(e)}, 500, latency_ms, "FAILED", error_message=err_message)
+            raise e
+        finally:
+            if dedup_lock:
+                try:
+                    from core.live_risk_engine import LiveRiskEngine
+                    LiveRiskEngine.get_instance().tracker.release_order_lock(dedup_lock)
+                except Exception as rel_err:
+                    self.logger.debug(f"Error releasing dedup_lock: {rel_err}")
 
     def _dispatch_telegram_order_event(self, event_type: str, details: Dict[str, Any]):
         try:
@@ -399,12 +407,6 @@ class PaytmOrderEngine:
                 send_message(str(tg_token), str(tg_chat), msg)
         except Exception as e:
             self.logger.warning(f"Telegram order alert dispatch skipped: {e}")
-        except Exception as e:
-            latency_ms = (time.time() - start_time) * 1000.0
-            err_message = str(e)
-            self.log_audit(symbol_clean, action_clean, order_type_clean, quantity, price, trigger_price,
-                           req_payload, {"error": str(e)}, 500, latency_ms, "FAILED", error_message=err_message)
-            raise e
 
     def get_order_book(self) -> List[Dict[str, Any]]:
         orders = self.broker.get_orders()
