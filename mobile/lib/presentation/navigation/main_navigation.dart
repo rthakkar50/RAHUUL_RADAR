@@ -15,6 +15,7 @@ import '../screens/portfolio/ai_portfolio_optimizer_screen.dart';
 import '../screens/journal/journal_screen.dart';
 import '../screens/risk/live_risk_center_screen.dart';
 import '../screens/risk/ai_risk_command_center_screen.dart';
+import '../screens/profile/user_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -43,6 +44,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     const JournalScreen(),
     const LiveRiskCenterScreen(),
     const AiRiskCommandCenterScreen(),
+    const UserProfileScreen(),
     const SettingsScreen(),
   ];
 
