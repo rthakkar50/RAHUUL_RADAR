@@ -368,8 +368,118 @@ def handle_command(text, token, chat_id):
         res_msg = restart_service()
         send_message(token, chat_id, res_msg)
 
+    elif text.startswith("/summary"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.generate_daily_summary()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error generating summary: `{e}`")
+
+    elif text.startswith("/copilot"):
+        parts = text.split(maxsplit=1)
+        sym = parts[1] if len(parts) > 1 else "RELIANCE"
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_copilot_analysis(sym)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Copilot analysis: `{e}`")
+
+    elif text.startswith("/sentinel"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_sentinel_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Sentinel report: `{e}`")
+
+    elif text.startswith("/macro"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_macro_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Global Macro report: `{e}`")
+
+    elif text.startswith("/news"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_ai_news_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching AI News report: `{e}`")
+
+    elif text.startswith("/risk"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_risk_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Risk Command Center report: `{e}`")
+
+    elif text.startswith("/optimizer"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_optimizer_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Portfolio Optimizer report: `{e}`")
+
+    elif text.startswith("/add"):
+        parts = text.split(maxsplit=1)
+        sym = parts[1] if len(parts) > 1 else ""
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.add_to_watchlist(sym)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error adding to Watchlist: `{e}`")
+
+    elif text.startswith("/remove"):
+        parts = text.split(maxsplit=1)
+        sym = parts[1] if len(parts) > 1 else ""
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.remove_from_watchlist(sym)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error removing from Watchlist: `{e}`")
+
+    elif text.startswith("/favorites"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_user_favorites()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Favorites: `{e}`")
+
+    elif text.startswith("/ping"):
+        t0 = time.time()
+        status_msg = check_status()
+        latency_ms = round((time.time() - t0) * 1000, 2)
+        send_message(token, chat_id, f"🏓 *Pong!* Server Status: Active & Operational | Latency: `{latency_ms}ms`\n{status_msg}")
+
+    elif text.startswith("/refresh"):
+        send_message(token, chat_id, "🔄 Initiating automatic Paytm token refresh sequence...")
+        success, msg_text = auto_refresh_paytm_token(max_retries=3)
+        if success:
+            send_message(token, chat_id, f"✅ *Automatic Token Refresh Succeeded!*\n{msg_text}")
+        else:
+            send_message(token, chat_id, f"❌ *Automatic Token Refresh Failed!*: {msg_text}")
+
     elif text.startswith("/token"):
-        send_message(token, chat_id, "🔒 *Token Security Status*: Active & Redacted.\n\nAutomated token refresh is 100% operational. No raw tokens exposed.")
+        send_message(token, chat_id, "⚠️ *Deprecation Warning*: Manual token entry via Telegram is deprecated for security.\n🔒 *Token Security Status*: Active & Redacted. Automated token refresh is 100% operational. No raw tokens exposed.")
 
     else:
         send_message(token, chat_id, "❓ Unknown command. Type `/help` to see the available 16 commands.")

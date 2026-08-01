@@ -103,6 +103,7 @@ class TestSprintM6TelegramAndTokenRefresh(unittest.TestCase):
                 self.assertFalse(success)
                 self.assertIn("failed after 3 attempts", msg)
 
+    @patch.dict(os.environ, {"PAYTM_API_KEY": "TEST_KEY", "PAYTM_API_SECRET": "TEST_SECRET"})
     def test_paytm_broker_auto_refresh_token_retries(self):
         """PaytmBroker.auto_refresh_token retry logic test."""
         with patch("broker.paytm.paytm_broker.PaytmMoneyProvider"):
