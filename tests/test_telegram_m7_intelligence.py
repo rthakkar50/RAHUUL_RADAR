@@ -183,6 +183,21 @@ class TestSprintM7TelegramIntelligence(unittest.TestCase):
             mock_send.assert_called_once()
             self.assertIn("DAILY MARKET SUMMARY", mock_send.call_args[0][2])
 
+        with patch("telegram_controller.send_message") as mock_send:
+            telegram_controller.handle_command("/dashboard", token, chat_id)
+            mock_send.assert_called_once()
+            self.assertIn("REMOTE DASHBOARD", mock_send.call_args[0][2])
+
+        with patch("telegram_controller.send_message") as mock_send:
+            telegram_controller.handle_command("/market", token, chat_id)
+            mock_send.assert_called_once()
+            self.assertIn("MARKET INTELLIGENCE", mock_send.call_args[0][2])
+
+        with patch("telegram_controller.send_message") as mock_send:
+            telegram_controller.handle_command("/export", token, chat_id)
+            mock_send.assert_called_once()
+            self.assertIn("EXPORT", mock_send.call_args[0][2])
+
 
 if __name__ == "__main__":
     unittest.main()

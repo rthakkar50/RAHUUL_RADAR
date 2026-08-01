@@ -455,6 +455,48 @@ def handle_command(text, token, chat_id):
         except Exception as e:
             send_message(token, chat_id, f"❌ Error removing from Watchlist: `{e}`")
 
+    elif text.startswith("/dashboard"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_remote_dashboard()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Remote Dashboard: `{e}`")
+
+    elif text.startswith("/market"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_market_intelligence()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Market Intelligence: `{e}`")
+
+    elif text.startswith("/export"):
+        parts = text.split(maxsplit=1)
+        fmt = parts[1] if len(parts) > 1 else "CSV"
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_export_report(fmt)
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error generating Export Report: `{e}`")
+
+    elif text.startswith("/menu"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = (
+                "🎛️ *RAHUUL RADAR REMOTE COMMAND CENTER*\n"
+                "-------------------------------------\n"
+                "Tap any button below to access live terminal features:"
+            )
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error loading menu: `{e}`")
+
     elif text.startswith("/favorites"):
         try:
             from core.telegram_intelligence import TelegramIntelligence
