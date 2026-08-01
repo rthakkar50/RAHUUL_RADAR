@@ -8,6 +8,7 @@ import '../screens/forensics/ai_forensics_screen.dart';
 import '../screens/fno/fno_screen.dart';
 import '../screens/orders/order_book_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
+import '../screens/portfolio/ai_portfolio_optimizer_screen.dart';
 import '../screens/journal/journal_screen.dart';
 import '../screens/risk/live_risk_center_screen.dart';
 import '../screens/settings/settings_screen.dart';
@@ -31,6 +32,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     const FnoScreen(),
     const OrderBookScreen(),
     const PortfolioScreen(),
+    const AiPortfolioOptimizerScreen(),
     const JournalScreen(),
     const LiveRiskCenterScreen(),
     const SettingsScreen(),
