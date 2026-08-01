@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/scan_result_model.dart';
 import '../../../data/repositories/scanner_repository.dart';
+import '../../../data/repositories/ai_master_decision_engine.dart';
 
 class AiCopilotScreen extends StatefulWidget {
   const AiCopilotScreen({super.key});
@@ -10,31 +11,41 @@ class AiCopilotScreen extends StatefulWidget {
 }
 
 class _AiCopilotScreenState extends State<AiCopilotScreen> {
-  final ScannerRepository _repository = ScannerRepository();
-  ScanResultModel? _selectedStock;
-  List<ScanResultModel> _allStocks = [];
+  final ScannerRepository _scannerRepo = ScannerRepository();
+  final AiMasterDecisionEngine _masterAiEngine = AiMasterDecisionEngine();
+  List<ScanResultModel> _scans = [];
+  ScanResultModel? _selectedScan;
+  MasterDecisionModel? _masterDecision;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _fetchData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
-      final res = await _repository.getSwingScans();
+      final res = await _scannerRepo.getSwingScans();
       if (mounted && res.qualifiedResults.isNotEmpty) {
         setState(() {
-          _allStocks = res.qualifiedResults;
-          _selectedStock = res.qualifiedResults.first;
+          _scans = res.qualifiedResults;
+          _selectedScan = _scans.first;
+          _masterDecision = _masterAiEngine.evaluateStock(_scans.first);
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _selectStock(ScanResultModel scan) {
+    setState(() {
+      _selectedScan = scan;
+      _masterDecision = _masterAiEngine.evaluateStock(scan);
+    });
   }
 
   @override
@@ -58,7 +69,7 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
           ],
         ),
       ),
-      body: _isLoading || _selectedStock == null
+      body: _isLoading || _selectedScan == null
           ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -67,11 +78,11 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
                 children: [
                   _buildStockSelector(),
                   const SizedBox(height: 16),
-                  _buildCopilotDecisionCard(_selectedStock!),
+                  _buildCopilotDecisionCard(_selectedScan!),
                   const SizedBox(height: 16),
-                  _buildScoresBreakout(_selectedStock!),
+                  _buildScoresBreakout(_selectedScan!),
                   const SizedBox(height: 16),
-                  _buildSmartAnalysisCard(_selectedStock!),
+                  _buildSmartAnalysisCard(_selectedScan!),
                   const SizedBox(height: 16),
                   _buildWatchlistAiSection(),
                 ],
@@ -90,11 +101,11 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ScanResultModel>(
-          value: _selectedStock,
+          value: _selectedScan,
           isExpanded: true,
           dropdownColor: const Color(0xFF161B22),
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          items: _allStocks.map((st) {
+          items: _scans.map((st) {
             return DropdownMenuItem(
               value: st,
               child: Row(
@@ -114,7 +125,7 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
             );
           }).toList(),
           onChanged: (val) {
-            if (val != null) setState(() => _selectedStock = val);
+            if (val != null) _selectStock(val);
           },
         ),
       ),
