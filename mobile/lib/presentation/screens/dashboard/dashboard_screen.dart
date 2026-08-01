@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_design_system.dart';
 import '../../../data/models/dashboard_data_model.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../notifications/notification_screen.dart';
@@ -13,16 +14,30 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   final DashboardRepository _repository = DashboardRepository();
   DashboardDataModel? _data;
   bool _isLoading = false;
   String? _error;
   Timer? _autoRefreshTimer;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _fetchDashboard();
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _fetchDashboard(silent: true);
@@ -32,11 +47,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _autoRefreshTimer?.cancel();
+    _searchController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchDashboard({bool silent = false}) async {
-    if (!silent) setState(() { _isLoading = true; _error = null; });
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final data = await _repository.getDashboardData();
@@ -59,40 +81,197 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0E14),
-        title: Row(
+      backgroundColor: AppDesignSystem.background,
+      body: SafeArea(
+        child: Column(
           children: [
-            Image.asset(
-              'assets/icons/logo.png',
-              height: 28,
-              errorBuilder: (ctx, err, st) => const Icon(Icons.radar, color: Colors.blueAccent),
-            ),
-            const SizedBox(width: 8),
-            const Text('RAHUUL_RADAR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+            _buildTopHeader(),
+            if (_isLoading && _data != null)
+              const LinearProgressIndicator(
+                minHeight: 2,
+                color: AppDesignSystem.primary,
+                backgroundColor: AppDesignSystem.surface,
+              ),
+            Expanded(child: _buildBody()),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : () => _fetchDashboard(),
-          ),
-        ],
       ),
-      body: _buildBody(),
+    );
+  }
+
+  Widget _buildTopHeader() {
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppDesignSystem.surface.withValues(alpha: 0.95),
+          border: const Border(bottom: BorderSide(color: AppDesignSystem.border, width: 1)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => widget.onNavigate(16), // Profile
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppDesignSystem.primary, width: 1.5),
+                    ),
+                    child: const CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Color(0xFF1F2937),
+                      child: Icon(Icons.person, color: AppDesignSystem.primary, size: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'RAHUL SHARMA',
+                            style: TextStyle(
+                              color: AppDesignSystem.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF1E293B),
+                              borderRadius: BorderRadius.all(Radius.circular(4)),
+                            ),
+                            child: Text(
+                              'INSTITUTIONAL PRO',
+                              style: TextStyle(
+                                color: AppDesignSystem.primary,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          _buildConnectionBadge(),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Broker: Connected (Zerodha Direct)',
+                            style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined, color: AppDesignSystem.textPrimary, size: 22),
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: AppDesignSystem.primary, size: 22),
+                  onPressed: _isLoading ? null : () => _fetchDashboard(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Header Stats Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0D1117),
+                borderRadius: AppDesignSystem.radiusSmall,
+                border: Border.all(color: AppDesignSystem.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _headerStatItem('PORTFOLIO EQUITY', '₹9,93,101.13', AppDesignSystem.textPrimary),
+                  Container(height: 20, width: 1, color: AppDesignSystem.border),
+                  _headerStatItem('TODAY P&L', '+₹1,450.00 (+0.15%)', AppDesignSystem.success),
+                  Container(height: 20, width: 1, color: AppDesignSystem.border),
+                  _headerStatItem('MARGIN CASH', '₹2,76,405.13', AppDesignSystem.primary),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _headerStatItem(String label, String val, Color col) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 9, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildConnectionBadge() {
+    final isOnline = _data?.isOnline ?? true;
+    return FadeTransition(
+      opacity: _pulseAnimation,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: (isOnline ? AppDesignSystem.success : AppDesignSystem.danger).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger, width: 0.8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isOnline ? 'LIVE WS' : 'OFFLINE',
+              style: TextStyle(
+                color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading && _data == null) {
-      return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppDesignSystem.primary),
+            SizedBox(height: 16),
+            Text('Initializing Institutional Terminal...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          ],
+        ),
+      );
     }
 
     if (_error != null && _data == null) {
@@ -100,11 +279,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, color: Colors.orangeAccent, size: 48),
-            const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(color: Colors.white70)),
+            const Icon(Icons.cloud_off, color: AppDesignSystem.warning, size: 54),
             const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _fetchDashboard, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+            const Text('Terminal Data Connection Interrupted', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _fetchDashboard,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reconnect Terminal'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppDesignSystem.primary, foregroundColor: Colors.black),
+            ),
           ],
         ),
       );
@@ -114,100 +300,315 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: () => _fetchDashboard(),
+      color: AppDesignSystem.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatusHeader(d),
+            _buildSearchBar(),
             const SizedBox(height: 16),
-            _buildIndicesSection(),
+            _buildMarketOverviewSection(),
             const SizedBox(height: 16),
-            _buildAiBiasSection(),
+            _buildPortfolioSnapshotCard(d),
             const SizedBox(height: 16),
-            _buildPortfolioQuickSummary(),
+            _buildScannerSummaryCard(d),
+            const SizedBox(height: 16),
+            _buildAiIntelligencePanel(d),
             const SizedBox(height: 16),
             _buildQuickActionsGrid(),
             const SizedBox(height: 16),
-            _buildScannerSummaryCard(d),
+            _buildWatchlistWidget(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusHeader(DashboardDataModel d) {
+  Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+      decoration: AppDesignSystem.glassCard(),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) => setState(() => _searchQuery = val),
+        style: const TextStyle(color: AppDesignSystem.textPrimary, fontSize: 13),
+        decoration: InputDecoration(
+          hintText: 'Search Stock, Index, Option Strike, or AI Signal...',
+          hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          prefixIcon: const Icon(Icons.search, color: AppDesignSystem.primary, size: 20),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : const Icon(Icons.tune, color: Colors.grey, size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+    );
+  }
+
+  Widget _buildMarketOverviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.show_chart, color: AppDesignSystem.primary, size: 18),
+                SizedBox(width: 6),
+                Text(
+                  'LIVE MARKET OVERVIEW',
+                  style: TextStyle(
+                    color: AppDesignSystem.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+            Text('NSE/BSE LIVE', style: TextStyle(color: AppDesignSystem.success, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: d.isOnline ? Colors.greenAccent : Colors.redAccent, shape: BoxShape.circle)),
-              const SizedBox(width: 6),
-              Text(d.isOnline ? 'ONLINE' : 'OFFLINE', style: TextStyle(color: d.isOnline ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              _buildIndexSparklineCard('NIFTY 50', '24,850.40', '+184.20 (+0.75%)', AppDesignSystem.success, [24600, 24650, 24710, 24680, 24790, 24850]),
+              const SizedBox(width: 10),
+              _buildIndexSparklineCard('BANK NIFTY', '52,450.15', '+410.50 (+0.79%)', AppDesignSystem.success, [51900, 52100, 52050, 52300, 52450]),
+              const SizedBox(width: 10),
+              _buildIndexSparklineCard('FINNIFTY', '23,150.80', '+142.10 (+0.62%)', AppDesignSystem.success, [22950, 23010, 23050, 23100, 23150]),
+              const SizedBox(width: 10),
+              _buildIndexSparklineCard('SENSEX', '81,332.90', '+602.40 (+0.75%)', AppDesignSystem.success, [80600, 80850, 81100, 81332]),
+              const SizedBox(width: 10),
+              _buildIndexSparklineCard('INDIA VIX', '12.45', '-0.45 (-3.48%)', AppDesignSystem.primary, [13.8, 13.5, 13.1, 12.8, 12.45]),
             ],
           ),
-          Text(d.marketStatus, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 12)),
-          Text('Scan: ${d.lastScanTime}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildIndicesSection() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _indexCard('NIFTY 50', '24,850.40', '+184.20 (+0.75%)', Colors.greenAccent),
-          const SizedBox(width: 10),
-          _indexCard('BANK NIFTY', '52,450.15', '+410.50 (+0.79%)', Colors.greenAccent),
-          const SizedBox(width: 10),
-          _indexCard('FINNIFTY', '23,150.80', '+142.10 (+0.62%)', Colors.greenAccent),
-          const SizedBox(width: 10),
-          _indexCard('INDIA VIX', '12.45', '-0.45 (-3.48%)', Colors.cyanAccent),
-        ],
-      ),
-    );
-  }
-
-  Widget _indexCard(String title, String val, String chg, Color col) {
+  Widget _buildIndexSparklineCard(String title, String price, String change, Color color, List<double> sparkPoints) {
     return Container(
+      width: 155,
       padding: const EdgeInsets.all(12),
-      width: 135,
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
+      decoration: AppDesignSystem.glassCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-          const SizedBox(height: 4),
-          Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: TextStyle(color: Colors.grey.shade400, fontSize: 10, fontWeight: FontWeight.bold)),
+              Icon(color == AppDesignSystem.success ? Icons.trending_up : Icons.trending_down, color: color, size: 14),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(price, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 2),
-          Text(chg, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.w600)),
+          Text(change, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 24,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _SparklinePainter(points: sparkPoints, color: color),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAiBiasSection() {
+  Widget _buildPortfolioSnapshotCard(DashboardDataModel d) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: AppDesignSystem.glassCard(borderColor: AppDesignSystem.primary.withValues(alpha: 0.3)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.pie_chart, color: AppDesignSystem.primary, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'PORTFOLIO SNAPSHOT',
+                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppDesignSystem.success.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppDesignSystem.success, width: 0.8),
+                ),
+                child: const Text('RISK: LOW (0.69%)', style: TextStyle(color: AppDesignSystem.success, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Total Portfolio Capital', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  SizedBox(height: 4),
+                  Text('₹9,99,649.32', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('Current Equity Value', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  SizedBox(height: 4),
+                  Text('₹9,93,101.13', style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: AppDesignSystem.border, height: 1),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _metricItem('Available Cash', '₹2,76,405.13', AppDesignSystem.primary),
+              _metricItem('Used Margin', '₹7,23,244.20', Colors.purpleAccent),
+              _metricItem('Open Positions', '5 Active', AppDesignSystem.textPrimary),
+              _metricItem('Overall Return', '-0.69%', AppDesignSystem.warning),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricItem(String label, String val, Color col) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+        const SizedBox(height: 3),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+      ],
+    );
+  }
+
+  Widget _buildScannerSummaryCard(DashboardDataModel d) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: AppDesignSystem.glassCard(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.radar, color: AppDesignSystem.primary, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'AI SWING SCANNER WIDGET',
+                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () => widget.onNavigate(2), // Scanner
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppDesignSystem.primary,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Open Scanner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _scannerStat('Scanned', '${d.totalScanned}', AppDesignSystem.textPrimary),
+              _scannerStat('Qualified', '${d.qualifiedSignals}', AppDesignSystem.success),
+              _scannerStat('Market Quality', d.marketQuality, AppDesignSystem.primary),
+              _scannerStat('Last Scan', d.lastScanTime, Colors.cyanAccent),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1117),
+              borderRadius: AppDesignSystem.radiusSmall,
+              border: Border.all(color: AppDesignSystem.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amberAccent, size: 16),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'TOP PICK: DIVISLAB (BUY) — Score: 88.5/100 | Target: ₹6,500',
+                    style: TextStyle(color: AppDesignSystem.textPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => widget.onNavigate(2),
+                  child: const Text('Details', style: TextStyle(color: AppDesignSystem.primary, fontSize: 11)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _scannerStat(String label, String val, Color col) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        const SizedBox(height: 4),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
+      ],
+    );
+  }
+
+  Widget _buildAiIntelligencePanel(DashboardDataModel d) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.blue.shade900.withValues(alpha: 0.4), const Color(0xFF161B22)]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+        gradient: LinearGradient(
+          colors: [
+            AppDesignSystem.secondary.withValues(alpha: 0.2),
+            AppDesignSystem.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: AppDesignSystem.radiusMedium,
+        border: Border.all(color: AppDesignSystem.secondary.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,85 +620,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 18),
                   SizedBox(width: 6),
-                  Text('AI Market Intelligence Panel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                  Text(
+                    'AI MARKET INTELLIGENCE PANEL',
+                    style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                  ),
                 ],
               ),
-              Text('BULLISH / ACCUMULATION', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+              Text('BULLISH / ACCUMULATION', style: TextStyle(color: AppDesignSystem.success, fontWeight: FontWeight.bold, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: AppDesignSystem.border, height: 1),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _biasItem('Trend Strength', '88.4 / 100', Colors.cyanAccent),
-              _biasItem('Market Breadth', '132 Adv / 44 Dec', Colors.greenAccent),
-              _biasItem('AI Confidence', '94.2%', Colors.amberAccent),
+              _aiIntelItem('Trend Strength', '88.4 / 100', AppDesignSystem.primary),
+              _aiIntelItem('Market Breadth', '132 Adv / 44 Dec', AppDesignSystem.success),
+              _aiIntelItem('AI Confidence', '94.2%', Colors.amberAccent),
+              _aiIntelItem('Risk Verdict', 'SAFE TO ENTER', AppDesignSystem.success),
             ],
           ),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3))),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.purple.withValues(alpha: 0.15),
+              borderRadius: AppDesignSystem.radiusSmall,
+              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+            ),
             child: const Row(
               children: [
-                Icon(Icons.lightbulb_outline, color: Colors.purpleAccent, size: 16),
-                SizedBox(width: 6),
+                Icon(Icons.psychology, color: Colors.purpleAccent, size: 18),
+                SizedBox(width: 8),
                 Expanded(
-                  child: Text('AI RECOMMENDATION: Prefer Pharma & Auto. Avoid Fresh Shorts in Banking.', style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'INSTITUTIONAL BRIEF: Accumulate Pharma & IT on pullbacks. Banking index testing 52,500 resistance.',
+                    style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _biasItem(String label, String val, Color col) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 2),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildPortfolioQuickSummary() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Portfolio Quick Snapshot', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-              Text('Risk Meter: LOW (0.69%)', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
-            ],
           ),
-          const SizedBox(height: 12),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Total Equity', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                Text('₹9,93,101.13', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              ]),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text('Today P&L', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                Text('+₹1,450.00', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 16)),
-              ]),
-            ],
-          )
         ],
       ),
+    );
+  }
+
+  Widget _aiIntelItem(String label, String val, Color col) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+        const SizedBox(height: 3),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
+      ],
     );
   }
 
@@ -305,76 +682,185 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Institutional Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-        const SizedBox(height: 10),
-        Row(
+        const Row(
           children: [
-            Expanded(child: _actionBtn('Scanner', Icons.radar, Colors.blueAccent, () => widget.onNavigate(2))),
-            const SizedBox(width: 8),
-            Expanded(child: _actionBtn('F&O Engine', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(4))),
-            const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(6))),
+            Icon(Icons.grid_view, color: AppDesignSystem.primary, size: 18),
+            SizedBox(width: 6),
+            Text(
+              'INSTITUTIONAL QUICK ACTIONS',
+              style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+            ),
           ],
         ),
-        const SizedBox(height: 8),
-        Row(
+        const SizedBox(height: 12),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.45,
           children: [
-            Expanded(child: _actionBtn('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(7))),
-            const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Paper Trade', Icons.note_alt, Colors.tealAccent, () => widget.onNavigate(6))),
-            const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Quant Lab', Icons.science, Colors.indigoAccent, () => widget.onNavigate(1))),
+            _quickActionCard('Scanner', Icons.radar, AppDesignSystem.primary, () => widget.onNavigate(2)),
+            _quickActionCard('F&O Terminal', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(4)),
+            _quickActionCard('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(6)),
+            _quickActionCard('Orders', Icons.receipt_long, AppDesignSystem.primary, () => widget.onNavigate(5)),
+            _quickActionCard('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(7)),
+            _quickActionCard('Risk Center', Icons.shield, AppDesignSystem.danger, () => widget.onNavigate(8)),
+            _quickActionCard('AI Copilot', Icons.psychology, Colors.cyanAccent, () => widget.onNavigate(3)),
+            _quickActionCard('AI Sentinel', Icons.security, Colors.orangeAccent, () => widget.onNavigate(12)),
+            _quickActionCard('Global Macro', Icons.public, Colors.tealAccent, () => widget.onNavigate(10)),
           ],
         ),
       ],
     );
   }
 
-  Widget _actionBtn(String label, IconData icon, Color col, VoidCallback onTap) {
+  Widget _quickActionCard(String label, IconData icon, Color col, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppDesignSystem.radiusSmall,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: col.withValues(alpha: 0.3)),
-        ),
+        padding: const EdgeInsets.all(10),
+        decoration: AppDesignSystem.glassCard(borderColor: col.withValues(alpha: 0.3)),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: col, size: 20),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Text(
+              label,
+              style: const TextStyle(color: AppDesignSystem.textPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildScannerSummaryCard(DashboardDataModel d) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('AI Swing Scanner', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-            const SizedBox(height: 2),
-            Text('${d.qualifiedSignals} High Confidence Signals Out of ${d.totalScanned}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
-          ]),
-          ElevatedButton(
-            onPressed: () => widget.onNavigate(2),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-            child: const Text('View All'),
-          ),
-        ],
-      ),
+  Widget _buildWatchlistWidget() {
+    final watchlist = [
+      {'symbol': 'DIVISLAB', 'name': "Divi's Laboratories", 'price': '₹6,240.50', 'change': '+3.4%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '88.5%'},
+      {'symbol': 'DIXON', 'name': 'Dixon Technologies', 'price': '₹14,850.00', 'change': '+2.1%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '86.2%'},
+      {'symbol': 'PAYTM', 'name': 'One97 Communications', 'price': '₹895.40', 'change': '+5.88%', 'signal': 'BUY', 'color': AppDesignSystem.success, 'conf': '91.0%'},
+      {'symbol': 'TATASTEEL', 'name': 'Tata Steel Ltd.', 'price': '₹154.20', 'change': '-1.2%', 'signal': 'WATCH', 'color': AppDesignSystem.warning, 'conf': '72.0%'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.remove_red_eye_outlined, color: AppDesignSystem.primary, size: 18),
+                SizedBox(width: 6),
+                Text(
+                  'INSTITUTIONAL WATCHLIST',
+                  style: TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                ),
+              ],
+            ),
+            Text('4 STOCKS', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: watchlist.length,
+          separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
+          itemBuilder: (ctx, idx) {
+            final item = watchlist[idx];
+            final col = item['color'] as Color;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: AppDesignSystem.glassCard(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item['symbol'] as String, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 2),
+                      Text(item['name'] as String, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: col.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: col, width: 0.6),
+                        ),
+                        child: Text('${item['signal']} (${item['conf']})', style: TextStyle(color: col, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(item['price'] as String, style: const TextStyle(color: AppDesignSystem.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 2),
+                          Text(item['change'] as String, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
+  }
+}
+
+class _SparklinePainter extends CustomPainter {
+  final List<double> points;
+  final Color color;
+
+  _SparklinePainter({required this.points, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+
+    final minVal = points.reduce((a, b) => a < b ? a : b);
+    final maxVal = points.reduce((a, b) => a > b ? a : b);
+    final range = maxVal - minVal == 0 ? 1.0 : maxVal - minVal;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+
+    for (int i = 0; i < points.length; i++) {
+      final x = (i / (points.length - 1)) * size.width;
+      final y = size.height - ((points[i] - minVal) / range) * size.height;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparklinePainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.color != color;
   }
 }
