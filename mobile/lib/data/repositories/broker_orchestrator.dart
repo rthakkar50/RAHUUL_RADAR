@@ -7,7 +7,7 @@ class BrokerOrchestrator {
   BrokerOrchestrator._internal();
 
   BrokerType _activeBroker = BrokerType.paytmMoney;
-  BrokerType _secondaryBroker = BrokerType.zerodhaKite;
+  final BrokerType _secondaryBroker = BrokerType.zerodhaKite;
 
   final List<BrokerAuditLogModel> _auditLogs = [
     BrokerAuditLogModel(timestamp: DateTime.now().subtract(const Duration(minutes: 10)).toIso8601String(), brokerName: 'Paytm Money', action: 'CONNECT', details: 'OAuth2 Session Authorized', status: 'SUCCESS'),
