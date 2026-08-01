@@ -29,23 +29,23 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
-    DashboardScreen(onNavigate: _navigateTo),
-    const MarketIntelligenceScreen(),
-    const GlobalMacroScreen(),
-    const AiNewsScreen(),
-    const ScannerScreen(),
-    const AiCopilotScreen(),
-    const AiSentinelScreen(),
-    const AiForensicsScreen(),
-    const FnoScreen(),
-    const OrderBookScreen(),
-    const PortfolioScreen(),
-    const AiPortfolioOptimizerScreen(),
-    const JournalScreen(),
-    const LiveRiskCenterScreen(),
-    const AiRiskCommandCenterScreen(),
-    const UserProfileScreen(),
-    const SettingsScreen(),
+    DashboardScreen(onNavigate: _navigateTo), // Index 0: Home
+    const MarketIntelligenceScreen(),          // Index 1: Market AI
+    const ScannerScreen(),                     // Index 2: Swing Trading Scanner ONLY
+    const AiCopilotScreen(),                   // Index 3: Copilot
+    const FnoScreen(),                         // Index 4: F&O Terminal ONLY
+    const OrderBookScreen(),                   // Index 5: Orders
+    const PortfolioScreen(),                   // Index 6: Portfolio
+    const JournalScreen(),                     // Index 7: Journal
+    const LiveRiskCenterScreen(),              // Index 8: Risk
+    const SettingsScreen(),                    // Index 9: Settings
+    const GlobalMacroScreen(),                 // Index 10: Global Macro
+    const AiNewsScreen(),                      // Index 11: AI News
+    const AiSentinelScreen(),                  // Index 12: AI Sentinel
+    const AiForensicsScreen(),                 // Index 13: AI Forensics
+    const AiPortfolioOptimizerScreen(),        // Index 14: Portfolio Optimizer
+    const AiRiskCommandCenterScreen(),         // Index 15: Risk Command Center
+    const UserProfileScreen(),                 // Index 16: User Profile
   ];
 
   @override
@@ -85,7 +85,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
         children: _screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: _currentIndex < 10 ? _currentIndex : 0,
         onDestinationSelected: _navigateTo,
         backgroundColor: const Color(0xFF0B0E14),
         indicatorColor: Colors.blueAccent.withValues(alpha: 0.25),

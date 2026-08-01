@@ -6,7 +6,7 @@ import '../../../data/repositories/scanner_repository.dart';
 import '../../widgets/scanner_loading_shimmer.dart';
 import '../../widgets/scanner_result_card.dart';
 
-enum ScannerFilter { all, buy, sell, watch, highConfidence, highScore, fnoOnly }
+enum ScannerFilter { all, buy, sell, watch, highConfidence, highScore }
 enum ScannerSort { scoreDesc, confidenceDesc, rrDesc, symbolAsc }
 
 class ScannerScreen extends StatefulWidget {
@@ -113,9 +113,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
           break;
         case ScannerFilter.highScore:
           matchesFilter = item.score >= 70.0;
-          break;
-        case ScannerFilter.fnoOnly:
-          matchesFilter = item.sector.toUpperCase().contains('PHARMA') || item.sector.toUpperCase().contains('AUTO') || item.sector.toUpperCase().contains('FINANCE') || item.symbol.length <= 8;
           break;
         case ScannerFilter.all:
           matchesFilter = true;

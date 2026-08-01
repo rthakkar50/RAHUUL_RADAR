@@ -183,7 +183,9 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
           const Divider(color: Colors.white10, height: 1),
           const SizedBox(height: 12),
           Text(
-            'HUMAN READABLE REASONING: ${item.symbol} initiated a high-conviction ${item.signal} thesis. Price is trading comfortably above 20 EMA and 50 EMA with volume expansion of ${item.volume}. RS Score is ${item.rsScore.toStringAsFixed(1)} outperforming NIFTY 50 by +4.2%.',
+            _masterDecision != null
+                ? 'AI MASTER DECISION: ${_masterDecision!.masterSignal} (Score: ${_masterDecision!.masterAiScore.toStringAsFixed(1)}/100). ${_masterDecision!.selfCheckReason}'
+                : 'HUMAN READABLE REASONING: ${item.symbol} initiated a high-conviction ${item.signal} thesis. Price is trading comfortably above 20 EMA and 50 EMA with volume expansion of ${item.volume}. RS Score is ${item.rsScore.toStringAsFixed(1)} outperforming NIFTY 50 by +4.2%.',
             style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
         ],

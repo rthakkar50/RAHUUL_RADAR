@@ -309,21 +309,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _actionBtn('Scanner', Icons.radar, Colors.blueAccent, () => widget.onNavigate(1))),
+            Expanded(child: _actionBtn('Scanner', Icons.radar, Colors.blueAccent, () => widget.onNavigate(2))),
             const SizedBox(width: 8),
-            Expanded(child: _actionBtn('F&O Engine', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(2))),
+            Expanded(child: _actionBtn('F&O Engine', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(4))),
             const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(3))),
+            Expanded(child: _actionBtn('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(6))),
           ],
         ),
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _actionBtn('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(4))),
+            Expanded(child: _actionBtn('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(7))),
             const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Paper Trade', Icons.note_alt, Colors.tealAccent, () => widget.onNavigate(5))),
+            Expanded(child: _actionBtn('Paper Trade', Icons.note_alt, Colors.tealAccent, () => widget.onNavigate(6))),
             const SizedBox(width: 8),
-            Expanded(child: _actionBtn('Quant Lab', Icons.science, Colors.indigoAccent, () => widget.onNavigate(5))),
+            Expanded(child: _actionBtn('Quant Lab', Icons.science, Colors.indigoAccent, () => widget.onNavigate(1))),
           ],
         ),
       ],
@@ -369,7 +369,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text('${d.qualifiedSignals} High Confidence Signals Out of ${d.totalScanned}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
           ]),
           ElevatedButton(
-            onPressed: () => widget.onNavigate(1),
+            onPressed: () => widget.onNavigate(2),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
             child: const Text('View All'),
           ),
