@@ -11,7 +11,6 @@ class AiCopilotScreen extends StatefulWidget {
 }
 
 class _AiCopilotScreenState extends State<AiCopilotScreen> {
-  final ScannerRepository _scannerRepo = ScannerRepository();
   final AiMasterDecisionEngine _masterAiEngine = AiMasterDecisionEngine();
   List<ScanResultModel> _scans = [];
   ScanResultModel? _selectedScan;
@@ -27,17 +26,19 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
-      final res = await _scannerRepo.getSwingScans();
-      if (mounted && res.qualifiedResults.isNotEmpty) {
-        setState(() {
-          _scans = res.qualifiedResults;
-          _selectedScan = _scans.first;
-          _masterDecision = _masterAiEngine.evaluateStock(_scans.first);
-          _isLoading = false;
-        });
-      }
+      final repo = ScannerRepository();
+      final res = await repo.getSwingScans();
+      final scans = res.qualifiedResults;
+      setState(() {
+        _scans = scans;
+        if (scans.isNotEmpty) {
+          _selectedScan = scans.first;
+          _masterDecision = _masterAiEngine.evaluateStock(scans.first);
+        }
+        _isLoading = false;
+      });
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
     }
   }
 
