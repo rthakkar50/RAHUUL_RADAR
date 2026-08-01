@@ -14,6 +14,7 @@ class DashboardRepository {
       try {
         final response = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/health'),
+          headers: ApiConfig.defaultHeaders(),
         ).timeout(const Duration(seconds: ApiConfig.healthTimeoutSeconds));
         
         if (response.statusCode == 200) {

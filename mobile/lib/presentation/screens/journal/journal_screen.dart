@@ -30,6 +30,7 @@ class _JournalScreenState extends State<JournalScreen> {
     if (_isFetching) return;
     _isFetching = true;
 
+    debugPrint('[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> LOADING');
     setState(() {
       _isLoading = true;
       _error = null;
@@ -37,15 +38,20 @@ class _JournalScreenState extends State<JournalScreen> {
 
     try {
       final data = await _repository.getJournal();
+      debugPrint('[RUN-AUDIT] [JournalScreen] Repository returned SUCCESS. Trades count: ${data.trades.length}');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> SUCCESS');
         setState(() {
           _data = data;
           _isLoading = false;
           _error = null;
         });
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[RUN-AUDIT] [JournalScreen] Repository THREW EXCEPTION: $e');
+      debugPrint('[RUN-AUDIT] [JournalScreen] STACKTRACE:\n$st');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [JournalScreen] [STATE TRANSITION] -> ERROR (error: $e)');
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -157,6 +163,7 @@ class _JournalScreenState extends State<JournalScreen> {
     }
 
     if (_error != null && _data == null) {
+      debugPrint('[RUN-AUDIT] [JournalScreen] RENDERING ERROR WIDGET "Failed to load journal". Current _error value: "$_error"');
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

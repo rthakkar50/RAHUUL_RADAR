@@ -27,7 +27,11 @@ class OrderRepository {
     });
 
     final response = await http
-        .post(url, headers: {'Content-Type': 'application/json'}, body: body)
+        .post(
+          url,
+          headers: ApiConfig.defaultHeaders(extraHeaders: {'Content-Type': 'application/json'}),
+          body: body,
+        )
         .timeout(Duration(seconds: ApiConfig.timeoutSeconds));
 
     if (response.statusCode == 200) {
@@ -64,7 +68,11 @@ class OrderRepository {
     });
 
     final response = await http
-        .post(url, headers: {'Content-Type': 'application/json'}, body: body)
+        .post(
+          url,
+          headers: ApiConfig.defaultHeaders(extraHeaders: {'Content-Type': 'application/json'}),
+          body: body,
+        )
         .timeout(Duration(seconds: ApiConfig.timeoutSeconds));
 
     if (response.statusCode == 200) {
@@ -81,7 +89,10 @@ class OrderRepository {
     final url = Uri.parse('$baseUrl/orders/book');
 
     final response = await http
-        .get(url)
+        .get(
+          url,
+          headers: ApiConfig.defaultHeaders(),
+        )
         .timeout(Duration(seconds: ApiConfig.timeoutSeconds));
 
     if (response.statusCode == 200) {
@@ -98,7 +109,10 @@ class OrderRepository {
     final url = Uri.parse('$baseUrl/orders/cancel/$orderId');
 
     final response = await http
-        .post(url)
+        .post(
+          url,
+          headers: ApiConfig.defaultHeaders(),
+        )
         .timeout(Duration(seconds: ApiConfig.timeoutSeconds));
 
     if (response.statusCode == 200) {

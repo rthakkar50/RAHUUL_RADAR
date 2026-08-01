@@ -24,6 +24,19 @@ class ApiConfig {
     '10.0.2.2',
     '127.0.0.1'
   ];
+  static List<String> get candidateIps => _candidateIps;
+
+  static Map<String, String> defaultHeaders({Map<String, String>? extraHeaders}) {
+    final headers = <String, String>{
+      'User-Agent': 'FlutterApp',
+      'Accept': 'application/json',
+      'Bypass-Tunnel-Remainder': 'true',
+    };
+    if (extraHeaders != null) {
+      headers.addAll(extraHeaders);
+    }
+    return headers;
+  }
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();

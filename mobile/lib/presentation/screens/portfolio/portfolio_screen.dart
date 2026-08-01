@@ -45,10 +45,13 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     if (_isFetching) return;
     _isFetching = true;
 
+    debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> LOADING (silent: $silent)');
     if (!silent) setState(() { _isLoading = true; _error = null; });
     try {
       final data = await _repository.getPortfolio();
+      debugPrint('[RUN-AUDIT] [PortfolioScreen] Repository returned SUCCESS. Capital: ${data.summary.totalCapital}');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> SUCCESS');
         setState(() {
           _data = data;
           _lastRefreshTime = DateTime.now();
@@ -56,8 +59,11 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           _error = null;
         });
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[RUN-AUDIT] [PortfolioScreen] Repository THREW EXCEPTION: $e');
+      debugPrint('[RUN-AUDIT] [PortfolioScreen] STACKTRACE:\n$st');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [PortfolioScreen] [STATE TRANSITION] -> ERROR (error: $e)');
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -113,6 +119,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     }
 
     if (_error != null && _data == null) {
+      debugPrint('[RUN-AUDIT] [PortfolioScreen] RENDERING ERROR WIDGET "Cannot Load Portfolio". Current _error value: "$_error"');
       return Center(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

@@ -51,6 +51,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (_isFetching) return;
     _isFetching = true;
 
+    debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> LOADING (isAutoRefresh: $isAutoRefresh)');
     setState(() {
       _isLoading = true;
       if (!isAutoRefresh) _error = null;
@@ -58,7 +59,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     try {
       final response = await _repository.getSwingScans();
+      debugPrint('[RUN-AUDIT] [ScannerScreen] Repository returned SUCCESS. Qualified count: ${response.qualifiedResults.length}');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> SUCCESS');
         setState(() {
           _response = response;
           _lastRefreshTime = DateTime.now();
@@ -66,8 +69,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
           _error = null;
         });
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[RUN-AUDIT] [ScannerScreen] Repository THREW EXCEPTION: $e');
+      debugPrint('[RUN-AUDIT] [ScannerScreen] STACKTRACE:\n$st');
       if (mounted) {
+        debugPrint('[RUN-AUDIT] [ScannerScreen] [STATE TRANSITION] -> ERROR (error: $e)');
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -278,6 +284,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
 
     if (_error != null && _response == null) {
+      debugPrint('[RUN-AUDIT] [ScannerScreen] RENDERING ERROR WIDGET "API Unavailable". Current _error value: "$_error"');
       return Center(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
