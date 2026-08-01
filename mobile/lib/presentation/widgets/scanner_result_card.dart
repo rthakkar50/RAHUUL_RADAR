@@ -7,106 +7,81 @@ class ScannerResultCard extends StatelessWidget {
 
   const ScannerResultCard({super.key, required this.result});
 
-  Color _getSignalColor(String signal) {
-    final upper = signal.toUpperCase();
-    if (upper.contains('BUY')) {
-      return Colors.greenAccent;
-    } else if (upper.contains('SELL')) {
-      return Colors.redAccent;
-    } else {
-      return Colors.orangeAccent;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final signalColor = _getSignalColor(result.signal);
+    final isBuy = result.signal.toUpperCase().contains('BUY');
+    final sigColor = isBuy ? Colors.greenAccent : Colors.redAccent;
+    final target3 = result.entry > 0 ? (isBuy ? result.entry * 1.25 : result.entry * 0.75) : 0.0;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: signalColor.withValues(alpha: 0.3), width: 1),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: sigColor.withValues(alpha: 0.3), width: 1.2),
       ),
+      color: const Color(0xFF161B22),
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => StockDetailScreen(result: result),
-            ),
+            MaterialPageRoute(builder: (_) => StockDetailScreen(result: result)),
           );
         },
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(14.0),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Symbol & Signal Badge
+              // Row 1: Symbol, Company & Signal Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          result.symbol,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (result.company.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            result.company,
-                            style: const TextStyle(color: Colors.grey, fontSize: 12),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(result.symbol, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                          const SizedBox(width: 6),
+                          _gradeBadge(result.tradeGrade, Colors.amberAccent),
                         ],
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text('${result.company} • ${result.sector}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                    ],
                   ),
-                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: signalColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: signalColor, width: 1.2),
+                      color: sigColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: sigColor, width: 1.2),
                     ),
                     child: Text(
-                      result.signal,
-                      style: TextStyle(
-                        color: signalColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+                      result.signal.toUpperCase(),
+                      style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              const Divider(color: Colors.white10, height: 1),
+              const SizedBox(height: 10),
 
-              // Metrics Row: Score, Confidence, R:R, Sector
+              // Row 2: Price, AI Score, Confidence & RS Score
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildStat('Score', result.score.toStringAsFixed(1), Colors.white),
-                  _buildStat('Confidence', '${result.confidence.toStringAsFixed(0)}%', Colors.blueAccent),
-                  _buildStat('R:R', result.riskReward.isNotEmpty ? result.riskReward : '1:2.0', Colors.amberAccent),
-                  _buildStat('Sector', result.sector.isNotEmpty ? result.sector : 'N/A', Colors.grey),
+                  _stat('Price', '₹${result.price.toStringAsFixed(2)}', Colors.white),
+                  _stat('AI Score', result.score.toStringAsFixed(1), Colors.cyanAccent),
+                  _stat('Confidence', '${result.confidence.toStringAsFixed(1)}%', Colors.purpleAccent),
+                  _stat('RS Score', result.rsScore.toStringAsFixed(1), Colors.amberAccent),
                 ],
               ),
+              const SizedBox(height: 10),
 
-              const SizedBox(height: 12),
+              // Row 3: Entry, SL, Target 1, Target 2, Target 3
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
@@ -116,16 +91,30 @@ class ScannerResultCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildLevel('Entry', '₹${result.entry.toStringAsFixed(2)}', Colors.blue),
-                    _buildLevel('SL', '₹${result.stopLoss.toStringAsFixed(2)}', Colors.redAccent),
-                    _buildLevel(
-                      'Target',
-                      '₹${result.target1 > 0 ? result.target1.toStringAsFixed(2) : (result.entry * 1.05).toStringAsFixed(2)}',
-                      Colors.greenAccent,
-                    ),
+                    _level('Entry', '₹${result.entry.toStringAsFixed(1)}', Colors.blueAccent),
+                    _level('SL', '₹${result.stopLoss.toStringAsFixed(1)}', Colors.redAccent),
+                    _level('T1', '₹${result.target1.toStringAsFixed(1)}', Colors.greenAccent),
+                    _level('T2', '₹${result.target2.toStringAsFixed(1)}', Colors.greenAccent),
+                    _level('T3', '₹${target3.toStringAsFixed(1)}', Colors.amberAccent),
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
+
+              // Row 4: Indicators & Risk Grade
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      _badge('R:R ${result.riskReward}', Colors.cyanAccent),
+                      const SizedBox(width: 6),
+                      _badge('Vol ${result.volume}', Colors.amberAccent),
+                    ],
+                  ),
+                  Text('Risk Grade: ${result.riskGrade}', style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
+              )
             ],
           ),
         ),
@@ -133,34 +122,40 @@ class ScannerResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStat(String label, String value, Color valueColor) {
+  Widget _stat(String label, String val, Color col) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-          overflow: TextOverflow.ellipsis,
-        ),
+        const SizedBox(height: 2),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
       ],
     );
   }
 
-  Widget _buildLevel(String label, String value, Color color) {
-    return Row(
+  Widget _level(String label, String val, Color col) {
+    return Column(
       children: [
-        Text('$label: ', style: const TextStyle(color: Colors.grey, fontSize: 11)),
-        Text(
-          value,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
-        ),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+        const SizedBox(height: 2),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
       ],
+    );
+  }
+
+  Widget _gradeBadge(String grade, Color col) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(color: col.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4), border: Border.all(color: col, width: 0.8)),
+      child: Text(grade, style: TextStyle(color: col, fontSize: 9, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _badge(String text, Color col) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(color: col.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+      child: Text(text, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }

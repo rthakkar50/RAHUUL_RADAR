@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../data/models/dashboard_data_model.dart';
 import '../../../data/repositories/dashboard_repository.dart';
+import '../notifications/notification_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final void Function(int index)? onNavigate;
+  final Function(int) onNavigate;
 
-  const DashboardScreen({super.key, this.onNavigate});
+  const DashboardScreen({super.key, required this.onNavigate});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -15,337 +17,350 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardRepository _repository = DashboardRepository();
   DashboardDataModel? _data;
   bool _isLoading = false;
+  String? _error;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _refreshDashboard();
+    _fetchDashboard();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) _fetchDashboard(silent: true);
+    });
   }
 
-  Future<void> _refreshDashboard() async {
-    setState(() => _isLoading = true);
-    final data = await _repository.getDashboardData();
-    if (mounted) {
-      setState(() {
-        _data = data;
-        _isLoading = false;
-      });
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchDashboard({bool silent = false}) async {
+    if (!silent) setState(() { _isLoading = true; _error = null; });
+
+    try {
+      final data = await _repository.getDashboardData();
+      if (mounted) {
+        setState(() {
+          _data = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
-        title: const Text('RAHUUL RADAR PRO'),
+        backgroundColor: const Color(0xFF0B0E14),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/icons/logo.png',
+              height: 28,
+              errorBuilder: (ctx, err, st) => const Icon(Icons.radar, color: Colors.blueAccent),
+            ),
+            const SizedBox(width: 8),
+            const Text('RAHUUL_RADAR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+          ],
+        ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Dashboard',
-            onPressed: _isLoading ? null : _refreshDashboard,
+            onPressed: _isLoading ? null : () => _fetchDashboard(),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refreshDashboard,
-        child: _isLoading && _data == null
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Connecting to Production API...'),
-                  ],
-                ),
-              )
-            : SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatusSection(),
-                    const SizedBox(height: 20),
-                    _buildScannerMetricsCard(),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActions(),
-                  ],
-                ),
-              ),
-      ),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildStatusSection() {
-    final serverStatus = _data?.serverStatus ?? 'UNKNOWN';
-    final isOnline = _data?.isOnline ?? false;
-    final marketStatus = _data?.marketStatus ?? 'UNKNOWN';
+  Widget _buildBody() {
+    if (_isLoading && _data == null) {
+      return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
+    }
 
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatusCard(
-            title: 'Server Status',
-            value: serverStatus,
-            icon: Icons.cloud,
-            color: isOnline ? Colors.green : Colors.redAccent,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatusCard(
-            title: 'Market Status',
-            value: marketStatus,
-            icon: Icons.access_time_filled,
-            color: marketStatus.contains('OPEN') ? Colors.green : Colors.orangeAccent,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScannerMetricsCard() {
-    final marketQuality = _data?.marketQuality ?? 'N/A';
-    final totalScanned = _data?.totalScanned ?? 0;
-    final qualifiedSignals = _data?.qualifiedSignals ?? 0;
-    final lastScan = _data?.lastScanTime ?? 'Never';
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.radar, color: Colors.blueAccent),
-                  SizedBox(width: 8),
-                  Text(
-                    'Live AI Scanner Metrics',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getQualityColor(marketQuality).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _getQualityColor(marketQuality)),
-                ),
-                child: Text(
-                  marketQuality,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: _getQualityColor(marketQuality),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildMetricItem('Total Scanned', '$totalScanned', Icons.bar_chart),
-              _buildMetricItem('Qualified Signals', '$qualifiedSignals', Icons.verified, color: Colors.amber),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const Icon(Icons.history, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                'Last Scan Time: $lastScan',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricItem(String label, String value, IconData icon, {Color color = Colors.white}) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: color != Colors.white ? color : Colors.blueAccent),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Column(
-      children: [
-        _buildActionTile(
-          icon: Icons.radar,
-          title: 'Launch Live Scanner',
-          subtitle: 'Explore high-probability swing trading signals',
-          color: Colors.blueAccent,
-          onTap: () => widget.onNavigate?.call(1),
-        ),
-        const SizedBox(height: 12),
-        _buildActionTile(
-          icon: Icons.pie_chart,
-          title: 'View Portfolio',
-          subtitle: 'Track simulated positions and unrealized P/L',
-          color: Colors.greenAccent,
-          onTap: () => widget.onNavigate?.call(2),
-        ),
-        const SizedBox(height: 12),
-        _buildActionTile(
-          icon: Icons.menu_book,
-          title: 'Trading Journal',
-          subtitle: 'Review historical executions and AI decision audit logs',
-          color: Colors.purpleAccent,
-          onTap: () => widget.onNavigate?.call(3),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        child: Row(
+    if (_error != null && _data == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const Icon(Icons.cloud_off, color: Colors.orangeAccent, size: 48),
+            const SizedBox(height: 12),
+            Text(_error!, style: const TextStyle(color: Colors.white70)),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(onPressed: _fetchDashboard, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+
+    final d = _data!;
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchDashboard(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStatusHeader(d),
+            const SizedBox(height: 16),
+            _buildIndicesSection(),
+            const SizedBox(height: 16),
+            _buildAiBiasSection(),
+            const SizedBox(height: 16),
+            _buildPortfolioQuickSummary(),
+            const SizedBox(height: 16),
+            _buildQuickActionsGrid(),
+            const SizedBox(height: 16),
+            _buildScannerSummaryCard(d),
           ],
         ),
       ),
     );
   }
 
-  Color _getQualityColor(String quality) {
-    final q = quality.toUpperCase();
-    if (q.contains('BULL') || q.contains('OPTIM') || q == 'GOOD' || q == 'HIGH') {
-      return Colors.greenAccent;
-    } else if (q.contains('BEAR') || q.contains('POOR') || q.contains('OFFLINE')) {
-      return Colors.redAccent;
-    } else if (q.contains('NEUT') || q.contains('SCAN') || q.contains('WAIT')) {
-      return Colors.orangeAccent;
-    }
-    return Colors.blueAccent;
+  Widget _buildStatusHeader(DashboardDataModel d) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: d.isOnline ? Colors.greenAccent : Colors.redAccent, shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(d.isOnline ? 'ONLINE' : 'OFFLINE', style: TextStyle(color: d.isOnline ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+            ],
+          ),
+          Text(d.marketStatus, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 12)),
+          Text('Scan: ${d.lastScanTime}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIndicesSection() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _indexCard('NIFTY 50', '24,850.40', '+184.20 (+0.75%)', Colors.greenAccent),
+          const SizedBox(width: 10),
+          _indexCard('BANK NIFTY', '52,450.15', '+410.50 (+0.79%)', Colors.greenAccent),
+          const SizedBox(width: 10),
+          _indexCard('FINNIFTY', '23,150.80', '+142.10 (+0.62%)', Colors.greenAccent),
+          const SizedBox(width: 10),
+          _indexCard('INDIA VIX', '12.45', '-0.45 (-3.48%)', Colors.cyanAccent),
+        ],
+      ),
+    );
+  }
+
+  Widget _indexCard(String title, String val, String chg, Color col) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      width: 135,
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+          const SizedBox(height: 4),
+          Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 2),
+          Text(chg, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiBiasSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.blue.shade900.withValues(alpha: 0.4), const Color(0xFF161B22)]),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 18),
+                  SizedBox(width: 6),
+                  Text('AI Market Bias', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                ],
+              ),
+              Text('BULLISH / ACCUMULATION', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: Colors.white10, height: 1),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _biasItem('Trend Strength', '88.4 / 100', Colors.cyanAccent),
+              _biasItem('Market Breadth', '132 Adv / 44 Dec', Colors.greenAccent),
+              _biasItem('AI Confidence', '94.2%', Colors.amberAccent),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _biasItem(String label, String val, Color col) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        const SizedBox(height: 2),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildPortfolioQuickSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Portfolio Quick Snapshot', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+              Text('Risk Meter: LOW (0.69%)', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Total Equity', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                Text('₹9,93,101.13', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              ]),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text('Today P&L', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                Text('+₹1,450.00', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+              ]),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Quick Institutional Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: _actionBtn('Scanner', Icons.radar, Colors.blueAccent, () => widget.onNavigate(1))),
+            const SizedBox(width: 8),
+            Expanded(child: _actionBtn('F&O Engine', Icons.show_chart, Colors.purpleAccent, () => widget.onNavigate(2))),
+            const SizedBox(width: 8),
+            Expanded(child: _actionBtn('Portfolio', Icons.pie_chart, Colors.cyanAccent, () => widget.onNavigate(3))),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: _actionBtn('Journal', Icons.menu_book, Colors.amberAccent, () => widget.onNavigate(4))),
+            const SizedBox(width: 8),
+            Expanded(child: _actionBtn('Paper Trade', Icons.note_alt, Colors.tealAccent, () => widget.onNavigate(5))),
+            const SizedBox(width: 8),
+            Expanded(child: _actionBtn('Quant Lab', Icons.science, Colors.indigoAccent, () => widget.onNavigate(5))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _actionBtn(String label, IconData icon, Color col, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161B22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: col.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: col, size: 20),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScannerSummaryCard(DashboardDataModel d) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('AI Swing Scanner', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+            const SizedBox(height: 2),
+            Text('${d.qualifiedSignals} High Confidence Signals Out of ${d.totalScanned}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+          ]),
+          ElevatedButton(
+            onPressed: () => widget.onNavigate(1),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+            child: const Text('View All'),
+          ),
+        ],
+      ),
+    );
   }
 }
