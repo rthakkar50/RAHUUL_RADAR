@@ -4,6 +4,7 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/market/market_intelligence_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/copilot/ai_copilot_screen.dart';
+import '../screens/forensics/ai_forensics_screen.dart';
 import '../screens/fno/fno_screen.dart';
 import '../screens/orders/order_book_screen.dart';
 import '../screens/portfolio/portfolio_screen.dart';
@@ -26,6 +27,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     const MarketIntelligenceScreen(),
     const ScannerScreen(),
     const AiCopilotScreen(),
+    const AiForensicsScreen(),
     const FnoScreen(),
     const OrderBookScreen(),
     const PortfolioScreen(),
