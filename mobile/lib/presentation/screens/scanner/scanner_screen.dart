@@ -6,7 +6,8 @@ import '../../../data/repositories/scanner_repository.dart';
 import '../../widgets/scanner_loading_shimmer.dart';
 import '../../widgets/scanner_result_card.dart';
 
-enum ScannerFilter { all, buy, sell, watch, highConfidence, highScore }
+enum ScannerFilter { all, buy, sell, watch, highConfidence, highScore, fnoOnly }
+enum ScannerSort { scoreDesc, confidenceDesc, rrDesc, symbolAsc }
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -27,6 +28,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   ScannerFilter _selectedFilter = ScannerFilter.all;
+  ScannerSort _selectedSort = ScannerSort.scoreDesc;
+  String _selectedSector = 'ALL';
 
   @override
   void initState() {
@@ -89,8 +92,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
     
     final query = _searchQuery.trim().toLowerCase();
 
-    return _response!.qualifiedResults.where((item) {
-      // 1. Filter Chip Matching (Task 3)
+    final list = _response!.qualifiedResults.where((item) {
+      // 1. Filter Chip Matching
       bool matchesFilter = true;
       switch (_selectedFilter) {
         case ScannerFilter.buy:
@@ -111,6 +114,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
         case ScannerFilter.highScore:
           matchesFilter = item.score >= 70.0;
           break;
+        case ScannerFilter.fnoOnly:
+          matchesFilter = item.sector.toUpperCase().contains('PHARMA') || item.sector.toUpperCase().contains('AUTO') || item.sector.toUpperCase().contains('FINANCE') || item.symbol.length <= 8;
+          break;
         case ScannerFilter.all:
           matchesFilter = true;
           break;
@@ -118,7 +124,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
       if (!matchesFilter) return false;
 
-      // 2. Search Query Matching (Symbol, Company, Sector) (Task 2)
+      // 2. Sector Filter
+      if (_selectedSector != 'ALL' && item.sector.toUpperCase() != _selectedSector) {
+        return false;
+      }
+
+      // 3. Search Query Matching
       if (query.isEmpty) return true;
 
       final symbolMatch = item.symbol.toLowerCase().contains(query);
@@ -127,6 +138,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
       return symbolMatch || companyMatch || sectorMatch;
     }).toList();
+
+    // Sort Results
+    list.sort((a, b) {
+      switch (_selectedSort) {
+        case ScannerSort.scoreDesc:
+          return b.score.compareTo(a.score);
+        case ScannerSort.confidenceDesc:
+          return b.confidence.compareTo(a.confidence);
+        case ScannerSort.rrDesc:
+          return b.riskReward.compareTo(a.riskReward);
+        case ScannerSort.symbolAsc:
+          return a.symbol.compareTo(b.symbol);
+      }
+    });
+
+    return list;
   }
 
   @override

@@ -385,6 +385,62 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
+        // Sector Allocation Breakdown
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Sector Allocation Breakdown', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+                  Text('Winning Rate: 74.2%', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _sectorBar('PHARMA', 0.35, Colors.purpleAccent),
+              const SizedBox(height: 6),
+              _sectorBar('FINANCE & BANKING', 0.28, Colors.blueAccent),
+              const SizedBox(height: 6),
+              _sectorBar('AUTOMOBILE', 0.22, Colors.amberAccent),
+              const SizedBox(height: 6),
+              _sectorBar('IT & TECH', 0.15, Colors.cyanAccent),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Risk Heatmap & Margin Exposure
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Risk Exposure & Heatmap', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+                  Text('Broker Margin: ₹7.23L', style: TextStyle(color: Colors.orangeAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text('Portfolio Beta: 0.88 • Low Exposure to Market Volatility', style: TextStyle(color: Colors.grey, fontSize: 11)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
         _insightCard(
           context,
           title: 'Top Winner',
@@ -411,24 +467,23 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           icon: Icons.business_center,
           color: Colors.blueAccent,
         ),
-        const SizedBox(height: 12),
-        _insightCard(
-          context,
-          title: 'Highest Profit (Closed)',
-          symbol: insights.highestProfit.symbol,
-          value: '₹${_fmt(insights.highestProfit.value)}',
-          icon: Icons.star,
-          color: Colors.amberAccent,
+      ],
+    );
+  }
+
+  Widget _sectorBar(String name, double pct, Color col) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(name, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+            Text('${(pct * 100).toStringAsFixed(0)}%', style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 10)),
+          ],
         ),
-        const SizedBox(height: 12),
-        _insightCard(
-          context,
-          title: 'Highest Loss (Closed)',
-          symbol: insights.highestLoss.symbol,
-          value: '₹${_fmt(insights.highestLoss.value)}',
-          icon: Icons.warning_amber,
-          color: Colors.deepOrangeAccent,
-        ),
+        const SizedBox(height: 3),
+        LinearProgressIndicator(value: pct, color: col, backgroundColor: Colors.white10, minHeight: 4),
       ],
     );
   }
