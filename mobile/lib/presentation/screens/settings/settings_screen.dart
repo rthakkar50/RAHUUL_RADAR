@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_config.dart';
+import 'broker_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -78,11 +79,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _sectionTitle('Broker & Execution Pipeline'),
           _buildCard([
-            const ListTile(
-              leading: Icon(Icons.account_balance_wallet, color: Colors.amberAccent),
-              title: Text('Paytm Money API v2 Engine', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-              subtitle: Text('Connected & Authenticated (OAuth2 Active)', style: TextStyle(color: Colors.greenAccent, fontSize: 11)),
-              trailing: Icon(Icons.verified, color: Colors.greenAccent),
+            ListTile(
+              leading: const Icon(Icons.account_balance_wallet, color: Colors.amberAccent),
+              title: const Text('Paytm Money API v2 Engine', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Connected & Authenticated (OAuth2 Active)', style: TextStyle(color: Colors.greenAccent, fontSize: 11)),
+              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const BrokerSettingsScreen()));
+              },
             ),
           ]),
           const SizedBox(height: 16),
