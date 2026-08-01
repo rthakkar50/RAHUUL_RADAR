@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/api_config.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/market/market_intelligence_screen.dart';
+import '../screens/macro/global_macro_screen.dart';
 import '../screens/scanner/scanner_screen.dart';
 import '../screens/copilot/ai_copilot_screen.dart';
 import '../screens/forensics/ai_forensics_screen.dart';
@@ -26,6 +27,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   late final List<Widget> _screens = [
     DashboardScreen(onNavigate: _navigateTo),
     const MarketIntelligenceScreen(),
+    const GlobalMacroScreen(),
     const ScannerScreen(),
     const AiCopilotScreen(),
     const AiForensicsScreen(),
