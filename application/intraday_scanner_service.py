@@ -500,6 +500,7 @@ class IntradayScannerService:
                         "Score": score,
                         "Raw Score": bullish_score,
                         "Confidence": round(confidence, 1),
+                        "Trend": getattr(r, 'trend_direction', 'NEUTRAL'),
                         "Entry": round(entry, 2),
                         "Stop Loss": round(sl, 2),
                         "Target 1": round(t1, 2),
