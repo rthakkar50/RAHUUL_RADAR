@@ -374,6 +374,10 @@ class IntradayScannerService:
                         except Exception as e:
                             logger.error(f"IntradayEngine evaluation failed for {symbol}: {e}")
 
+                    if decision_str in ["WAIT", "NO_DATA", "EXCLUDED"]:
+                        logger.info(f"IntradayEngine REJECTED {symbol} ({decision_str})")
+                        continue
+
                     # 4. Refine with Master Signal Pipeline
                     pipeline_res = self.pipeline.run(
                         symbol=symbol,
@@ -468,6 +472,25 @@ class IntradayScannerService:
                     self.execution_center.perform_risk_check(req)
                     self.execution_center.perform_validation_check(req)
                     
+                    # Apply F&O Filter
+                    adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
+                    oi_change_pct = fno_data.get("oi_change_pct", None)  # None = Paytm unavailable
+                    is_valid, filter_reason = self.fno_filter.validate_for_fno({
+                        "Symbol": symbol,
+                        "Score": score,
+                        "Confidence": confidence,
+                        "ADX": adx_val,
+                        "Volume": volume,
+                        "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
+                        "OI Change %": oi_change_pct,
+                        "PCR": fno_data.get("pcr", 1.0),
+                        "Signal": decision_str
+                    })
+
+                    if not is_valid:
+                        logger.info(f"F&O FILTER REJECTED {symbol}: {filter_reason}")
+                        continue
+                        
                     processed_results.append({
                         "Symbol": symbol,
                         "Company": symbol.replace(".NS", ""),
@@ -490,25 +513,6 @@ class IntradayScannerService:
                         "F&O Bias": fno_data.get("fno_bias", "NEUTRAL"),
                         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
-
-                    # Apply F&O Filter
-                    adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
-                    oi_change_pct = fno_data.get("oi_change_pct", None)  # None = Paytm unavailable
-                    is_valid, filter_reason = self.fno_filter.validate_for_fno({
-                        "Symbol": symbol,
-                        "Score": score,
-                        "Confidence": confidence,
-                        "ADX": adx_val,
-                        "Volume": volume,
-                        "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
-                        "OI Change %": oi_change_pct,
-                        "PCR": fno_data.get("pcr", 1.0),
-                        "Signal": decision_str
-                    })
-
-                    if not is_valid:
-                        logger.info(f"F&O FILTER REJECTED {symbol}: {filter_reason}")
-                        continue
 
                     # Calculate F&O Grade
                     grade = self.fno_filter.calculate_grade(score, confidence, adx_val, rr,

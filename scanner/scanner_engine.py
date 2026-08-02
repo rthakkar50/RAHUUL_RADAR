@@ -683,7 +683,7 @@ class ScannerEngine:
                     trend_persistence=rs_persistence,
                     breakdown_detail=breakdown_detail,
                     quality_grade=getattr(decision_result, "quality_grade", "N/A"),
-                    adx_value=getattr(decision_result, "adx_value", 0.0),
+                    adx_value=getattr(adx_result, "adx", 0.0) if adx_result else 0.0,
                     avwap_status=getattr(decision_result, "avwap_status", "Neutral"),
                     mtf_data=getattr(decision_result, "mtf_data", None)
                 )
