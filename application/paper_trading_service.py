@@ -101,6 +101,7 @@ class PaperTradingEngine:
         res = c.fetchone()
         if res:
             self.engine.virtual_capital = res[0]
+            self.engine.realized_pnl = res[0] - self.engine.starting_capital
             self.engine.available_cash = res[0]
             
         # Load open positions
@@ -134,6 +135,7 @@ class PaperTradingEngine:
         
         # Sync engine state
         self.engine.used_margin = sum(p.used_margin for p in self.engine.open_positions.values())
+        self.engine.available_cash = max(0.0, self.engine.virtual_capital - self.engine.used_margin)
         self._emit_portfolio_update()
 
     def _emit_portfolio_update(self):
@@ -270,28 +272,69 @@ class PaperTradingEngine:
 
     def get_statistics(self):
         conn = sqlite3.connect(self.db_path)
-        df_closed = pd.read_sql("SELECT * FROM positions WHERE status='CLOSED'", conn)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT * FROM positions WHERE status='CLOSED'")
+        closed_rows = [dict(r) for r in c.fetchall()]
+        c.execute("SELECT * FROM positions WHERE status='OPEN'")
+        open_rows = [dict(r) for r in c.fetchall()]
         conn.close()
-        
-        open_pos = list(self.engine.open_positions.values())
-        open_data = [{'net_pnl': p.unrealized_pnl - p.charges} for p in open_pos]
-        df_open = pd.DataFrame(open_data)
-        
-        if df_open.empty and df_closed.empty:
-            return {}
-            
-        df = pd.concat([df_closed, df_open], ignore_index=True) if not df_open.empty else df_closed
-        
-        wins = df[df['net_pnl'] > 0]
-        losses = df[df['net_pnl'] <= 0]
-        
-        win_rate = len(wins) / len(df) * 100
-        loss_rate = len(losses) / len(df) * 100
-        avg_win = wins['net_pnl'].mean() if not wins.empty else 0
-        avg_loss = abs(losses['net_pnl'].mean()) if not losses.empty else 0
-        profit_factor = (wins['net_pnl'].sum() / abs(losses['net_pnl'].sum())) if not losses.empty and losses['net_pnl'].sum() != 0 else 0
-        
-        # Accurate Drawdown using portfolio history
+
+        total_trades = len(closed_rows) + len(open_rows)
+        closed_trades = len(closed_rows)
+        open_trades = len(open_rows)
+
+        if closed_trades == 0:
+            return {
+                "total_trades": total_trades,
+                "closed_trades": 0,
+                "open_trades": open_trades,
+                "winning_trades": 0,
+                "losing_trades": 0,
+                "win_rate": 0.0,
+                "loss_rate": 0.0,
+                "avg_win": 0.0,
+                "avg_loss": 0.0,
+                "profit_factor": 0.0,
+                "expectancy": 0.0,
+                "max_drawdown": 0.0,
+                "sharpe_ratio": 0.0,
+                "sortino_ratio": 0.0,
+                "largest_winner": 0.0,
+                "largest_loser": 0.0
+            }
+
+        wins = [float(r.get("net_pnl") or r.get("pnl") or 0.0) for r in closed_rows if float(r.get("net_pnl") or r.get("pnl") or 0.0) > 0]
+        losses = [abs(float(r.get("net_pnl") or r.get("pnl") or 0.0)) for r in closed_rows if float(r.get("net_pnl") or r.get("pnl") or 0.0) < 0]
+
+        winning_trades = len(wins)
+        losing_trades = len(losses)
+
+        win_rate = (winning_trades / closed_trades * 100.0) if closed_trades > 0 else 0.0
+        loss_rate = (losing_trades / closed_trades * 100.0) if closed_trades > 0 else 0.0
+
+        avg_win = (sum(wins) / winning_trades) if winning_trades > 0 else 0.0
+        avg_loss = (sum(losses) / losing_trades) if losing_trades > 0 else 0.0
+
+        # Mathematical Guardrails (Task 4)
+        if winning_trades == 0:
+            profit_factor = 0.0
+        elif losing_trades == 0:
+            profit_factor = round(sum(wins), 2)
+        else:
+            profit_factor = round(sum(wins) / sum(losses), 2)
+
+        win_prob = win_rate / 100.0
+        loss_prob = loss_rate / 100.0
+        expectancy = (win_prob * avg_win) - (loss_prob * avg_loss)
+
+        std_dev = (sum((w - avg_win) ** 2 for w in wins) / max(1, len(wins))) ** 0.5 if wins else 1.0
+        sharpe = round((expectancy / (std_dev + 1.0)) * 1.5, 2)
+        sortino = round((expectancy / (avg_loss + 1.0)) * 1.8, 2)
+
+        largest_winner = max(wins, default=0.0)
+        largest_loser = max(losses, default=0.0)
+
         history_df = self.get_portfolio_history()
         max_dd = 0.0
         if not history_df.empty and 'capital' in history_df.columns:
@@ -300,14 +343,24 @@ class PaperTradingEngine:
             drawdown = (equity - peak) / peak * 100
             max_dd = drawdown.min()
             if str(max_dd) == 'nan': max_dd = 0.0
-            
+
         return {
+            "total_trades": total_trades,
+            "closed_trades": closed_trades,
+            "open_trades": open_trades,
+            "winning_trades": winning_trades,
+            "losing_trades": losing_trades,
             "win_rate": round(win_rate, 2),
             "loss_rate": round(loss_rate, 2),
             "avg_win": round(avg_win, 2),
             "avg_loss": round(avg_loss, 2),
-            "profit_factor": round(profit_factor, 2),
-            "max_drawdown": round(max_dd, 2)
+            "profit_factor": profit_factor,
+            "expectancy": round(expectancy, 2),
+            "max_drawdown": round(max_dd, 2),
+            "sharpe_ratio": sharpe,
+            "sortino_ratio": sortino,
+            "largest_winner": round(largest_winner, 2),
+            "largest_loser": round(largest_loser, 2)
         }
 
     def get_portfolio_history(self):

@@ -1159,29 +1159,25 @@ async def get_paper_performance():
         from application.paper_trading_service import PaperTradingEngine
         pte = PaperTradingEngine.get_instance()
         stats = pte.get_statistics()
-        
-        win_rate = stats.get("win_rate", 75.0)
-        avg_win = stats.get("avg_win", 1450.0)
-        avg_loss = stats.get("avg_loss", 620.0)
-        profit_factor = stats.get("profit_factor", 2.34)
-        max_dd = stats.get("max_drawdown", 1.2)
-        
-        win_prob = win_rate / 100.0
-        expectancy = (win_prob * avg_win) - ((1 - win_prob) * avg_loss)
-        sharpe = round((expectancy / (avg_loss + 1.0)) * 1.5, 2)
-        
         meta = _get_provider_metadata()
+        
         return {
-            "total_trades": len(pte.engine.closed_positions) + len(pte.engine.open_positions),
-            "winning_trades": int(len(pte.engine.closed_positions) * (win_rate / 100.0)),
-            "losing_trades": int(len(pte.engine.closed_positions) * ((100.0 - win_rate) / 100.0)),
-            "win_rate": win_rate,
-            "profit_factor": profit_factor,
-            "average_winner": avg_win,
-            "average_loser": avg_loss,
-            "expectancy": round(expectancy, 2),
-            "maximum_drawdown": max_dd,
-            "sharpe_ratio": sharpe,
+            "total_trades": stats.get("total_trades", 0),
+            "closed_trades": stats.get("closed_trades", 0),
+            "open_trades": stats.get("open_trades", 0),
+            "winning_trades": stats.get("winning_trades", 0),
+            "losing_trades": stats.get("losing_trades", 0),
+            "win_rate": stats.get("win_rate", 0.0),
+            "loss_rate": stats.get("loss_rate", 0.0),
+            "profit_factor": stats.get("profit_factor", 0.0),
+            "average_winner": stats.get("avg_win", 0.0),
+            "average_loser": stats.get("avg_loss", 0.0),
+            "expectancy": stats.get("expectancy", 0.0),
+            "maximum_drawdown": stats.get("max_drawdown", 0.0),
+            "sharpe_ratio": stats.get("sharpe_ratio", 0.0),
+            "sortino_ratio": stats.get("sortino_ratio", 0.0),
+            "largest_winner": stats.get("largest_winner", 0.0),
+            "largest_loser": stats.get("largest_loser", 0.0),
             "is_paper_trading": True,
             **meta
         }
