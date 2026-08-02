@@ -724,8 +724,9 @@ async def get_order_book():
         meta = _get_provider_metadata()
         return {"orders": orders, **meta}
     except Exception as e:
-        logger.error(f"Failed to fetch order book: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.warning(f"Order book fetch fallback: {e}")
+        meta = _get_provider_metadata()
+        return {"orders": [], "message": str(e), **meta}
 
 @v1_router.post("/orders/cancel/{order_id}", tags=["Orders"])
 async def cancel_order(order_id: str):
