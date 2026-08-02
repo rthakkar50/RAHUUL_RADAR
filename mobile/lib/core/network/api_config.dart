@@ -53,8 +53,9 @@ class ApiConfig {
 
   static Future<String> autoDiscoverReachableServer() async {
     final candidates = [
-      _localIp,
+      'http://127.0.0.1:8000',
       'https://rahuul-radar.onrender.com',
+      _localIp,
       'odd-vans-shave.loca.lt',
       '140.238.161.80',
       '10.0.2.2',
@@ -78,7 +79,8 @@ class ApiConfig {
           if (cleanIp.endsWith('/')) {
             cleanIp = cleanIp.substring(0, cleanIp.length - 1);
           }
-          final portStr = isTunnel ? '' : ':$_port';
+          final hasPort = cleanIp.contains(':');
+          final portStr = (isTunnel || hasPort) ? '' : ':$_port';
           final uri = Uri.parse('$scheme://$cleanIp$portStr/api/v1/health');
 
           final response = await http

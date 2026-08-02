@@ -40,7 +40,7 @@ class PaytmMoneyProvider(MarketDataProvider):
             self._load_credentials_from_config()
 
         if not self.api_key or self.api_key == "YOUR_PAYTM_API_KEY":
-            logger.warning("PaytmMoneyProvider: Paytm API key not set. Using Yahoo Finance fallback for live market data.")
+            self.logger.warning("PaytmMoneyProvider: Paytm API key not set. Using Yahoo Finance fallback for live market data.")
             self._use_fallback_only = True
         else:
             self._use_fallback_only = False

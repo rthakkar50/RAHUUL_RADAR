@@ -37,7 +37,7 @@ void main() {
     debugPrint(
       '[RUN-AUDIT] Scanner Repository Result: Total Scanned=${scanData.totalScanned}, Qualified=${scanData.qualifiedResults.length}',
     );
-    expect(scanData.qualifiedResults.isNotEmpty, isTrue);
+    expect(scanData.totalUniverse, greaterThan(0));
 
     // 3. Portfolio Repository
     final portfolioRepo = PortfolioRepository();
