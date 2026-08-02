@@ -5,8 +5,7 @@ class MarketIntelligenceScreen extends StatefulWidget {
   const MarketIntelligenceScreen({super.key});
 
   @override
-  State<MarketIntelligenceScreen> createState() =>
-      _MarketIntelligenceScreenState();
+  State<MarketIntelligenceScreen> createState() => _MarketIntelligenceScreenState();
 }
 
 class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
@@ -55,14 +54,14 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
-                Icons.analytics_outlined,
+                Icons.psychology,
                 color: Colors.black,
                 size: 18,
               ),
             ),
             const SizedBox(width: 8),
             const Text(
-              'Institutional Market Intelligence',
+              'AI Market Intelligence & Advisor',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
@@ -73,10 +72,10 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Overview'),
+            Tab(text: 'Market Regime'),
             Tab(text: 'Sectors'),
-            Tab(text: 'Flows & Breadth'),
-            Tab(text: 'Volatility'),
+            Tab(text: 'AI Explanations'),
+            Tab(text: 'Advisors'),
           ],
         ),
       ),
@@ -87,364 +86,105 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
           : TabBarView(
               controller: _tabController,
               children: [
-                _buildOverviewTab(),
-                _buildSectorsTab(),
-                _buildFlowsBreadthTab(),
-                _buildVolatilityTab(),
+                _buildMarketRegimeTab(),
+                _buildSectorIntelligenceTab(),
+                _buildAiExplanationsTab(),
+                _buildAdvisorsTab(),
               ],
             ),
     );
   }
 
-  Widget _buildOverviewTab() {
+  // Phase 1 & 2: Market Regime & Priority Engine
+  Widget _buildMarketRegimeTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildMarketGradeCard(),
-        const SizedBox(height: 16),
-        _buildAICommentaryCard(),
-        const SizedBox(height: 16),
-        _buildLiveHeatmapCard(),
-        const SizedBox(height: 16),
-        _buildTopOpportunitiesCard(),
-      ],
-    );
-  }
-
-  Widget _buildMarketGradeCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Overall Market Grade',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                'GRADE A+ (BULLISH)',
-                style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ],
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _metricTile('Market Bias', 'BULLISH 78%', Colors.greenAccent),
-              _metricTile('Trend Strength', '92.4 / 100', Colors.cyanAccent),
-              _metricTile('Volatility', 'LOW (13.8)', Colors.amberAccent),
-              _metricTile('AI Confidence', '94.2%', Colors.greenAccent),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Current Market Regime', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
+                    child: const Text('BULLISH EXPANSION', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text('Trend Strength: 88/100 • Volatility: Low • AI Confidence: 94%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 4),
+              const Text('Market Breadth: 78% Advancing / 22% Declining • Market Quality: HIGH', style: TextStyle(color: Colors.white70, fontSize: 12)),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metricTile(String label, String val, Color col) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 3),
-        Text(
-          val,
-          style: TextStyle(
-            color: col,
-            fontWeight: FontWeight.bold,
-            fontSize: 11,
           ),
         ),
+        const SizedBox(height: 16),
+        const Text('AI Priority Ranking (Smart Priority Engine)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 12),
+        _priorityCard('DIVISLAB', '★★★★★', '98.4 Score', 'Strong Base Breakout + Sector Leader', Colors.greenAccent),
+        _priorityCard('DIXON.NS', '★★★★★', '96.2 Score', 'Volume Burst + Institutional Buying', Colors.greenAccent),
+        _priorityCard('RELIANCE', '★★★★☆', '91.0 Score', 'ORB High Breakout + VWAP Support', Colors.cyanAccent),
+        _priorityCard('HDFCBANK', '★★★★☆', '88.5 Score', 'EMA 9/20 Cross + Long Accumulation', Colors.cyanAccent),
       ],
     );
   }
 
-  Widget _buildAICommentaryCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.psychology, color: Colors.purpleAccent, size: 18),
-              SizedBox(width: 8),
-              Text(
-                'Institutional AI Commentary Engine',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Text(
-            '• Broader market structure remains strongly bullish above NIFTY 24,500.\n'
-            '• Institutional money flow accelerating into Pharma and IT sectors.\n'
-            '• Banking stocks showing heavy accumulation with low volatility contraction.\n'
-            '• AI Recommendation: PREFER PHARMA & IT. AVOID METALS & REALTY.',
-            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
-          ),
-        ],
+  Widget _priorityCard(String symbol, String stars, String score, String reason, Color col) {
+    return Card(
+      color: const Color(0xFF161B22),
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        leading: Text(stars, style: const TextStyle(color: Colors.amberAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+        title: Text(symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+        subtitle: Text(reason, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        trailing: Text(score, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 13)),
       ),
     );
   }
 
-  Widget _buildLiveHeatmapCard() {
-    final indices = [
-      {'name': 'NIFTY 50', 'change': '+1.25%', 'col': Colors.greenAccent},
-      {'name': 'BANKNIFTY', 'change': '+0.88%', 'col': Colors.greenAccent},
-      {'name': 'FINNIFTY', 'change': '+1.10%', 'col': Colors.greenAccent},
-      {'name': 'MIDCAP 100', 'change': '-0.45%', 'col': Colors.redAccent},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Module 2 — Live Market Heatmap',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 2.5,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemCount: indices.length,
-            itemBuilder: (ctx, i) {
-              final idx = indices[i];
-              return Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (idx['col'] as Color).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: idx['col'] as Color),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      idx['name'] as String,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      idx['change'] as String,
-                      style: TextStyle(
-                        color: idx['col'] as Color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopOpportunitiesCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Module 9 — Top 10 High Confidence Opportunities',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '1. DIVISLAB (PHARMA)',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'BUY 94.2% • R:R 1:3.2',
-                style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '2. RELIANCE (ENERGY)',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'BUY 91.0% • R:R 1:2.8',
-                style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '3. HDFCBANK (BANKING)',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'BUY 88.5% • R:R 1:2.5',
-                style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectorsTab() {
+  // Phase 5: Sector Intelligence
+  Widget _buildSectorIntelligenceTab() {
     final sectors = [
-      {
-        'name': 'PHARMA',
-        'strength': '96.4',
-        'flow': '+₹1,420 Cr',
-        'rec': 'STRONG ACCUMULATION',
-        'col': Colors.greenAccent,
-      },
-      {
-        'name': 'IT',
-        'strength': '91.2',
-        'flow': '+₹890 Cr',
-        'rec': 'BULLISH OUTPERFORM',
-        'col': Colors.greenAccent,
-      },
-      {
-        'name': 'BANKING',
-        'strength': '85.0',
-        'flow': '+₹650 Cr',
-        'rec': 'ACCUMULATE ON DIPS',
-        'col': Colors.cyanAccent,
-      },
-      {
-        'name': 'AUTO',
-        'strength': '74.5',
-        'flow': '+₹210 Cr',
-        'rec': 'NEUTRAL / HOLD',
-        'col': Colors.amberAccent,
-      },
-      {
-        'name': 'METALS',
-        'strength': '38.0',
-        'flow': '-₹540 Cr',
-        'rec': 'UNDERPERFORM / AVOID',
-        'col': Colors.redAccent,
-      },
+      {'name': 'PHARMA', 'score': '94/100', 'top': 'DIVISLAB', 'trend': 'Strong Outperforming'},
+      {'name': 'IT', 'score': '89/100', 'top': 'PERSISTENT', 'trend': 'Momentum Surge'},
+      {'name': 'BANKING', 'score': '86/100', 'top': 'SBIN', 'trend': 'Steady Accumulation'},
+      {'name': 'AUTO', 'score': '84/100', 'top': 'TATAMOTORS', 'trend': 'Consolidating High'},
+      {'name': 'ENERGY', 'score': '82/100', 'top': 'RELIANCE', 'trend': 'Base Formation'},
     ];
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: sectors.length,
       itemBuilder: (ctx, i) {
-        final sec = sectors[i];
+        final s = sectors[i];
         return Card(
           color: const Color(0xFF161B22),
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            title: Text(
-              sec['name'] as String,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-            subtitle: Text(
-              'Strength: ${sec['strength']} • Money Flow: ${sec['flow']}',
-              style: const TextStyle(color: Colors.grey, fontSize: 11),
-            ),
-            trailing: Text(
-              sec['rec'] as String,
-              style: TextStyle(
-                color: sec['col'] as Color,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(s['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(s['score']!, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('Top Stock: ${s['top']} • Sector Trend: ${s['trend']}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ],
             ),
           ),
         );
@@ -452,7 +192,8 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
     );
   }
 
-  Widget _buildFlowsBreadthTab() {
+  // Phase 4 & 3: AI Explanations & Smart Alerts
+  Widget _buildAiExplanationsTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -461,133 +202,19 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF161B22),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
+            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
           ),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Module 4 — Institutional FII / DII Flow Engine',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'FII Net Flow (Cash): +₹2,450 Cr',
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'DII Net Flow: +₹1,120 Cr',
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'FII Index Futures: +₹820 Cr',
-                    style: TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'Net Institutional Flow: +₹4,390 Cr',
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Module 5 — Market Breadth Matrix',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Advances: 1,420',
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'Declines: 680',
-                    style: TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'A/D Ratio: 2.08',
-                    style: TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+              Text('DIVISLAB AI Trade Explanation', style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 15)),
               SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '52W Highs: 84',
-                    style: TextStyle(color: Colors.greenAccent, fontSize: 11),
-                  ),
-                  Text(
-                    '52W Lows: 6',
-                    style: TextStyle(color: Colors.redAccent, fontSize: 11),
-                  ),
-                  Text(
-                    'Gap Ups: 34',
-                    style: TextStyle(color: Colors.cyanAccent, fontSize: 11),
-                  ),
-                ],
-              ),
+              Text('Why BUY?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              SizedBox(height: 4),
+              Text('1. Trend: Multi-timeframe bullish alignment across daily and weekly charts.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+              Text('2. Volume: Institutional volume surge +340% over 5-day average.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+              Text('3. Risk: High R:R ratio (1:4.5) with tight stop loss below key support.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+              Text('4. Conviction: 98.4% AI score with verified sector momentum leadership.', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -595,76 +222,62 @@ class _MarketIntelligenceScreenState extends State<MarketIntelligenceScreen>
     );
   }
 
-  Widget _buildVolatilityTab() {
+  // Phase 7 & 8: Portfolio Advisor & Watchlist Advisor
+  Widget _buildAdvisorsTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
+        Card(
+          color: const Color(0xFF161B22),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Portfolio Advisor Recommendation', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 8),
+                const Text('• Sector Concentration: PHARMA is 35% of total capital. Consider rebalancing 5% to DEFENCE for optimal risk parity.', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 4),
+                const Text('• Actionable Advice: Hold DIXON.NS; target T2 is near. Trailing SL active.', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+              ],
+            ),
           ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Module 6 — Volatility & Option Analytics Center',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'India VIX: 13.82 (-2.1%)',
-                    style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'PCR (NIFTY): 1.28 (BULLISH)',
-                    style: TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Max Pain: 24,600',
-                    style: TextStyle(
-                      color: Colors.amberAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'IV Rank: 22.4%',
-                    style: TextStyle(
-                      color: Colors.purpleAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        ),
+        const SizedBox(height: 12),
+        Card(
+          color: const Color(0xFF161B22),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Watchlist Advisor Guidance', style: TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 8),
+                _watchItem('RELIANCE', 'ACCUMULATE', 'ORB breakout confirmed; good risk-reward entry.', Colors.greenAccent),
+                _watchItem('HDFCBANK', 'WAIT', 'Consolidating near VWAP; wait for breakout above ₹1650.', Colors.amberAccent),
+                _watchItem('ICICIBANK', 'BOOK PROFIT', 'Reached Target 1; book 50% profits & trail SL.', Colors.cyanAccent),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _watchItem(String sym, String advice, String desc, Color col) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(sym, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(color: col.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
+            child: Text(advice, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 10)),
+          ),
+        ],
+      ),
     );
   }
 }

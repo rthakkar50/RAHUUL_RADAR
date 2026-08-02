@@ -144,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       Row(
                         children: [
                           Text(
-                            'RAHUL SHARMA',
+                            'RAHUUL THAKKAR',
                             style: TextStyle(
                               color: AppDesignSystem.textPrimary,
                               fontWeight: FontWeight.bold,
@@ -152,20 +152,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                               letterSpacing: 0.5,
                             ),
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Color(0xFF1E293B),
                               borderRadius: BorderRadius.all(
                                 Radius.circular(4),
                               ),
                             ),
-                            child: Text(
-                              'INSTITUTIONAL PRO',
+                            child: const Text(
+                              'INSTITUTIONAL PRO+',
                               style: TextStyle(
                                 color: AppDesignSystem.primary,
                                 fontSize: 9,
@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           _buildConnectionBadge(),
                           const SizedBox(width: 8),
                           Text(
-                            'Broker: Connected (Zerodha Direct)',
+                            'Broker: Connected (Paytm Money)',
                             style: TextStyle(
                               color: Colors.grey.shade400,
                               fontSize: 11,

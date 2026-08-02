@@ -473,6 +473,33 @@ def handle_command(text, token, chat_id):
         except Exception as e:
             send_message(token, chat_id, f"❌ Error fetching Market Intelligence: `{e}`")
 
+    elif text.startswith("/orders"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_orders_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Order Book: `{e}`")
+
+    elif text.startswith("/journal"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_journal_report()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Journal stats: `{e}`")
+
+    elif text.startswith("/top"):
+        try:
+            from core.telegram_intelligence import TelegramIntelligence
+            intel = TelegramIntelligence.get_instance()
+            msg = intel.get_top_opportunities()
+            send_message(token, chat_id, msg)
+        except Exception as e:
+            send_message(token, chat_id, f"❌ Error fetching Top Opportunities: `{e}`")
+
     elif text.startswith("/export"):
         parts = text.split(maxsplit=1)
         fmt = parts[1] if len(parts) > 1 else "CSV"

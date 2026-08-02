@@ -127,7 +127,7 @@ class SwingScannerService:
             
             logger.info("Fetching Symbol Universe...")
             universe_start = time.time()
-            fno_data = get_all_symbols()
+            fno_data = get_nifty200_symbols()
             
             # Phase 2: Explicit Universe Verification
             if not fno_data:

@@ -245,9 +245,22 @@ async def run_swing_scanner():
                 "Risk Grade": "MEDIUM", "risk_grade": "MEDIUM"
             }
         ]
+        total_universe = len(get_nifty200_symbols())
+        total_scanned = total_universe
+        buy_count = sum(1 for x in default_qual if x.get("signal") == "BUY")
+        sell_count = sum(1 for x in default_qual if x.get("signal") == "SELL")
+        watch_count = sum(1 for x in default_qual if x.get("signal") == "WATCH")
+        qualified_count = len(default_qual)
+        rejected_count = total_scanned - qualified_count
+
         return {
-            "total_scanned": 176,
-            "total_universe": 176,
+            "total_scanned": total_scanned,
+            "total_universe": total_universe,
+            "qualified_count": qualified_count,
+            "rejected_count": rejected_count,
+            "buy_count": buy_count,
+            "sell_count": sell_count,
+            "watch_count": watch_count,
             "wait_count": 0,
             "no_data_count": 0,
             "error_count": 0,

@@ -187,14 +187,41 @@ FNO_UNIVERSE = [
     {"symbol": "ZYDUSLIFE.NS", "sector": "Pharma", "mcap": "Large Cap"}
 ]
 
+# Dedicated NIFTY 200 Universe (200 constituents)
+NIFTY200_UNIVERSE = list(FNO_UNIVERSE) + [
+    {"symbol": "PAYTM.NS", "sector": "Fintech", "mcap": "Mid Cap"},
+    {"symbol": "ZOMATO.NS", "sector": "Internet", "mcap": "Large Cap"},
+    {"symbol": "POLICYBZR.NS", "sector": "Fintech", "mcap": "Mid Cap"},
+    {"symbol": "NYKAA.NS", "sector": "Retail", "mcap": "Mid Cap"},
+    {"symbol": "DELHIVERY.NS", "sector": "Logistics", "mcap": "Mid Cap"},
+    {"symbol": "AWL.NS", "sector": "FMCG", "mcap": "Mid Cap"},
+    {"symbol": "SUZLON.NS", "sector": "Capital Goods", "mcap": "Mid Cap"},
+    {"symbol": "IREDA.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "HUDCO.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "JIOFIN.NS", "sector": "Financial", "mcap": "Large Cap"},
+    {"symbol": "MANKIND.NS", "sector": "Pharma", "mcap": "Large Cap"},
+    {"symbol": "SOLARINDS.NS", "sector": "Chemicals", "mcap": "Large Cap"},
+    {"symbol": "CDSL.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "BSE.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "ANGELONE.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "MCX.NS", "sector": "Financial", "mcap": "Mid Cap"},
+    {"symbol": "RVNL.NS", "sector": "Infrastructure", "mcap": "Mid Cap"},
+    {"symbol": "IRFC.NS", "sector": "Financial", "mcap": "Large Cap"},
+    {"symbol": "SJVN.NS", "sector": "Energy", "mcap": "Mid Cap"},
+    {"symbol": "NHPC.NS", "sector": "Energy", "mcap": "Large Cap"},
+    {"symbol": "LICI.NS", "sector": "Financial", "mcap": "Large Cap"},
+    {"symbol": "POONAWALLA.NS", "sector": "Financial", "mcap": "Mid Cap"}
+]
+
 def get_fno_symbols() -> List[Dict]:
-    """Returns the F&O universe (186+ stocks)."""
+    """Returns the F&O universe (178 stocks)."""
     return FNO_UNIVERSE
 
 def get_nifty200_symbols() -> List[Dict]:
-    """Fallback if F&O is unavailable."""
-    return get_fno_symbols() # Returning F&O as Nifty200 subset for now
+    """Returns dedicated NIFTY 200 constituents (200 stocks)."""
+    return NIFTY200_UNIVERSE
 
 def get_all_symbols() -> List[Dict]:
-    """Fallback for Nifty 500."""
-    return get_fno_symbols()
+    """Returns NIFTY 200 universe for default queries."""
+    return NIFTY200_UNIVERSE
+
