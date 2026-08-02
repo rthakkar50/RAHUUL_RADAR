@@ -548,15 +548,20 @@ class IntradayScannerService:
                         pee_res["Score"] = pee_res.get("Trade Quality Index", res["Score"])
                         pee_res["Trend"] = pee_res.get("Trade Grade", "")
                         pee_res["Risk Reward"] = f"{pee_res.get('Risk Grade', '')} | {res.get('Risk Reward', '')}"
-                        pee_res["Signal"] = f"{pee_res.get('Entry Decision', '')} | {res.get('Signal', '')}"
+                        entry_dec = pee_res.get("Entry Decision", "ENTER NOW")
+                        pee_res["Entry Decision"] = entry_dec
+                        pee_res["entry_decision"] = entry_dec
+                        canonical_sig = str(res.get("Signal", "BUY")).upper()
+                        pee_res["Signal"] = canonical_sig
+                        pee_res["signal"] = canonical_sig
                         pee_res["Confidence"] = pee_res.get("Entry Score", 0)
                         pee_res["Timestamp"] = f"{res.get('Timestamp', '')} | Hold: {pee_res.get('Expected Holding Time', '')}"
                         pee_res["Company"] = f"{res.get('Company', '')} - {pee_res.get('Reason Selected', '')}"
                         elite_candidates.append(pee_res)
                     
-            buys = [res for res in elite_candidates if "BUY" in str(res.get("Signal", ""))]
-            watches = [res for res in elite_candidates if "WATCH" in str(res.get("Signal", ""))]
-            sells = [res for res in elite_candidates if "SELL" in str(res.get("Signal", ""))]
+            buys = [res for res in elite_candidates if str(res.get("Signal", "")).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"]]
+            watches = [res for res in elite_candidates if str(res.get("Signal", "")).upper() == "WATCH"]
+            sells = [res for res in elite_candidates if str(res.get("Signal", "")).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"]]
 
             buys.sort(key=lambda x: float(x.get("Score", 0)), reverse=True)
             watches.sort(key=lambda x: float(x.get("Score", 0)), reverse=True)

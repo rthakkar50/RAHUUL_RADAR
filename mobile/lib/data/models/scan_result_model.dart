@@ -4,6 +4,7 @@ class ScanResultModel {
   final String sector;
   final double price;
   final String signal;
+  final String entryDecision;
   final double score;
   final double rawScore;
   final double confidence;
@@ -15,6 +16,7 @@ class ScanResultModel {
   final double stopLoss;
   final double target1;
   final double target2;
+  final double target3;
   final String tradeGrade;
   final String riskGrade;
   final String timestamp;
@@ -23,12 +25,20 @@ class ScanResultModel {
   final Map<String, dynamic> scores;
   final Map<String, dynamic> indicators;
 
+  String get displaySignal {
+    if (entryDecision.isNotEmpty && entryDecision.toUpperCase() != signal.toUpperCase()) {
+      return '$entryDecision | $signal';
+    }
+    return signal;
+  }
+
   ScanResultModel({
     required this.symbol,
     required this.company,
     required this.sector,
     required this.price,
     required this.signal,
+    this.entryDecision = '',
     required this.score,
     required this.rawScore,
     required this.confidence,
@@ -40,6 +50,7 @@ class ScanResultModel {
     required this.stopLoss,
     required this.target1,
     required this.target2,
+    required this.target3,
     required this.tradeGrade,
     required this.riskGrade,
     required this.timestamp,
@@ -51,22 +62,36 @@ class ScanResultModel {
 
   factory ScanResultModel.fromJson(Map<String, dynamic> json) {
     final p = (json['Price'] ?? json['price'] as num?)?.toDouble() ?? 0.0;
-    final sig = (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY';
+    String rawSignal = (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY';
+    String entryDec = (json['Entry Decision'] ?? json['entry_decision'])?.toString() ?? '';
+
+    // Backward compatibility: normalize legacy concatenated strings ("RETEST FIRST | BUY")
+    if (rawSignal.contains(' | ')) {
+      final parts = rawSignal.split(' | ');
+      if (entryDec.isEmpty) {
+        entryDec = parts[0].trim();
+      }
+      rawSignal = parts[1].trim();
+    }
+    final sig = rawSignal.toUpperCase();
     final isBuy = sig.toUpperCase() != 'SELL';
     final entryVal = (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p;
     
     double slVal = (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? (isBuy ? entryVal * 0.96 : entryVal * 1.04);
     double t1Val = (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.08 : entryVal * 0.92);
     double t2Val = (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.15 : entryVal * 0.85);
+    double t3Val = (json['Target 3'] ?? json['target_3'] as num?)?.toDouble() ?? 0.0;
 
     if (isBuy) {
       if (slVal >= entryVal) slVal = entryVal * 0.96;
       if (t1Val <= entryVal) t1Val = entryVal * 1.08;
       if (t2Val <= t1Val) t2Val = t1Val * 1.06;
+      if (t3Val <= t2Val) t3Val = t2Val * 1.06;
     } else {
       if (slVal <= entryVal) slVal = entryVal * 1.04;
       if (t1Val >= entryVal) t1Val = entryVal * 0.92;
       if (t2Val >= t1Val) t2Val = t1Val * 0.94;
+      if (t3Val >= t2Val) t3Val = t2Val * 0.94;
     }
 
     final whyRaw = json['_why_selected'] ?? json['why_selected'];
@@ -85,6 +110,7 @@ class ScanResultModel {
       sector: (json['Sector'] ?? json['sector'])?.toString() ?? 'GENERAL',
       price: p,
       signal: sig,
+      entryDecision: entryDec,
       score: (json['Score'] ?? json['score'] as num?)?.toDouble() ?? 80.0,
       rawScore: (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
       confidence: (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ?? 85.0,
@@ -96,6 +122,7 @@ class ScanResultModel {
       stopLoss: slVal,
       target1: t1Val,
       target2: t2Val,
+      target3: t3Val,
       tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
       riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
       timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? 'LIVE',

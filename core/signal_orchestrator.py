@@ -160,6 +160,9 @@ class SignalOrchestrator:
             
             upgraded_signal = self.priority_engine.upgrade_signal(current_signal, confidence, score)
             winner["Signal"] = upgraded_signal
+            winner["signal"] = upgraded_signal
+            winner["entry_decision"] = winner.get("entry_decision", winner.get("Entry Decision", "ENTER NOW"))
+            winner["Entry Decision"] = winner.get("Entry Decision", winner.get("entry_decision", "ENTER NOW"))
             
             # 2. Unified Signal Score
             composite_score = self.score_calculator.calculate(winner)

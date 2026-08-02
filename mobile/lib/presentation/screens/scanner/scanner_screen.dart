@@ -186,7 +186,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                   ),
                   TableRow(children: [_tableCell('AI Score'), _tableCell('${a.score}'), _tableCell('${b.score}')]),
                   TableRow(children: [_tableCell('Confidence'), _tableCell('${a.confidence}%'), _tableCell('${b.confidence}%')]),
-                  TableRow(children: [_tableCell('Signal'), _tableCell(a.signal, col: Colors.greenAccent), _tableCell(b.signal, col: Colors.greenAccent)]),
+                  TableRow(children: [_tableCell('Signal'), _tableCell(a.displaySignal, col: Colors.greenAccent), _tableCell(b.displaySignal, col: Colors.greenAccent)]),
                   TableRow(children: [_tableCell('Risk Reward'), _tableCell(a.riskReward), _tableCell(b.riskReward)]),
                   TableRow(children: [_tableCell('Volume'), _tableCell(a.volume), _tableCell(b.volume)]),
                 ],
@@ -302,8 +302,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     }
     final results = activeResponse?.qualifiedResults ?? [];
     final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (activeResponse?.totalScanned ?? 200);
-    final buyCount = results.where((r) => r.signal.toUpperCase() == 'BUY').length;
-    final sellCount = results.where((r) => r.signal.toUpperCase() == 'SELL').length;
+    final buyCount = results.where((r) => ['BUY', 'STRONG_BUY', 'INSTITUTIONAL_BUY'].contains(r.signal.toUpperCase())).length;
+    final sellCount = results.where((r) => ['SELL', 'STRONG_SELL', 'INSTITUTIONAL_SELL'].contains(r.signal.toUpperCase())).length;
     final watchCount = results.where((r) => r.signal.toUpperCase() == 'WATCH').length;
     final qualCount = results.length;
 
