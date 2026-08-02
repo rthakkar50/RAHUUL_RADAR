@@ -102,8 +102,8 @@ async def startup_event():
 
 # Swing Scanner Endpoint (Returns instantly from cache)
 @v1_router.get("/scanner/swing", tags=["Scanner"])
-async def run_swing_scanner():
-    logger.info("Swing scanner endpoint called")
+async def run_swing_scanner(debug: bool = False):
+    logger.info(f"Swing scanner endpoint called (debug={debug})")
     try:
         current_time = time.time()
         with _CACHE_LOCK:
@@ -111,33 +111,32 @@ async def run_swing_scanner():
             last_updated = _SCANNER_CACHE["last_updated"]
             is_scanning = _SCANNER_CACHE["is_scanning"]
         
-        # If cache exists and is valid, or if a scan is already running, return cached data
-        if data is not None:
-            # Trigger background refresh if TTL expired and not already scanning
+        if data is None:
+            logger.info("Cache empty on request. Executing live swing scan synchronously...")
+            service = SwingScannerService()
+            results = service.execute_swing_scan()
+            data = json.loads(json.dumps(results, default=str))
+
+            with _CACHE_LOCK:
+                _SCANNER_CACHE["data"] = data
+                _SCANNER_CACHE["last_updated"] = time.time()
+                _SCANNER_CACHE["is_scanning"] = False
+        else:
             if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
                 logger.info("Cache expired. Triggering background refresh...")
                 threading.Thread(target=_run_background_scan, daemon=True).start()
-            return data
 
-        # Synchronous fallback execution when cache is unpopulated
-        logger.info("Cache empty on request. Executing live swing scan synchronously...")
-        service = SwingScannerService()
-        results = service.execute_swing_scan()
-        json_compatible_results = json.loads(json.dumps(results, default=str))
-
-        with _CACHE_LOCK:
-            _SCANNER_CACHE["data"] = json_compatible_results
-            _SCANNER_CACHE["last_updated"] = time.time()
-            _SCANNER_CACHE["is_scanning"] = False
-
-        return json_compatible_results
+        if not debug:
+            clean_data = {k: v for k, v in data.items() if k != "symbol_decision_traces"}
+            return clean_data
+        return data
     except Exception as e:
         logger.error(f"Error serving swing scan: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @v1_router.get("/scanner/intraday", tags=["Scanner"])
-async def run_intraday_scanner():
-    logger.info("Intraday scanner endpoint called - executing live scan over F&O universe")
+async def run_intraday_scanner(debug: bool = False):
+    logger.info(f"Intraday scanner endpoint called (debug={debug}) - executing live scan over F&O universe")
     try:
         service = SwingScannerService()
         scan_output = service.execute_swing_scan()
@@ -152,7 +151,7 @@ async def run_intraday_scanner():
         qualified_count = len(qualified_results)
         rejected_count = max(0, total_scanned - qualified_count)
 
-        return {
+        res = {
             "total_scanned": total_scanned,
             "total_universe": total_universe,
             "qualified_count": qualified_count,
@@ -165,8 +164,16 @@ async def run_intraday_scanner():
             "error_count": scan_output.get("error_count", 0),
             "market_quality": scan_output.get("market_quality", "HIGH"),
             "exec_time": scan_output.get("exec_time", 0.01),
+            "rejection_analytics": scan_output.get("rejection_analytics", {}),
+            "pipeline_stages": scan_output.get("pipeline_stages", []),
+            "scanner_health": scan_output.get("scanner_health", {}),
+            "market_summary": scan_output.get("market_summary", {}),
+            "performance_metrics": scan_output.get("performance_metrics", {}),
             "qualified_results": qualified_results
         }
+        if debug:
+            res["symbol_decision_traces"] = scan_output.get("symbol_decision_traces", [])
+        return res
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

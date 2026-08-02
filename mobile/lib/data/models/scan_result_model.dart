@@ -18,6 +18,10 @@ class ScanResultModel {
   final String tradeGrade;
   final String riskGrade;
   final String timestamp;
+  final List<String> whySelected;
+  final List<String> reasons;
+  final Map<String, dynamic> scores;
+  final Map<String, dynamic> indicators;
 
   ScanResultModel({
     required this.symbol,
@@ -39,6 +43,10 @@ class ScanResultModel {
     required this.tradeGrade,
     required this.riskGrade,
     required this.timestamp,
+    this.whySelected = const [],
+    this.reasons = const [],
+    this.scores = const {},
+    this.indicators = const {},
   });
 
   factory ScanResultModel.fromJson(Map<String, dynamic> json) {
@@ -51,7 +59,6 @@ class ScanResultModel {
     double t1Val = (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.08 : entryVal * 0.92);
     double t2Val = (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.15 : entryVal * 0.85);
 
-    // Enforce target hierarchy validity
     if (isBuy) {
       if (slVal >= entryVal) slVal = entryVal * 0.96;
       if (t1Val <= entryVal) t1Val = entryVal * 1.08;
@@ -61,6 +68,16 @@ class ScanResultModel {
       if (t1Val >= entryVal) t1Val = entryVal * 0.92;
       if (t2Val >= t1Val) t2Val = t1Val * 0.94;
     }
+
+    final whyRaw = json['_why_selected'] ?? json['why_selected'];
+    final List<String> whyList = (whyRaw is List)
+        ? whyRaw.map((e) => e.toString()).toList()
+        : <String>[];
+
+    final reaRaw = json['_reasons'] ?? json['reasons'];
+    final List<String> reaList = (reaRaw is List)
+        ? reaRaw.map((e) => e.toString()).toList()
+        : <String>[];
 
     return ScanResultModel(
       symbol: (json['Symbol'] ?? json['symbol'])?.toString() ?? '',
@@ -82,6 +99,10 @@ class ScanResultModel {
       tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
       riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
       timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? 'LIVE',
+      whySelected: whyList,
+      reasons: reaList,
+      scores: Map<String, dynamic>.from(json['scores'] as Map? ?? {}),
+      indicators: Map<String, dynamic>.from(json['indicators'] as Map? ?? {}),
     );
   }
 }

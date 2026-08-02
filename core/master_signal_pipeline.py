@@ -48,7 +48,7 @@ class MasterSignalPipeline:
         
         # 1. Validation & Input Mapping
         collected_results, weighted_score, mapped_input, pipeline_status = self._run_validation(
-            *args, decision=decision, confidence=confidence, symbol=symbol, **kwargs
+            *args, decision=decision, confidence=confidence, **kwargs
         )
 
         # 2. False Signal Detection

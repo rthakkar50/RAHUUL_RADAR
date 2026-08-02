@@ -6,6 +6,8 @@ import '../../../data/models/scan_result_model.dart';
 import '../../../data/repositories/scanner_repository.dart';
 import '../../widgets/scanner_loading_shimmer.dart';
 import '../stock_detail/stock_detail_screen.dart';
+import 'widgets/scanner_summary_panel.dart';
+import 'widgets/scanner_inspector_dialog.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -243,6 +245,12 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildScannerDecisionHeader() {
+    if (_response != null) {
+      return ScannerSummaryPanel(
+        response: _response!,
+        universeName: _selectedUniverse,
+      );
+    }
     final results = _response?.qualifiedResults ?? [];
     final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (_response?.totalScanned ?? 200);
     final buyCount = results.where((r) => r.signal.toUpperCase() == 'BUY').length;
@@ -378,6 +386,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: () => _openDetail(item),
+            onLongPress: () => ScannerInspectorDialog.show(context, item),
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -400,7 +409,18 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                             _smartBadge(item.sector, Colors.cyanAccent),
                         ],
                       ),
-                      Text('${item.confidence.toStringAsFixed(1)}% Swing Score', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Row(
+                        children: [
+                          Text('${item.confidence.toStringAsFixed(1)}% Swing Score', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.info_outline, size: 16, color: Colors.cyanAccent),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ScannerInspectorDialog.show(context, item),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -420,19 +440,28 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(item.signal == 'SELL' ? 'Setup Risk: MEDIUM (Short Setup)' : 'Chasing Warning: NO (Ideal Entry)', style: TextStyle(color: sigColor, fontSize: 10, fontWeight: FontWeight.bold)),
-                      GestureDetector(
-                        onTap: () {
-                          if (_compareItemA == null) {
-                            _compareItemA = item;
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${item.symbol} for comparison. Tap another setup to compare.')));
-                          } else {
-                            _compareItemB = item;
-                            _showCompareModal(_compareItemA!, _compareItemB!);
-                            _compareItemA = null;
-                            _compareItemB = null;
-                          }
-                        },
-                        child: const Text('⚡ Compare Setup', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => ScannerInspectorDialog.show(context, item),
+                            child: const Text('🔍 Inspect', style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () {
+                              if (_compareItemA == null) {
+                                _compareItemA = item;
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${item.symbol} for comparison. Tap another setup to compare.')));
+                              } else {
+                                _compareItemB = item;
+                                _showCompareModal(_compareItemA!, _compareItemB!);
+                                _compareItemA = null;
+                                _compareItemB = null;
+                              }
+                            },
+                            child: const Text('⚡ Compare Setup', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                     ],
                   ),

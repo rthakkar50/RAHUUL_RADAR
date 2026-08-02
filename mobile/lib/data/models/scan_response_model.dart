@@ -10,6 +10,12 @@ class ScanResponseModel {
   final double execTime;
   final List<ScanResultModel> qualifiedResults;
   final String lastUpdated;
+  final Map<String, int> rejectionAnalytics;
+  final List<Map<String, dynamic>> pipelineStages;
+  final Map<String, dynamic> scannerHealth;
+  final Map<String, dynamic> marketSummary;
+  final Map<String, dynamic> performanceMetrics;
+  final List<Map<String, dynamic>> symbolDecisionTraces;
 
   ScanResponseModel({
     required this.totalScanned,
@@ -21,12 +27,34 @@ class ScanResponseModel {
     required this.execTime,
     required this.qualifiedResults,
     required this.lastUpdated,
+    this.rejectionAnalytics = const {},
+    this.pipelineStages = const [],
+    this.scannerHealth = const {},
+    this.marketSummary = const {},
+    this.performanceMetrics = const {},
+    this.symbolDecisionTraces = const [],
   });
 
   factory ScanResponseModel.fromJson(Map<String, dynamic> json) {
     var list = json['qualified_results'] as List? ?? [];
     List<ScanResultModel> results = list
         .map((i) => ScanResultModel.fromJson(i))
+        .toList();
+
+    var rejRaw = json['rejection_analytics'] as Map<String, dynamic>? ?? {};
+    Map<String, int> rejMap = {};
+    rejRaw.forEach((k, v) {
+      rejMap[k] = (v as num?)?.toInt() ?? 0;
+    });
+
+    var pipeRaw = json['pipeline_stages'] as List? ?? [];
+    List<Map<String, dynamic>> stagesList = pipeRaw
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+
+    var tracesRaw = json['symbol_decision_traces'] as List? ?? [];
+    List<Map<String, dynamic>> tracesList = tracesRaw
+        .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
 
     return ScanResponseModel(
@@ -38,8 +66,13 @@ class ScanResponseModel {
       marketQuality: json['market_quality']?.toString() ?? 'Unknown',
       execTime: (json['exec_time'] as num?)?.toDouble() ?? 0.0,
       qualifiedResults: results,
-      lastUpdated: DateTime.now()
-          .toString(), // Storing client side time of fetch
+      lastUpdated: DateTime.now().toString(),
+      rejectionAnalytics: rejMap,
+      pipelineStages: stagesList,
+      scannerHealth: Map<String, dynamic>.from(json['scanner_health'] as Map? ?? {}),
+      marketSummary: Map<String, dynamic>.from(json['market_summary'] as Map? ?? {}),
+      performanceMetrics: Map<String, dynamic>.from(json['performance_metrics'] as Map? ?? {}),
+      symbolDecisionTraces: tracesList,
     );
   }
 }
