@@ -243,6 +243,13 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildScannerDecisionHeader() {
+    final results = _response?.qualifiedResults ?? [];
+    final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (_response?.totalScanned ?? 200);
+    final buyCount = results.where((r) => r.signal.toUpperCase() == 'BUY').length;
+    final sellCount = results.where((r) => r.signal.toUpperCase() == 'SELL').length;
+    final watchCount = results.where((r) => r.signal.toUpperCase() == 'WATCH').length;
+    final qualCount = results.length;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: const Color(0xFF161B22),
@@ -251,11 +258,12 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _hdrStat('Scanned', '${_response?.totalScanned ?? 176}', Colors.white),
-              _hdrStat('Qualified', '${_response?.qualifiedResults.length ?? 6}', Colors.cyanAccent),
-              _hdrStat('BUY', '4', Colors.greenAccent),
-              _hdrStat('SELL', '1', Colors.redAccent),
-              _hdrStat('WATCH', '1', Colors.amberAccent),
+              _hdrStat('Universe', _selectedUniverse, Colors.cyanAccent),
+              _hdrStat('Scanned', '$totalScanned', Colors.white),
+              _hdrStat('Qualified', '$qualCount', Colors.cyanAccent),
+              _hdrStat('BUY', '$buyCount', Colors.greenAccent),
+              _hdrStat('SELL', '$sellCount', Colors.redAccent),
+              _hdrStat('WATCH', '$watchCount', Colors.amberAccent),
               _hdrStat('Regime', 'BULLISH', Colors.greenAccent),
             ],
           ),
