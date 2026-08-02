@@ -17,4 +17,6 @@ cffi>=1.15.0
 cryptography>=3.4.0
 websockets>=10.0
 websocket-client>=1.3.0
+schedule>=1.1.0
+psutil>=5.8.0
 

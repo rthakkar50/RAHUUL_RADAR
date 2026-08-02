@@ -317,3 +317,10 @@ class TelegramIntelligence:
     def notify_event(cls, event_name: str, details: str):
         inst = cls.get_instance()
         inst._send_notification(f"🔔 *EVENT: {event_name}*\n{details}")
+
+    def evaluate_trade_alert_eligibility(self, setup_info: dict) -> tuple:
+        score = float(setup_info.get("score", setup_info.get("Score", 0)))
+        conf = float(setup_info.get("confidence", setup_info.get("Confidence", 0)))
+        if score >= 75.0 and conf >= 70.0:
+            return True, "Eligible"
+        return False, "Score/Confidence below alert threshold"

@@ -224,16 +224,24 @@ async def run_swing_scanner(debug: bool = False):
             is_scanning = _SCANNER_CACHE["is_scanning"]
         
         if data is None:
-            logger.info("Cache empty on request. Executing live orchestrated scan synchronously...")
-            _run_enterprise_orchestration()
+            logger.info("Cache empty on request. Triggering live background scan...")
+            if not _ORCHESTRATION_IS_RUNNING:
+                threading.Thread(target=_run_background_scan, daemon=True).start()
             
-            # Now cache should be populated
-            with _CACHE_LOCK:
-                data = _SCANNER_CACHE.get("data")
-            
-            if data is None:
-                raise Exception("Orchestration failed to populate swing cache")
-
+            meta = _get_provider_metadata()
+            return {
+                "total_universe": 200,
+                "total_scanned": 0,
+                "qualified_count": 0,
+                "filter_rejected_count": 0,
+                "buy_count": 0,
+                "sell_count": 0,
+                "watch_count": 0,
+                "qualified_results": [],
+                "is_scanning": True,
+                "status": "SCANNING",
+                **meta
+            }
 
         else:
             if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
@@ -264,14 +272,24 @@ async def run_intraday_scanner(debug: bool = False):
         ttl = _get_intraday_cache_ttl()
         
         if data is None:
-            logger.info("Intraday cache empty. Executing live orchestrated scan synchronously...")
-            _run_enterprise_orchestration()
+            logger.info("Intraday cache empty. Triggering live background scan...")
+            if not _ORCHESTRATION_IS_RUNNING:
+                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
 
-            with _INTRADAY_LOCK:
-                data = _INTRADAY_CACHE.get("data")
-            
-            if data is None:
-                raise Exception("Orchestration failed to populate intraday cache")
+            meta = _get_provider_metadata()
+            return {
+                "total_universe": 184,
+                "total_scanned": 0,
+                "qualified_count": 0,
+                "filter_rejected_count": 0,
+                "buy_count": 0,
+                "sell_count": 0,
+                "watch_count": 0,
+                "qualified_results": [],
+                "is_scanning": True,
+                "status": "SCANNING",
+                **meta
+            }
             
 
         else:
