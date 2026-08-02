@@ -408,7 +408,11 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     final intradayList = intradayFiltered;
 
     // DATA SOURCE: /api/v1/scanner/swing
-    final volumeList = swingFiltered.where((r) => r.volume.contains('+') || r.volume.contains('x') || r.volume.contains('M') || r.volume.contains('K')).toList();
+    final volumeList = swingFiltered.where((r) {
+      if (r.volume.contains('+') || r.volume.contains('x') || r.volume.contains('M') || r.volume.contains('K')) return true;
+      final volVal = double.tryParse(r.volume.replaceAll(',', '').trim()) ?? 0;
+      return volVal > 100000;
+    }).toList();
 
     // DATA SOURCE: /api/v1/scanner/swing
     final breakoutList = swingFiltered.where((r) => r.trend.toUpperCase().contains('BREAKOUT') || r.trend.toUpperCase().contains('BUILDUP') || r.trend.toUpperCase().contains('BULLISH')).toList();

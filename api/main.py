@@ -181,13 +181,14 @@ def _run_enterprise_orchestration():
         
         # 2. Run Intraday Scan
         intra_service = IntradayScannerService()
-        intra_raw = intra_service.execute_intraday_scan()
+        intra_res = intra_service.execute_intraday_scan()
+        intra_signals = intra_res.get("qualified_results", []) if isinstance(intra_res, dict) else (intra_res or [])
         
         # 3. Orchestrate Signals
         orchestrator = SignalOrchestrator()
         merged_signals = orchestrator.merge_and_resolve({
             "swing": swing_signals,
-            "intraday": intra_raw
+            "intraday": intra_signals
         })
         
         final_swing = [s for s in merged_signals if s.get("source_engine") == "swing"]
