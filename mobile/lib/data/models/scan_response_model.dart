@@ -3,8 +3,11 @@ import 'scan_result_model.dart';
 class ScanResponseModel {
   final int totalScanned;
   final int totalUniverse;
-  final int waitCount;
+  final int qualifiedCount;
+  final int filterRejectedCount;
   final int noDataCount;
+  final int rejectedCount;
+  final int waitCount;
   final int errorCount;
   final String marketQuality;
   final double execTime;
@@ -20,8 +23,11 @@ class ScanResponseModel {
   ScanResponseModel({
     required this.totalScanned,
     required this.totalUniverse,
-    required this.waitCount,
+    required this.qualifiedCount,
+    required this.filterRejectedCount,
     required this.noDataCount,
+    required this.rejectedCount,
+    required this.waitCount,
     required this.errorCount,
     required this.marketQuality,
     required this.execTime,
@@ -57,11 +63,21 @@ class ScanResponseModel {
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
 
+    int totScanned = json['total_scanned'] ?? 0;
+    int totUniverse = json['total_universe'] ?? 0;
+    int qualCount = json['qualified_count'] ?? results.length;
+    int filterRej = json['filter_rejected_count'] ?? (totScanned > qualCount ? totScanned - qualCount : 0);
+    int noData = json['no_data_count'] ?? (totUniverse > totScanned ? totUniverse - totScanned : 0);
+    int totalRej = json['rejected_count'] ?? (filterRej + noData);
+
     return ScanResponseModel(
-      totalScanned: json['total_scanned'] ?? 0,
-      totalUniverse: json['total_universe'] ?? 0,
+      totalScanned: totScanned,
+      totalUniverse: totUniverse,
+      qualifiedCount: qualCount,
+      filterRejectedCount: filterRej,
+      noDataCount: noData,
+      rejectedCount: totalRej,
       waitCount: json['wait_count'] ?? 0,
-      noDataCount: json['no_data_count'] ?? 0,
       errorCount: json['error_count'] ?? 0,
       marketQuality: json['market_quality']?.toString() ?? 'Unknown',
       execTime: (json['exec_time'] as num?)?.toDouble() ?? 0.0,

@@ -175,24 +175,29 @@ async def run_intraday_scanner(debug: bool = False):
         total_universe = len(fno_symbols)
         
         qualified_results = scan_output.get("qualified_results", [])
-        total_scanned = total_universe
+        total_scanned = scan_output.get("total_scanned", total_universe)
+        qualified_count = len(qualified_results)
+        
+        filter_rejected_count = max(0, total_scanned - qualified_count)
+        no_data_count = max(0, total_universe - total_scanned)
+        rejected_count = filter_rejected_count + no_data_count
+
         buy_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
         sell_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
         watch_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
-        qualified_count = len(qualified_results)
-        rejected_count = max(0, total_scanned - qualified_count)
 
         meta = _get_provider_metadata()
         res = {
-            "total_scanned": total_scanned,
             "total_universe": total_universe,
+            "total_scanned": total_scanned,
             "qualified_count": qualified_count,
-            "rejected_count": rejected_count,
+            "filter_rejected_count": filter_rejected_count,
+            "no_data_count": no_data_count,
             "buy_count": buy_count,
-            "sell_count": sell_count,
             "watch_count": watch_count,
+            "sell_count": sell_count,
+            "rejected_count": rejected_count,
             "wait_count": scan_output.get("wait_count", 0),
-            "no_data_count": scan_output.get("no_data_count", 0),
             "error_count": scan_output.get("error_count", 0),
             "market_quality": scan_output.get("market_quality", "HIGH"),
             "exec_time": scan_output.get("exec_time", 0.01),

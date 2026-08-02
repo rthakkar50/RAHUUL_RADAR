@@ -951,22 +951,30 @@ class SwingScannerService:
                 "cpu_usage_pct": cpu_pct
             }
 
-            # SCANNER COVERAGE & FILTER PIPELINE DOCUMENTATION:
-            # 1. Total Universe (e.g. 200 NIFTY symbols) = configured target universe.
-            # 2. Total Scanned / Downloaded (e.g. 37 symbols) = symbols with valid live market indicator data available (especially during weekend/off-market hours).
-            # 3. Qualified (e.g. 20 symbols) = symbols that passed the 7-stage scanner filter pipeline (BUY + WATCH).
-            # 4. Rejected = total_universe - qualified_count.
+            # SPRINT-165 SCANNER METRICS RECONCILIATION:
+            # 1. filter_rejected_count = total_scanned - qualified_count (e.g. 37 - 20 = 17)
+            # 2. no_data_count = total_universe - total_scanned (e.g. 200 - 37 = 163)
+            # 3. rejected_count = filter_rejected_count + no_data_count (e.g. 17 + 163 = 180 for backward compatibility)
+            total_universe_val = len(stock_list)
+            total_scanned_val = len(processed_results)
+            qualified_cnt_val = qualified_count
+            
+            filter_rejected_cnt = max(0, total_scanned_val - qualified_cnt_val)
+            no_data_cnt_val = max(0, total_universe_val - total_scanned_val)
+            rejected_cnt_val = filter_rejected_cnt + no_data_cnt_val
+
             return {
-                "total_scanned": len(processed_results),
-                "total_universe": len(stock_list),
-                "qualified_count": qualified_count,
-                "rejected_count": rejected_count,
+                "total_universe": total_universe_val,
+                "total_scanned": total_scanned_val,
+                "qualified_count": qualified_cnt_val,
+                "filter_rejected_count": filter_rejected_cnt,
+                "no_data_count": no_data_cnt_val,
                 "buy_count": buy_count,
-                "sell_count": sell_count,
                 "watch_count": watch_count,
+                "sell_count": sell_count,
+                "rejected_count": rejected_cnt_val,
                 "qualified_results": qualified_results,
                 "wait_count": wait_count,
-                "no_data_count": no_data_count,
                 "error_count": error_count,
                 "best_trades": best_trades,
                 "market_quality": market_quality,
