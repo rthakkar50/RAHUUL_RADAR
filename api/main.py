@@ -112,6 +112,46 @@ def _get_intraday_cache_ttl() -> float:
         return 120.0  # 2 minutes during market open
     return 900.0      # 15 minutes during market closed
 
+CACHE_FILE_SWING = "data/cache_swing.json"
+CACHE_FILE_INTRADAY = "data/cache_intraday.json"
+
+def _save_cache_to_disk(filepath: str, cache_dict: dict):
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(cache_dict, f)
+    except Exception as e:
+        logger.warning(f"Failed to save cache to disk {filepath}: {e}")
+
+def _load_cache_from_disk():
+    global _SCANNER_CACHE, _INTRADAY_CACHE
+    try:
+        if os.path.exists(CACHE_FILE_SWING):
+            with open(CACHE_FILE_SWING, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if data and data.get("qualified_results"):
+                    with _CACHE_LOCK:
+                        _SCANNER_CACHE["data"] = data
+                        _SCANNER_CACHE["last_updated"] = time.time()
+                    logger.info(f"Loaded {len(data.get('qualified_results', []))} swing results from disk cache.")
+    except Exception as e:
+        logger.warning(f"Failed to load swing cache from disk: {e}")
+
+    try:
+        if os.path.exists(CACHE_FILE_INTRADAY):
+            with open(CACHE_FILE_INTRADAY, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if data and data.get("qualified_results"):
+                    with _INTRADAY_LOCK:
+                        _INTRADAY_CACHE["data"] = data
+                        _INTRADAY_CACHE["last_updated"] = time.time()
+                    logger.info(f"Loaded {len(data.get('qualified_results', []))} intraday results from disk cache.")
+    except Exception as e:
+        logger.warning(f"Failed to load intraday cache from disk: {e}")
+
+# Load disk cache on module import
+_load_cache_from_disk()
+
 _ORCHESTRATOR_LOCK = threading.Lock()
 _ORCHESTRATION_IS_RUNNING = False
 
@@ -126,32 +166,40 @@ def _run_enterprise_orchestration():
         logger.info("Executing Enterprise Signal Orchestration Pipeline...")
         start_time = time.time()
         
-        # 1. Run Engines
+        # 1. Run Swing Scan & Populate Cache Immediately
         swing_service = SwingScannerService()
         swing_res = swing_service.execute_swing_scan()
         swing_signals = swing_res.get("qualified_results", [])
+
+        # Update Swing Cache immediately so UI gets results without waiting for Intraday
+        json_swing = json.loads(json.dumps(swing_res, default=str))
+        with _CACHE_LOCK:
+            _SCANNER_CACHE["data"] = json_swing
+            _SCANNER_CACHE["last_updated"] = time.time()
+            _SCANNER_CACHE["is_scanning"] = False
+        _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
         
+        # 2. Run Intraday Scan
         intra_service = IntradayScannerService()
         intra_raw = intra_service.execute_intraday_scan()
         
-        # 2. Orchestrate
+        # 3. Orchestrate Signals
         orchestrator = SignalOrchestrator()
         merged_signals = orchestrator.merge_and_resolve({
             "swing": swing_signals,
             "intraday": intra_raw
         })
         
-        # 3. Split back out based on source
         final_swing = [s for s in merged_signals if s.get("source_engine") == "swing"]
         final_intra = [s for s in merged_signals if s.get("source_engine") == "intraday"]
         
-        # Update Swing Cache
-        json_swing = json.loads(json.dumps(swing_res, default=str))
-        json_swing["qualified_results"] = json.loads(json.dumps(final_swing, default=str))
-        with _CACHE_LOCK:
-            _SCANNER_CACHE["data"] = json_swing
-            _SCANNER_CACHE["last_updated"] = time.time()
-            _SCANNER_CACHE["is_scanning"] = False
+        # Final Swing Cache Update
+        if final_swing:
+            json_swing["qualified_results"] = json.loads(json.dumps(final_swing, default=str))
+            with _CACHE_LOCK:
+                _SCANNER_CACHE["data"] = json_swing
+                _SCANNER_CACHE["last_updated"] = time.time()
+            _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
             
         # Update Intraday Cache
         fno_symbols = get_fno_symbols()

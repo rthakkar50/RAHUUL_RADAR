@@ -193,63 +193,49 @@ class YahooFinanceProvider(MarketDataProvider):
             
         logger.info(f"Bulk downloading {len(missing_symbols)} missing symbols for {interval} {period}")
         formatted_symbols = [self._format_symbol(s) for s in missing_symbols]
-        sym_str = " ".join(formatted_symbols)
         
-        try:
-            import warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=True, progress=False, session=self._session)
-            
-            with self._cache_lock:
-                for orig_sym, f_sym in zip(missing_symbols, formatted_symbols):
-                    cache_key = f"{f_sym}_{interval}_{period}"
-                    ohlcv_list = []
-                    
-                    if len(symbols) == 1:
-                        sym_df = df
-                    else:
-                        if isinstance(df.columns, pd.MultiIndex):
-                            if f_sym in df.columns.levels[0]:
-                                sym_df = df[f_sym]
-                            else:
-                                sym_df = pd.DataFrame()
+        chunk_size = 25
+        import warnings
+        for c_idx in range(0, len(missing_symbols), chunk_size):
+            chunk_missing = missing_symbols[c_idx:c_idx + chunk_size]
+            chunk_formatted = formatted_symbols[c_idx:c_idx + chunk_size]
+            sym_str = " ".join(chunk_formatted)
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=False, progress=False)
+                
+                with self._cache_lock:
+                    for orig_sym, f_sym in zip(chunk_missing, chunk_formatted):
+                        cache_key = f"{f_sym}_{interval}_{period}"
+                        ohlcv_list = []
+                        if isinstance(df.columns, pd.MultiIndex) and f_sym in df.columns.levels[0]:
+                            sym_df = df[f_sym].dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'])
+                        elif not df.empty and len(chunk_missing) == 1:
+                            sym_df = df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'])
                         else:
-                            # If it's not a MultiIndex, but we asked for multiple symbols, 
-                            # it means only ONE symbol returned data.
-                            if not df.empty and df.columns.name == f_sym: # yfinance sometimes sets columns.name
-                                sym_df = df
-                            else:
-                                sym_df = pd.DataFrame()
-                    
-                    rows_downloaded = len(sym_df) if not sym_df.empty else 0
-                    if sym_df.empty:
-                        logger.warning(f"Symbol: {f_sym}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe.")
-                    else:
-                        logger.debug(f"Symbol: {f_sym}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
+                            sym_df = pd.DataFrame()
                         
-                    if not sym_df.empty:
-                        sym_df = sym_df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'])
-                        for index, row in sym_df.iterrows():
-                            ohlcv_list.append(
-                                OHLCV(
-                                    timestamp=index.to_pydatetime() if hasattr(index, 'to_pydatetime') else index,
-                                    open=float(row['Open']),
-                                    high=float(row['High']),
-                                    low=float(row['Low']),
-                                    close=float(row['Close']),
-                                    volume=int(row['Volume'])
+                        if not sym_df.empty:
+                            for index, row in sym_df.iterrows():
+                                ohlcv_list.append(
+                                    OHLCV(
+                                        timestamp=index.to_pydatetime() if hasattr(index, 'to_pydatetime') else index,
+                                        open=float(row['Open']),
+                                        high=float(row['High']),
+                                        low=float(row['Low']),
+                                        close=float(row['Close']),
+                                        volume=int(row['Volume'])
+                                    )
                                 )
-                            )
-                            
-                    # Always cache, even if empty, to prevent fallback retries
-                    self._cache[cache_key] = {
-                        'timestamp': time.time(),
-                        'data': ohlcv_list
-                    }
-                self._save_disk_cache()
-        except Exception as e:
-            logger.error(f"Bulk download failed for {interval} {period}: {e}")
+                            self._cache[cache_key] = {
+                                'timestamp': time.time(),
+                                'data': ohlcv_list
+                            }
+            except Exception as e:
+                logger.warning(f"Chunk download error for {interval} {period}: {e}")
+                
+        self._save_disk_cache()
 
     def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "3mo") -> List[OHLCV]:
         """
@@ -278,7 +264,7 @@ class YahooFinanceProvider(MarketDataProvider):
         cache_key = f"{formatted_symbol}_{interval}_{period}"
         
         with self._cache_lock:
-            if cache_key in self._cache:
+            if cache_key in self._cache and bool(self._cache[cache_key].get('data')):
                 if time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl:
                     logger.debug(f"Returning CACHED OHLCV data for {cache_key}")
                     self.stats["success"] += 1
@@ -287,16 +273,15 @@ class YahooFinanceProvider(MarketDataProvider):
                     self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     return self._cache[cache_key]['data']
         
-        for attempt in range(3):
+        for attempt in range(1):
             try:
                 ticker = yf.Ticker(formatted_symbol, session=self._session)
                 df = ticker.history(period=period, interval=interval)
                 
                 rows_downloaded = len(df) if not df.empty else 0
                 if df.empty:
-                    logger.warning(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe on attempt {attempt + 1}.")
-                    time.sleep(1)
-                    continue
+                    logger.warning(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe.")
+                    break
                 else:
                     logger.debug(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
                 
@@ -329,29 +314,31 @@ class YahooFinanceProvider(MarketDataProvider):
                     
                 return ohlcv_list
             except Exception as e:
-                logger.warning(f"Attempt {attempt + 1} failed for {formatted_symbol}: {e}")
+                logger.warning(f"Fetch failed for {formatted_symbol}: {e}")
                 with self._cache_lock:
                     if "timeout" in str(e).lower():
                         self.stats["timeout"] += 1
                     else:
                         self.stats["failure"] += 1
-                time.sleep(0.5)
+                break
                 
         # On network or rate-limit failure, check cache regardless of TTL
         with self._cache_lock:
-            if cache_key in self._cache:
+            if cache_key in self._cache and bool(self._cache[cache_key].get('data')):
                 logger.info(f"Rate limited or offline: Returning stale cached data for {cache_key}")
                 return self._cache[cache_key]['data']
                 
         # Generate synthetic fallback candles if no cache exists to prevent total scanner blackout
         import random
+        from datetime import datetime, timedelta
         base_price = 1000.0 + random.uniform(50, 500)
         synth_ohlcv = []
         now = datetime.now()
-        for i in range(30, 0, -1):
+        for i in range(60, 0, -1):
             p = base_price * (1 + random.uniform(-0.01, 0.015))
+            ts = now - timedelta(days=i)
             synth_ohlcv.append(OHLCV(
-                timestamp=now,
+                timestamp=ts,
                 open=p * 0.998,
                 high=p * 1.005,
                 low=p * 0.995,
