@@ -199,10 +199,7 @@ class PaytmMoneyProvider(MarketDataProvider):
                 return cached_ltp
                 
         if security_id in self._rest_cache:
-            if self._rest_cache[security_id].get('price', 0.0) > 0:
-                return self._rest_cache[security_id]['price']
-            else:
-                return self.fallback.get_last_price(symbol)
+            return self._rest_cache[security_id].get('price', 0.0)
                 
         if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
             pref_string = f"NSE:{security_id}:INDEX"
@@ -326,7 +323,7 @@ class PaytmMoneyProvider(MarketDataProvider):
     def get_volume(self, symbol: str) -> int:
         self.logger.debug(f"Requesting Volume for {symbol} via Paytm Money...")
         if not self.is_connected():
-            return self.fallback.get_volume(symbol)
+            return 0
             
         security_id = self._get_security_id(symbol)
         
@@ -336,10 +333,7 @@ class PaytmMoneyProvider(MarketDataProvider):
                 return cached_vol
                 
         if security_id in self._rest_cache:
-            if self._rest_cache[security_id].get('volume', 0) > 0:
-                return self._rest_cache[security_id]['volume']
-            else:
-                return self.fallback.get_volume(symbol)
+            return self._rest_cache[security_id].get('volume', 0)
         
         if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
             pref_string = f"NSE:{security_id}:INDEX"
