@@ -35,6 +35,12 @@ class PaytmMoneyProvider(MarketDataProvider):
         self.ws_cache = PaytmLiveBroadcast.get_instance()
         self._rest_cache: Dict[str, Dict[str, float]] = {}
         self._option_chain_cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+        self.stats = {
+            "success": 0,
+            "fallback_count": 0,
+            "cache_hits": 0,
+            "cache_misses": 0
+        }
         
         if not self.api_key or not self.api_secret or not self.request_token:
             self._load_credentials_from_config()

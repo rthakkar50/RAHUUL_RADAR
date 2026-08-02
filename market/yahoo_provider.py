@@ -29,6 +29,14 @@ class YahooFinanceProvider(MarketDataProvider):
         self._cache = {}
         self._cache_lock = threading.Lock()
         self._cache_ttl = 900 # 15 minutes TTL for memory
+        self.stats = {
+            "total_requests": 0,
+            "success": 0,
+            "failure": 0,
+            "timeout": 0,
+            "total_latency_ms": 0.0,
+            "average_latency_ms": 0.0
+        }
         self._session = requests.Session()
         self._session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -256,10 +264,14 @@ class YahooFinanceProvider(MarketDataProvider):
         Returns:
             List[OHLCV]: A standardized list of candlestick data.
         """
-        logger.debug(f"Fetching OHLCV data for {symbol} ({interval}) from Yahoo Finance.")
-        
+        t0 = time.time()
+        with self._cache_lock:
+            self.stats["total_requests"] += 1
+
         if not self._is_connected:
             logger.warning("Provider disconnected. Returning empty list.")
+            with self._cache_lock:
+                self.stats["failure"] += 1
             return []
             
         formatted_symbol = self._format_symbol(symbol)
@@ -269,6 +281,10 @@ class YahooFinanceProvider(MarketDataProvider):
             if cache_key in self._cache:
                 if time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl:
                     logger.debug(f"Returning CACHED OHLCV data for {cache_key}")
+                    self.stats["success"] += 1
+                    lat = (time.time() - t0) * 1000
+                    self.stats["total_latency_ms"] += lat
+                    self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     return self._cache[cache_key]['data']
         
         for attempt in range(3):
@@ -287,7 +303,6 @@ class YahooFinanceProvider(MarketDataProvider):
                 df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'], inplace=True)
                     
                 ohlcv_list = []
-                # Ensure the dataframe index is a datetime
                 for index, row in df.iterrows():
                     ohlcv_list.append(
                         OHLCV(
@@ -307,10 +322,19 @@ class YahooFinanceProvider(MarketDataProvider):
                         'timestamp': time.time(),
                         'data': ohlcv_list
                     }
+                    self.stats["success"] += 1
+                    lat = (time.time() - t0) * 1000
+                    self.stats["total_latency_ms"] += lat
+                    self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     
                 return ohlcv_list
             except Exception as e:
                 logger.warning(f"Attempt {attempt + 1} failed for {formatted_symbol}: {e}")
+                with self._cache_lock:
+                    if "timeout" in str(e).lower():
+                        self.stats["timeout"] += 1
+                    else:
+                        self.stats["failure"] += 1
                 time.sleep(0.5)
                 
         # On network or rate-limit failure, check cache regardless of TTL

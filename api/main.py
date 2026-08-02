@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Request, status, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import get_logger
 import time
@@ -176,6 +176,41 @@ async def run_intraday_scanner(debug: bool = False):
         return res
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@v1_router.get("/scanner/audit", tags=["Scanner"])
+async def get_scanner_audit():
+    logger.info("Scanner Audit endpoint called")
+    try:
+        service = SwingScannerService()
+        data = service.execute_swing_scan()
+        return {
+            "universe_summary": data.get("universe_audit", {}),
+            "symbol_status_report": data.get("symbol_status_report", []),
+            "provider_statistics": data.get("provider_statistics", {}),
+            "sell_signal_validation": data.get("sell_signal_validation", {}),
+            "breadth_validation": data.get("breadth_validation", {}),
+            "pipeline_reconciliation": data.get("pipeline_reconciliation", {}),
+            "csv_download_url": "/api/v1/scanner/audit/csv"
+        }
+    except Exception as e:
+        logger.error(f"Error serving scanner audit: {e}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@v1_router.get("/scanner/audit/csv", tags=["Scanner"])
+async def get_scanner_audit_csv():
+    logger.info("Scanner Audit CSV endpoint called")
+    try:
+        import os
+        csv_path = "data/scanner_audit.csv"
+        if not os.path.exists(csv_path):
+            service = SwingScannerService()
+            service.execute_swing_scan()
+        if os.path.exists(csv_path):
+            return FileResponse(csv_path, media_type="text/csv", filename="scanner_audit.csv")
+        raise HTTPException(status_code=404, detail="Audit CSV not found")
+    except Exception as e:
+        logger.error(f"Error serving scanner audit CSV: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 # Portfolio Endpoint — Reads paper_trading.db directly (no PySide6/singleton dependency)
