@@ -17,7 +17,7 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
   String _selectedSymbol = 'NIFTY';
   late TabController _tabController;
 
-  final List<String> _symbols = ['NIFTY', 'BANKNIFTY', 'FINNIFTY'];
+  final List<String> _symbols = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY', 'SENSEX'];
 
   @override
   void initState() {
@@ -56,6 +56,159 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
     }
   }
 
+  void _showOptionDetail(String title, double strike, double premium, String type, double iv, double delta) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF161B22),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('$title ₹${strike.toStringAsFixed(0)} $type', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      const Text('LIVE 🟢 • Expiry: 06-AUG-2026', style: TextStyle(color: Colors.greenAccent, fontSize: 11)),
+                    ],
+                  ),
+                  IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+              const Divider(color: Colors.white10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _statBox('LTP Premium', '₹${premium.toStringAsFixed(2)}', Colors.cyanAccent),
+                  _statBox('OI Contracts', '4.2M (+14.2%)', Colors.greenAccent),
+                  _statBox('Implied Vol (IV)', '${iv.toStringAsFixed(1)}%', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text('Option Greeks Suite', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _greekBadge('Delta', delta.toStringAsFixed(2), Colors.cyanAccent),
+                  _greekBadge('Gamma', '0.0028', Colors.purpleAccent),
+                  _greekBadge('Theta', '-12.4', Colors.redAccent),
+                  _greekBadge('Vega', '18.2', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text('Trade Plan & Targets', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 4),
+              Text('Entry: ₹${premium.toStringAsFixed(1)} • SL: ₹${(premium * 0.75).toStringAsFixed(1)} • T1: ₹${(premium * 1.35).toStringAsFixed(1)} • T2: ₹${(premium * 1.70).toStringAsFixed(1)}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              Text('PCR: 1.34 (Bullish) • Expected Move: ±185 pts', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent, foregroundColor: Colors.white),
+                  icon: const Icon(Icons.flash_on, size: 16),
+                  label: const Text('Add to Option Watchlist'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added $title ₹${strike.toStringAsFixed(0)} $type to Watchlist')));
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showStrategyDetail(String strategyName, String idealMarket, String riskReward, double margin) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF161B22),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(strategyName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+              const Divider(color: Colors.white10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _statBox('Ideal Market', idealMarket, Colors.cyanAccent),
+                  _statBox('Risk/Reward', riskReward, Colors.greenAccent),
+                  _statBox('Margin Required', '₹${margin.toStringAsFixed(0)}', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text('Strategy Structure & Legs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 6),
+              const Text('• LEG 1: Buy 1x NIFTY 24,500 CE @ ₹145.00', style: TextStyle(color: Colors.greenAccent, fontSize: 11)),
+              const Text('• LEG 2: Sell 1x NIFTY 24,700 CE @ ₹65.00', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+              const SizedBox(height: 12),
+              Text('Max Profit: ₹5,500.00 • Max Loss: ₹4,000.00 • Breakeven: 24,580', style: const TextStyle(color: Colors.white, fontSize: 11)),
+              Text('Suitable IV: 12% - 16% • Expiry Proximity: 3-5 Days', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent, foregroundColor: Colors.black),
+                  icon: const Icon(Icons.play_arrow, size: 16),
+                  label: const Text('Execute Strategy Preview'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulated $strategyName Order Preview')));
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _statBox(String label, String val, Color col) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        const SizedBox(height: 2),
+        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _greekBadge(String label, String val, Color col) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(color: col.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(val, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,20 +225,25 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.show_chart,
-                color: Colors.white,
-                size: 18,
-              ),
+              child: const Icon(Icons.show_chart, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'F&O Trading Center',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            const Text('F&O Trading Center', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         actions: [
+          DropdownButton<String>(
+            value: _selectedSymbol,
+            dropdownColor: const Color(0xFF161B22),
+            underline: const SizedBox(),
+            items: _symbols.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)))).toList(),
+            onChanged: (v) {
+              if (v != null) {
+                setState(() => _selectedSymbol = v);
+                _fetchFno();
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _isLoading ? null : _fetchFno,
@@ -95,12 +253,12 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
           controller: _tabController,
           isScrollable: true,
           tabs: const [
-            Tab(text: 'Intraday Scanner'),
             Tab(text: 'Option Scanner'),
             Tab(text: 'Option Chain'),
-            Tab(text: 'Greeks'),
-            Tab(text: 'Strategy'),
-            Tab(text: 'Positions'),
+            Tab(text: 'Greeks Hub'),
+            Tab(text: 'Strategy Builder'),
+            Tab(text: 'OI Analytics'),
+            Tab(text: 'F&O Positions'),
           ],
         ),
       ),
@@ -110,467 +268,247 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
 
   Widget _buildBody() {
     if (_isLoading && _data == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.purpleAccent),
-      );
+      return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
     }
 
     if (_error != null && _data == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.redAccent,
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _fetchFno,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent)));
     }
-
-    final d = _data!;
 
     return TabBarView(
       controller: _tabController,
       children: [
-        _buildIntradayScannerTab(),
         _buildOptionScannerTab(),
-        _buildOptionChainTab(d),
-        _buildGreeksTab(d),
-        _buildStrategyTab(),
-        _buildPositionsTab(d),
+        _buildOptionChainTab(),
+        _buildGreeksTab(),
+        _buildStrategyBuilderTab(),
+        _buildOiAnalyticsTab(),
+        _buildPositionsTab(),
       ],
-    );
-  }
-
-  Widget _buildIntradayScannerTab() {
-    final items = [
-      {'symbol': 'RELIANCE', 'type': 'Breakout', 'momentum': 'Rank #1', 'volume': '+340%', 'vwap': 'Above VWAP', 'orb': 'ORB High Break'},
-      {'symbol': 'HDFCBANK', 'type': 'Volume Explosion', 'momentum': 'Rank #2', 'volume': '+410%', 'vwap': 'Above VWAP', 'orb': 'ORB High Break'},
-      {'symbol': 'ICICIBANK', 'type': 'VWAP Cross', 'momentum': 'Rank #3', 'volume': '+210%', 'vwap': 'Above VWAP', 'orb': 'Consolidating'},
-      {'symbol': 'INFY', 'type': 'Momentum Surge', 'momentum': 'Rank #4', 'volume': '+180%', 'vwap': 'Above VWAP', 'orb': 'ORB High Break'},
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
-      itemBuilder: (ctx, i) {
-        final item = items[i];
-        return Card(
-          color: const Color(0xFF161B22),
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item['symbol']!,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.greenAccent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        item['momentum']!,
-                        style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Signal: ${item['type']}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 12)),
-                    Text('Vol: ${item['volume']}', style: const TextStyle(color: Colors.amberAccent, fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text('VWAP: ${item['vwap']} • ORB: ${item['orb']}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
   Widget _buildOptionScannerTab() {
-    final alerts = [
-      {'setup': 'NIFTY 24800 CE', 'action': 'Best CE Buy', 'oi': '+48% OI Build', 'iv': 'IV Spike 18.4', 'pcr': 'PCR 1.45 (Bullish)'},
-      {'setup': 'BANKNIFTY 52500 CE', 'action': 'Best CE Buy', 'oi': '+62% OI Build', 'iv': 'Gamma Spike', 'pcr': 'PCR 1.32 (Bullish)'},
-      {'setup': 'FINNIFTY 23400 PE', 'action': 'Best PE Hedge', 'oi': '+22% OI Build', 'iv': 'IV Crush', 'pcr': 'PCR 0.82 (Bearish)'},
-    ];
+    final chain = _data?.optionChain ?? [];
+    if (chain.isEmpty) {
+      return const Center(child: Text('No Option Setups Found', style: TextStyle(color: Colors.grey)));
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: alerts.length,
+      itemCount: chain.length,
       itemBuilder: (ctx, i) {
-        final a = alerts[i];
+        final item = chain[i];
         return Card(
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: const Icon(Icons.flash_on, color: Colors.amberAccent),
-            title: Text(a['setup']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('${a['action']} • ${a['oi']}\n${a['iv']} • ${a['pcr']}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.purpleAccent, size: 14),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOptionChainTab(FnoOverviewModel d) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSymbolSelector(),
-          const SizedBox(height: 16),
-          _buildMetricsOverview(d),
-          const SizedBox(height: 16),
-          _buildBuildUpBanner(d),
-          const SizedBox(height: 20),
-          const Text(
-            'Option Chain Matrix',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildOptionChainTable(d),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGreeksTab(FnoOverviewModel d) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Options Greeks Analytics Hub',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              const SizedBox(height: 12),
-              _greekRow('Delta (Δ)', '0.52', 'ATM Sensitivity', Colors.greenAccent),
-              _greekRow('Gamma (Γ)', '0.0035', 'Acceleration', Colors.cyanAccent),
-              _greekRow('Theta (Θ)', '-12.40 Rs/day', 'Time Decay Burn', Colors.redAccent),
-              _greekRow('Vega (V)', '18.20', 'Volatility Impact', Colors.purpleAccent),
-              _greekRow('Rho (ρ)', '4.15', 'Interest Rate Impact', Colors.amberAccent),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  static Widget _greekRow(String name, String val, String desc, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-            ],
-          ),
-          Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStrategyTab() {
-    final strategies = [
-      {'name': 'Bull Call Spread', 'bias': 'Bullish', 'risk': 'Defined', 'reward': '1:2.8'},
-      {'name': 'Bear Put Spread', 'bias': 'Bearish', 'risk': 'Defined', 'reward': '1:2.5'},
-      {'name': 'Iron Condor', 'bias': 'Neutral', 'risk': 'Limited', 'reward': '1:1.9'},
-      {'name': 'Long Straddle', 'bias': 'High Volatility', 'risk': 'Premium Paid', 'reward': 'Unlimited'},
-      {'name': 'Short Strangle', 'bias': 'Low Volatility', 'risk': 'Managed', 'reward': 'Max Premium'},
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: strategies.length,
-      itemBuilder: (ctx, i) {
-        final s = strategies[i];
-        return Card(
-          color: const Color(0xFF161B22),
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: const Icon(Icons.layers_outlined, color: Colors.purpleAccent),
-            title: Text(s['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('Bias: ${s['bias']} • Risk: ${s['risk']} • R:R: ${s['reward']}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 14),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPositionsTab(FnoOverviewModel d) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Live F&O Broker Positions & Margins', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Colors.purpleAccent, width: 1)),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _showOptionDetail(_selectedSymbol, item.strike, item.callPrice, 'CE', item.callIv, item.callGreeks.delta),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _posTile('Open P&L', '+₹12,450.00', Colors.greenAccent),
-                  _posTile('Used Margin', '₹7,23,244.20', Colors.purpleAccent),
-                  _posTile('Available Cash', '₹2,76,405.13', Colors.cyanAccent),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('$_selectedSymbol ₹${item.strike.toStringAsFixed(0)} CE', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
+                        child: Text(item.buildupType, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Premium LTP: ₹${item.callPrice.toStringAsFixed(2)} • IV: ${item.callIv.toStringAsFixed(1)}% • Delta: ${item.callGreeks.delta.toStringAsFixed(2)}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                  Text('OI: ${item.callOi} (Contracts) • Scalp R:R: 1:3.0', style: const TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  static Widget _posTile(String label, String val, Color col) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 4),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildSymbolSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Target Index:',
-            style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
-          ),
-          DropdownButton<String>(
-            value: _selectedSymbol,
-            dropdownColor: const Color(0xFF161B22),
-            underline: const SizedBox(),
-            items: _symbols.map((sym) {
-              return DropdownMenuItem<String>(
-                value: sym,
-                child: Text(
-                  sym,
-                  style: const TextStyle(
-                    color: Colors.purpleAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) {
-                setState(() => _selectedSymbol = val);
-                _fetchFno();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricsOverview(FnoOverviewModel d) {
-    final isBullishPcr = d.pcr >= 1.0;
-    return Row(
-      children: [
-        Expanded(
-          child: _metricCard(
-            'PCR Ratio',
-            d.pcr.toStringAsFixed(2),
-            isBullishPcr ? 'Bullish Sentiment' : 'Bearish Sentiment',
-            isBullishPcr ? Colors.greenAccent : Colors.redAccent,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _metricCard(
-            'Max Pain Level',
-            '₹${d.maxPain.toStringAsFixed(0)}',
-            'Option Expiry Pin',
-            Colors.purpleAccent,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _metricCard(String title, String val, String sub, Color accent) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-          const SizedBox(height: 4),
-          Text(val, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 2),
-          Text(sub, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBuildUpBanner(FnoOverviewModel d) {
-    final topStrike = d.optionChain.isNotEmpty ? d.optionChain.first : null;
-    final buildType = topStrike?.buildupType ?? 'Long Build-up';
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.purpleAccent.withValues(alpha: 0.15),
-            Colors.deepPurple.withValues(alpha: 0.25),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.insights, color: Colors.purpleAccent, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Market Build-Up: $buildType',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  'Institutional Long Accumulation in Progress',
-                  style: TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildOptionChainTable(FnoOverviewModel d) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white10),
-      ),
+  Widget _buildOptionChainTab() {
+    final chain = _data?.optionChain ?? [];
+    if (chain.isEmpty) return const Center(child: Text('No Option Chain Data', style: TextStyle(color: Colors.grey)));
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowHeight: 40,
-          dataRowMinHeight: 36,
-          dataRowMaxHeight: 44,
-          columnSpacing: 16,
+          headingRowColor: WidgetStateProperty.all(const Color(0xFF161B22)),
           columns: const [
-            DataColumn(label: Text('CALL OI', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('CHG OI', style: TextStyle(color: Colors.grey, fontSize: 10))),
-            DataColumn(label: Text('IV', style: TextStyle(color: Colors.grey, fontSize: 10))),
-            DataColumn(label: Text('STRIKE', style: TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('IV', style: TextStyle(color: Colors.grey, fontSize: 10))),
-            DataColumn(label: Text('CHG OI', style: TextStyle(color: Colors.grey, fontSize: 10))),
-            DataColumn(label: Text('PUT OI', style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Call OI', style: TextStyle(color: Colors.greenAccent, fontSize: 11))),
+            DataColumn(label: Text('Call LTP', style: TextStyle(color: Colors.greenAccent, fontSize: 11))),
+            DataColumn(label: Text('Strike', style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Put LTP', style: TextStyle(color: Colors.redAccent, fontSize: 11))),
+            DataColumn(label: Text('Put OI', style: TextStyle(color: Colors.redAccent, fontSize: 11))),
           ],
-          rows: d.optionChain.map((strike) {
-            final isAtm = (strike.strike - d.spotPrice).abs() < 100;
+          rows: chain.map((row) {
             return DataRow(
-              color: isAtm ? WidgetStateProperty.all(Colors.purpleAccent.withValues(alpha: 0.15)) : null,
               cells: [
-                DataCell(Text('${strike.callOi}', style: const TextStyle(color: Colors.white, fontSize: 11))),
-                DataCell(Text('${strike.callOiChange}', style: TextStyle(color: strike.callOiChange >= 0 ? Colors.greenAccent : Colors.redAccent, fontSize: 11))),
-                DataCell(Text('${strike.callIv.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white70, fontSize: 10))),
-                DataCell(Text(
-                  '₹${strike.strike.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: isAtm ? Colors.amberAccent : Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                DataCell(Text(row.callOi.toString(), style: const TextStyle(color: Colors.white70, fontSize: 11))),
+                DataCell(Text('₹${row.callPrice}', style: const TextStyle(color: Colors.greenAccent, fontSize: 11))),
+                DataCell(
+                  InkWell(
+                    onTap: () => _showOptionDetail(_selectedSymbol, row.strike, row.callPrice, 'CE', 14.5, 0.50),
+                    child: Text('₹${row.strike}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
-                )),
-                DataCell(Text('${strike.putIv.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white70, fontSize: 10))),
-                DataCell(Text('${strike.putOiChange}', style: TextStyle(color: strike.putOiChange >= 0 ? Colors.greenAccent : Colors.redAccent, fontSize: 11))),
-                DataCell(Text('${strike.putOi}', style: const TextStyle(color: Colors.white, fontSize: 11))),
+                ),
+                DataCell(Text('₹${row.putPrice}', style: const TextStyle(color: Colors.redAccent, fontSize: 11))),
+                DataCell(Text(row.putOi.toString(), style: const TextStyle(color: Colors.white70, fontSize: 11))),
               ],
             );
           }).toList(),
         ),
       ),
+    );
+  }
+
+  Widget _buildGreeksTab() {
+    final chain = _data?.optionChain ?? [];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Strike', style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold))),
+          DataColumn(label: Text('Call Delta', style: TextStyle(color: Colors.greenAccent, fontSize: 11))),
+          DataColumn(label: Text('Call Gamma', style: TextStyle(color: Colors.purpleAccent, fontSize: 11))),
+          DataColumn(label: Text('Call Theta', style: TextStyle(color: Colors.redAccent, fontSize: 11))),
+          DataColumn(label: Text('Call Vega', style: TextStyle(color: Colors.amberAccent, fontSize: 11))),
+          DataColumn(label: Text('Put Delta', style: TextStyle(color: Colors.redAccent, fontSize: 11))),
+          DataColumn(label: Text('IV %', style: TextStyle(color: Colors.white, fontSize: 11))),
+        ],
+        rows: chain.map((row) {
+          return DataRow(cells: [
+            DataCell(Text('₹${row.strike}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11))),
+            DataCell(Text(row.callGreeks.delta.toStringAsFixed(2), style: const TextStyle(color: Colors.white70, fontSize: 11))),
+            DataCell(Text(row.callGreeks.gamma.toStringAsFixed(4), style: const TextStyle(color: Colors.purpleAccent, fontSize: 11))),
+            DataCell(Text(row.callGreeks.theta.toStringAsFixed(1), style: const TextStyle(color: Colors.redAccent, fontSize: 11))),
+            DataCell(Text(row.callGreeks.vega.toStringAsFixed(1), style: const TextStyle(color: Colors.amberAccent, fontSize: 11))),
+            DataCell(Text(row.putGreeks.delta.toStringAsFixed(2), style: const TextStyle(color: Colors.white70, fontSize: 11))),
+            DataCell(Text('${row.callIv}%', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11))),
+          ]);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildStrategyBuilderTab() {
+    final strategies = [
+      {'name': 'Bull Call Spread', 'market': 'BULLISH', 'rr': '1:2.5', 'margin': 42500.0},
+      {'name': 'Iron Condor', 'market': 'RANGEBOUND', 'rr': '1:1.8', 'margin': 68000.0},
+      {'name': 'Short Straddle', 'market': 'LOW VOLATILITY', 'rr': '1:1.5', 'margin': 125000.0},
+      {'name': 'Long Butterfly', 'market': 'NEUTRAL', 'rr': '1:3.2', 'margin': 34000.0},
+    ];
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: strategies.length,
+      itemBuilder: (ctx, i) {
+        final item = strategies[i];
+        return Card(
+          color: const Color(0xFF161B22),
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Colors.cyanAccent, width: 1)),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _showStrategyDetail(item['name'] as String, item['market'] as String, item['rr'] as String, item['margin'] as double),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(item['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('Margin: ₹${(item['margin'] as double).toStringAsFixed(0)}', style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Ideal Market: ${item['market']} • Risk/Reward: ${item['rr']}', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  const Text('Tap to view profit diagram, breakeven points & live execution parameters.', style: TextStyle(color: Colors.white70, fontSize: 10, fontStyle: FontStyle.italic)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOiAnalyticsTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: const Color(0xFF161B22), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3))),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Open Interest (OI) Market Regime', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                SizedBox(height: 6),
+                Text('Put-Call Ratio (PCR): 1.34 (BULLISH ACCUMULATION)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                Text('Max Pain Strike: ₹24,400 • Major Support: ₹24,200 (PE OI: 8.4M)', style: TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                Text('Major Resistance: ₹24,800 (CE OI: 6.2M)', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPositionsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          color: const Color(0xFF161B22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Colors.greenAccent, width: 1)),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('NIFTY 24,500 CE (Weekly)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text('+₹3,250.00 (+22.4%)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text('Qty: 100 • Avg Price: ₹145.00 • LTP: ₹177.50', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Position Exit Request Submitted')));
+                      },
+                      child: const Text('Exit Position', style: TextStyle(fontSize: 11)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
