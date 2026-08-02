@@ -269,18 +269,16 @@ class IntradayScannerService:
             logger.info("-" * 50)
             
             # 2. Get Universe (Standard Architecture)
-            logger.info("Fetching Symbol Universe...")
-            fno_data = get_all_symbols()
-            fno_symbols_set = {item["symbol"] for item in get_fno_symbols()}
+            logger.info("Fetching Symbol Universe (F&O Only)...")
+            fno_data = get_fno_symbols()
             if not fno_data:
-                raise ValueError("Empty universe returned from get_all_symbols()")
+                raise ValueError("Empty universe returned from get_fno_symbols()")
                 
             stock_list = []
             for item in fno_data:
                 sym = item["symbol"]
                 sector = item.get("sector", "N/A")
-                is_fno = sym in fno_symbols_set
-                stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=is_fno, is_nifty50=False))
+                stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=True, is_nifty50=False))
                 
             score_engine = ScoreEngine()
             

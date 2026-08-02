@@ -18,9 +18,12 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProviderStateMixin {
   final ScannerRepository _repository = ScannerRepository();
-  ScanResponseModel? _response;
-  bool _isLoading = false;
-  String? _error;
+  ScanResponseModel? _swingResponse;
+  ScanResponseModel? _intradayResponse;
+  bool _isSwingLoading = false;
+  bool _isIntradayLoading = false;
+  String? _swingError;
+  String? _intradayError;
   Timer? _autoRefreshTimer;
   StreamSubscription? _busSubscription;
   late TabController _tabController;
@@ -43,9 +46,12 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _fetchScans();
+    _fetchSwingScans();
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      if (mounted) _fetchScans(isAutoRefresh: true);
+      if (mounted) {
+        _fetchSwingScans(isAutoRefresh: true);
+        if (_tabController.index == 1) _fetchIntradayScans(isAutoRefresh: true);
+      }
     });
 
     _busSubscription = LiveDataBus().stream.listen((event) {
@@ -62,6 +68,9 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
         _selectedUniverse = 'NIFTY 200';
       } else if (_tabController.index == 1) {
         _selectedUniverse = 'F&O Stocks';
+        if (_intradayResponse == null) {
+          _fetchIntradayScans();
+        }
       }
     });
   }
@@ -75,35 +84,66 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     super.dispose();
   }
 
-  bool _isFetching = false;
+  bool _isSwingFetching = false;
+  bool _isIntradayFetching = false;
 
-  Future<void> _fetchScans({bool isAutoRefresh = false}) async {
-    if (_isFetching) return;
-    _isFetching = true;
+  Future<void> _fetchSwingScans({bool isAutoRefresh = false}) async {
+    if (_isSwingFetching) return;
+    _isSwingFetching = true;
 
     setState(() {
-      _isLoading = true;
-      if (!isAutoRefresh) _error = null;
+      _isSwingLoading = true;
+      if (!isAutoRefresh) _swingError = null;
     });
 
     try {
       final response = await _repository.getSwingScans();
       if (mounted) {
         setState(() {
-          _response = response;
-          _isLoading = false;
-          _error = null;
+          _swingResponse = response;
+          _isSwingLoading = false;
+          _swingError = null;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
-          _isLoading = false;
+          _swingError = e.toString();
+          _isSwingLoading = false;
         });
       }
     } finally {
-      _isFetching = false;
+      _isSwingFetching = false;
+    }
+  }
+
+  Future<void> _fetchIntradayScans({bool isAutoRefresh = false}) async {
+    if (_isIntradayFetching) return;
+    _isIntradayFetching = true;
+
+    setState(() {
+      _isIntradayLoading = true;
+      if (!isAutoRefresh) _intradayError = null;
+    });
+
+    try {
+      final response = await _repository.getIntradayScans();
+      if (mounted) {
+        setState(() {
+          _intradayResponse = response;
+          _isIntradayLoading = false;
+          _intradayError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _intradayError = e.toString();
+          _isIntradayLoading = false;
+        });
+      }
+    } finally {
+      _isIntradayFetching = false;
     }
   }
 
@@ -218,7 +258,13 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : () => _fetchScans(),
+            onPressed: (_isSwingLoading || _isIntradayLoading) ? null : () {
+              if (_tabController.index == 1) {
+                _fetchIntradayScans();
+              } else {
+                _fetchSwingScans();
+              }
+            },
           ),
         ],
         bottom: TabBar(
@@ -245,14 +291,17 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildScannerDecisionHeader() {
-    if (_response != null) {
+    final bool isIntradayTab = _tabController.index == 1;
+    final activeResponse = isIntradayTab ? _intradayResponse : _swingResponse;
+
+    if (activeResponse != null) {
       return ScannerSummaryPanel(
-        response: _response!,
+        response: activeResponse,
         universeName: _selectedUniverse,
       );
     }
-    final results = _response?.qualifiedResults ?? [];
-    final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (_response?.totalScanned ?? 200);
+    final results = activeResponse?.qualifiedResults ?? [];
+    final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (activeResponse?.totalScanned ?? 200);
     final buyCount = results.where((r) => r.signal.toUpperCase() == 'BUY').length;
     final sellCount = results.where((r) => r.signal.toUpperCase() == 'SELL').length;
     final watchCount = results.where((r) => r.signal.toUpperCase() == 'WATCH').length;
@@ -330,33 +379,64 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildBody() {
-    if (_isLoading && _response == null) {
+    final bool isIntradayTab = _tabController.index == 1;
+    final bool isLoading = isIntradayTab ? _isIntradayLoading : _isSwingLoading;
+    final String? error = isIntradayTab ? _intradayError : _swingError;
+    final ScanResponseModel? response = isIntradayTab ? _intradayResponse : _swingResponse;
+
+    if (isLoading && response == null) {
       return const ScannerLoadingShimmer();
     }
 
-    if (_error != null && _response == null) {
+    if (error != null && response == null) {
       return Center(
-        child: Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+        child: Text(error, style: const TextStyle(color: Colors.redAccent)),
       );
     }
 
-    final all = _response?.qualifiedResults ?? [];
-    final filtered = all.where((r) => r.symbol.contains(_searchQuery) || r.sector.contains(_searchQuery)).toList();
+    final swingAll = _swingResponse?.qualifiedResults ?? [];
+    final swingFiltered = swingAll.where((r) => r.symbol.contains(_searchQuery) || r.sector.contains(_searchQuery)).toList();
 
-    final swingList = filtered.where((r) => r.sector == 'PHARMA' || r.symbol.contains('DIVIS') || r.symbol.contains('DIXON')).toList();
-    final intradayList = filtered.where((r) => !swingList.contains(r) || r.confidence >= 80).toList();
-    final volumeList = filtered.where((r) => r.volume.contains('+') || r.volume.contains('x') || r.confidence >= 85).toList();
-    final breakoutList = filtered.where((r) => r.trend.toUpperCase().contains('BREAKOUT') || r.trend.toUpperCase().contains('BUILDUP') || r.confidence >= 88).toList();
+    final intradayAll = _intradayResponse?.qualifiedResults ?? [];
+    final intradayFiltered = intradayAll.where((r) => r.symbol.contains(_searchQuery) || r.sector.contains(_searchQuery)).toList();
 
+    // DATA SOURCE: /api/v1/scanner/swing
+    final swingList = swingFiltered.where((r) => r.signal.toUpperCase() == 'BUY' || r.signal.toUpperCase() == 'WATCH').toList();
+
+    // DATA SOURCE: /api/v1/scanner/intraday
+    // Intraday API only returns intraday-specific results, no further filtering needed
+    final intradayList = intradayFiltered;
+
+    // DATA SOURCE: /api/v1/scanner/swing
+    final volumeList = swingFiltered.where((r) => r.volume.contains('+') || r.volume.contains('x') || r.volume.contains('M') || r.volume.contains('K')).toList();
+
+    // DATA SOURCE: /api/v1/scanner/swing
+    final breakoutList = swingFiltered.where((r) => r.trend.toUpperCase().contains('BREAKOUT') || r.trend.toUpperCase().contains('BUILDUP') || r.trend.toUpperCase().contains('BULLISH')).toList();
+
+    // DATA SOURCE: /api/v1/scanner/swing
+    final watchlistList = swingFiltered.where((r) => _heldSymbols.contains(r.symbol) || _pendingOrderSymbols.contains(r.symbol)).toList();
+
+    // DATA SOURCE: /api/v1/scanner/swing
+    final sortedList = List<ScanResultModel>.from(swingFiltered)
+      ..sort((a, b) {
+        int cmpScore = b.score.compareTo(a.score);
+        if (cmpScore != 0) return cmpScore;
+        int cmpConf = b.confidence.compareTo(a.confidence);
+        if (cmpConf != 0) return cmpConf;
+        return b.riskReward.compareTo(a.riskReward);
+      });
+    final todaysBestList = sortedList.take(10).toList();
+
+    // TASK-3: Pass explicit lists without fallback logic (no list.isNotEmpty ? list : filtered)
     return TabBarView(
       controller: _tabController,
       children: [
-        _buildSwingScannerTab(swingList.isNotEmpty ? swingList : filtered),
-        _buildIntradayScannerTab(intradayList.isNotEmpty ? intradayList : filtered),
-        _buildHighVolumeTab(volumeList.isNotEmpty ? volumeList : filtered),
-        _buildBreakoutTab(breakoutList.isNotEmpty ? breakoutList : filtered),
-        _buildWatchlistTab(filtered),
-        _buildTodaysBestTab(filtered),
+        _buildSwingScannerTab(swingList),
+        _buildIntradayScannerTab(intradayList),
+        _buildHighVolumeTab(volumeList),
+        _buildBreakoutTab(breakoutList),
+        _buildWatchlistTab(watchlistList),
+        _buildTodaysBestTab(todaysBestList),
       ],
     );
   }
@@ -368,7 +448,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildSwingScannerTab(List<ScanResultModel> list) {
-    if (list.isEmpty) return _emptyState('No Positional Swing Candidates Found');
+    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -475,6 +555,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildIntradayScannerTab(List<ScanResultModel> list) {
+    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: list.length,
@@ -534,8 +616,9 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
-
   Widget _buildHighVolumeTab(List<ScanResultModel> list) {
+    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: list.length,
@@ -574,6 +657,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildBreakoutTab(List<ScanResultModel> list) {
+    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: list.length,
@@ -612,6 +697,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildWatchlistTab(List<ScanResultModel> list) {
+    if (list.isEmpty) return _emptyState('Watchlist is empty. Bookmark symbols to monitor.');
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: list.length,
@@ -634,13 +721,13 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildTodaysBestTab(List<ScanResultModel> list) {
-    final top10 = list.take(10).toList();
+    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: top10.length,
+      itemCount: list.length,
       itemBuilder: (ctx, i) {
-        final item = top10[i];
+        final item = list[i];
         return Card(
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 12),

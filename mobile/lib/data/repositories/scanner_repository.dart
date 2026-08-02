@@ -99,4 +99,47 @@ class ScannerRepository {
       throw Exception('Network error: $e');
     }
   }
+
+  Future<ScanResponseModel> getIntradayScans() async {
+    debugPrint('[RUN-AUDIT] [ScannerRepository] Initiating getIntradayScans()');
+    await _checkHealth();
+
+    final scanUrl = '${ApiConfig.baseUrl}/scanner/intraday';
+    debugPrint(
+      '[RUN-AUDIT] [ScannerRepository] Calling URL: $scanUrl | Method: GET',
+    );
+    debugPrint(
+      '[RUN-AUDIT] [ScannerRepository] Timeout: ${ApiConfig.timeoutSeconds}s',
+    );
+
+    try {
+      final response = await http
+          .get(Uri.parse(scanUrl), headers: ApiConfig.defaultHeaders())
+          .timeout(
+            const Duration(seconds: ApiConfig.timeoutSeconds),
+            onTimeout: () {
+              throw TimeoutException(
+                'The scanner took too long to respond. The server might be processing heavy AI loads.',
+              );
+            },
+          );
+
+      debugPrint(
+        '[RUN-AUDIT] [ScannerRepository] HTTP Status Code: ${response.statusCode}',
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return ScanResponseModel.fromJson(data);
+      } else {
+        throw Exception(
+          'Failed to load intraday scans. Status: ${response.statusCode}',
+        );
+      }
+    } on TimeoutException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 }

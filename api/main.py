@@ -97,6 +97,19 @@ _SCANNER_CACHE = {
 }
 CACHE_TTL_SECONDS = 180.0  # 3 minutes cache lifetime
 
+_INTRADAY_LOCK = threading.Lock()
+_INTRADAY_CACHE = {
+    "data": None,
+    "last_updated": 0.0,
+    "is_scanning": False
+}
+
+def _get_intraday_cache_ttl() -> float:
+    meta = _get_provider_metadata()
+    if meta.get("market_status") == "OPEN":
+        return 120.0  # 2 minutes during market open
+    return 900.0      # 15 minutes during market closed
+
 def _run_background_scan():
     global _SCANNER_CACHE
     try:
@@ -123,10 +136,71 @@ def _run_background_scan():
         with _CACHE_LOCK:
             _SCANNER_CACHE["is_scanning"] = False
 
+def _run_background_intraday_scan():
+    global _INTRADAY_CACHE
+    try:
+        with _INTRADAY_LOCK:
+            if _INTRADAY_CACHE["is_scanning"]:
+                return
+            _INTRADAY_CACHE["is_scanning"] = True
+        
+        logger.info("Executing background intraday scan...")
+        start_time = time.time()
+        service = IntradayScannerService()
+        results = service.execute_intraday_scan()
+        
+        # Ensure JSON safety
+        json_compatible_results = json.loads(json.dumps(results, default=str))
+        
+        # Wrap in expected response shape
+        qualified_results = json_compatible_results
+        fno_symbols = get_fno_symbols()
+        total_universe = len(fno_symbols)
+        total_scanned = len(qualified_results) # In intraday, we don't have total_scanned returned directly, assume length for now or adjust logic
+        qualified_count = len(qualified_results)
+        
+        buy_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
+        sell_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
+        watch_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+
+        res = {
+            "total_universe": total_universe,
+            "total_scanned": total_universe, # Approximated
+            "qualified_count": qualified_count,
+            "filter_rejected_count": total_universe - qualified_count,
+            "no_data_count": 0,
+            "buy_count": buy_count,
+            "watch_count": watch_count,
+            "sell_count": sell_count,
+            "rejected_count": total_universe - qualified_count,
+            "wait_count": 0,
+            "error_count": 0,
+            "market_quality": "HIGH",
+            "exec_time": time.time() - start_time,
+            "rejection_analytics": {},
+            "pipeline_stages": [],
+            "scanner_health": {},
+            "market_summary": {},
+            "performance_metrics": {},
+            "qualified_results": qualified_results,
+        }
+
+        with _INTRADAY_LOCK:
+            _INTRADAY_CACHE["data"] = res
+            _INTRADAY_CACHE["last_updated"] = time.time()
+            _INTRADAY_CACHE["is_scanning"] = False
+        logger.info(f"Background intraday scan completed and cached in {time.time() - start_time:.2f}s.")
+    except Exception as e:
+        logger.error(f"Error executing background intraday scan: {e}", exc_info=True)
+        with _INTRADAY_LOCK:
+            _INTRADAY_CACHE["is_scanning"] = False
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting initial background swing scan on boot...")
     threading.Thread(target=_run_background_scan, daemon=True).start()
+    logger.info("Starting initial background intraday scan on boot...")
+    threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
 
 # Swing Scanner Endpoint (Returns instantly from cache)
 @v1_router.get("/scanner/swing", tags=["Scanner"])
@@ -167,51 +241,67 @@ async def run_swing_scanner(debug: bool = False):
 
 @v1_router.get("/scanner/intraday", tags=["Scanner"])
 async def run_intraday_scanner(debug: bool = False):
-    logger.info(f"Intraday scanner endpoint called (debug={debug}) - executing live scan over F&O universe")
+    logger.info(f"Intraday scanner endpoint called (debug={debug})")
     try:
-        service = SwingScannerService()
-        scan_output = service.execute_swing_scan()
-        fno_symbols = get_fno_symbols()
-        total_universe = len(fno_symbols)
+        current_time = time.time()
+        with _INTRADAY_LOCK:
+            data = _INTRADAY_CACHE["data"]
+            last_updated = _INTRADAY_CACHE["last_updated"]
+            is_scanning = _INTRADAY_CACHE["is_scanning"]
         
-        qualified_results = scan_output.get("qualified_results", [])
-        total_scanned = scan_output.get("total_scanned", total_universe)
-        qualified_count = len(qualified_results)
+        ttl = _get_intraday_cache_ttl()
         
-        filter_rejected_count = max(0, total_scanned - qualified_count)
-        no_data_count = max(0, total_universe - total_scanned)
-        rejected_count = filter_rejected_count + no_data_count
+        if data is None:
+            logger.info("Intraday cache empty. Executing live intraday scan synchronously...")
+            service = IntradayScannerService()
+            raw_results = service.execute_intraday_scan()
+            json_compatible_results = json.loads(json.dumps(raw_results, default=str))
+            
+            fno_symbols = get_fno_symbols()
+            total_universe = len(fno_symbols)
+            qualified_count = len(json_compatible_results)
+            buy_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
+            sell_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
+            watch_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
 
-        buy_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
-        sell_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
-        watch_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+            data = {
+                "total_universe": total_universe,
+                "total_scanned": total_universe, 
+                "qualified_count": qualified_count,
+                "filter_rejected_count": total_universe - qualified_count,
+                "no_data_count": 0,
+                "buy_count": buy_count,
+                "watch_count": watch_count,
+                "sell_count": sell_count,
+                "rejected_count": total_universe - qualified_count,
+                "wait_count": 0,
+                "error_count": 0,
+                "market_quality": "HIGH",
+                "exec_time": 0.01,
+                "rejection_analytics": {},
+                "pipeline_stages": [],
+                "scanner_health": {},
+                "market_summary": {},
+                "performance_metrics": {},
+                "qualified_results": json_compatible_results,
+            }
+
+            with _INTRADAY_LOCK:
+                _INTRADAY_CACHE["data"] = data
+                _INTRADAY_CACHE["last_updated"] = time.time()
+                _INTRADAY_CACHE["is_scanning"] = False
+        else:
+            if current_time - last_updated > ttl and not is_scanning:
+                logger.info(f"Intraday cache expired (TTL {ttl}s). Triggering background refresh...")
+                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
 
         meta = _get_provider_metadata()
-        res = {
-            "total_universe": total_universe,
-            "total_scanned": total_scanned,
-            "qualified_count": qualified_count,
-            "filter_rejected_count": filter_rejected_count,
-            "no_data_count": no_data_count,
-            "buy_count": buy_count,
-            "watch_count": watch_count,
-            "sell_count": sell_count,
-            "rejected_count": rejected_count,
-            "wait_count": scan_output.get("wait_count", 0),
-            "error_count": scan_output.get("error_count", 0),
-            "market_quality": scan_output.get("market_quality", "HIGH"),
-            "exec_time": scan_output.get("exec_time", 0.01),
-            "rejection_analytics": scan_output.get("rejection_analytics", {}),
-            "pipeline_stages": scan_output.get("pipeline_stages", []),
-            "scanner_health": scan_output.get("scanner_health", {}),
-            "market_summary": scan_output.get("market_summary", {}),
-            "performance_metrics": scan_output.get("performance_metrics", {}),
-            "qualified_results": qualified_results,
-            **meta
-        }
-        if debug:
-            res["symbol_decision_traces"] = scan_output.get("symbol_decision_traces", [])
-        return res
+        data.update(meta)
+
+        if not debug:
+            clean_data = {k: v for k, v in data.items() if k != "symbol_decision_traces"}
+            return clean_data
+        return data
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
