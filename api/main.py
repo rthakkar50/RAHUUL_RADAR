@@ -118,159 +118,21 @@ async def run_swing_scanner():
                 logger.info("Cache expired. Triggering background refresh...")
                 threading.Thread(target=_run_background_scan, daemon=True).start()
             return data
-        
-        # If cache is None and not scanning (initial state or failure), start scanning
-        if not is_scanning:
-            threading.Thread(target=_run_background_scan, daemon=True).start()
-            
-        # Return instant qualified scan results while initial background scan finishes so Flutter app never shows 0 stocks
-        default_qual = [
-            {
-                "Symbol": "DIVISLAB", "symbol": "DIVISLAB",
-                "Company": "Divi's Laboratories Ltd.", "company": "Divi's Laboratories Ltd.",
-                "Sector": "PHARMA", "sector": "PHARMA",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 91.0, "score": 91.0,
-                "Raw Score": 88.5, "raw_score": 88.5,
-                "RS Score": 86.2, "rs_score": 86.2,
-                "Confidence": 95.5, "confidence": 95.5,
-                "Price": 8009.00, "price": 8009.00,
-                "Entry": 8009.00, "entry": 8009.00,
-                "Stop Loss": 7177.00, "sl": 7177.00,
-                "Target 1": 9673.00, "target_1": 9673.00,
-                "Target 2": 11337.00, "target_2": 11337.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "UPTREND", "trend": "UPTREND",
-                "Volume": "2.4x (High Expansion)", "volume": "2.4x (High Expansion)",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "TVSMOTOR", "symbol": "TVSMOTOR",
-                "Company": "TVS Motor Company Ltd.", "company": "TVS Motor Company Ltd.",
-                "Sector": "AUTO", "sector": "AUTO",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 89.0, "score": 89.0,
-                "Raw Score": 86.0, "raw_score": 86.0,
-                "RS Score": 84.5, "rs_score": 84.5,
-                "Confidence": 93.4, "confidence": 93.4,
-                "Price": 4305.00, "price": 4305.00,
-                "Entry": 4305.00, "entry": 4305.00,
-                "Stop Loss": 3823.30, "sl": 3823.30,
-                "Target 1": 5268.40, "target_1": 5268.40,
-                "Target 2": 6125.00, "target_2": 6125.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "UPTREND", "trend": "UPTREND",
-                "Volume": "2.1x (Breakout Volume)", "volume": "2.1x (Breakout Volume)",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "BAJAJ-AUTO", "symbol": "BAJAJ-AUTO",
-                "Company": "Bajaj Auto Ltd.", "company": "Bajaj Auto Ltd.",
-                "Sector": "AUTO", "sector": "AUTO",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 89.0, "score": 89.0,
-                "Raw Score": 85.5, "raw_score": 85.5,
-                "RS Score": 83.8, "rs_score": 83.8,
-                "Confidence": 93.4, "confidence": 93.4,
-                "Price": 11508.50, "price": 11508.50,
-                "Entry": 11508.50, "entry": 11508.50,
-                "Stop Loss": 10342.50, "sl": 10342.50,
-                "Target 1": 13840.50, "target_1": 13840.50,
-                "Target 2": 16100.00, "target_2": 16100.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "UPTREND", "trend": "UPTREND",
-                "Volume": "1.9x (Strong Buyer Volume)", "volume": "1.9x (Strong Buyer Volume)",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "M&MFIN", "symbol": "M&MFIN",
-                "Company": "Mahindra & Mahindra Financial Services", "company": "Mahindra & Mahindra Financial Services",
-                "Sector": "FINANCE", "sector": "FINANCE",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 88.0, "score": 88.0,
-                "Raw Score": 84.0, "raw_score": 84.0,
-                "RS Score": 81.2, "rs_score": 81.2,
-                "Confidence": 92.4, "confidence": 92.4,
-                "Price": 387.70, "price": 387.70,
-                "Entry": 387.70, "entry": 387.70,
-                "Stop Loss": 352.65, "sl": 352.65,
-                "Target 1": 457.80, "target_1": 457.80,
-                "Target 2": 535.00, "target_2": 535.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "UPTREND", "trend": "UPTREND",
-                "Volume": "1.8x (Expansion)", "volume": "1.8x (Expansion)",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "LAURUSLABS", "symbol": "LAURUSLABS",
-                "Company": "Laurus Labs Ltd.", "company": "Laurus Labs Ltd.",
-                "Sector": "PHARMA", "sector": "PHARMA",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 88.0, "score": 88.0,
-                "Raw Score": 84.0, "raw_score": 84.0,
-                "RS Score": 81.0, "rs_score": 81.0,
-                "Confidence": 92.4, "confidence": 92.4,
-                "Price": 1815.00, "price": 1815.00,
-                "Entry": 1815.00, "entry": 1815.00,
-                "Stop Loss": 1554.90, "sl": 1554.90,
-                "Target 1": 2335.20, "target_1": 2335.20,
-                "Target 2": 2680.00, "target_2": 2680.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "UPTREND", "trend": "UPTREND",
-                "Volume": "2.2x (Accumulation)", "volume": "2.2x (Accumulation)",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "DRREDDY", "symbol": "DRREDDY",
-                "Company": "Dr. Reddy's Laboratories Ltd.", "company": "Dr. Reddy's Laboratories Ltd.",
-                "Sector": "PHARMA", "sector": "PHARMA",
-                "Signal": "SELL", "signal": "SELL",
-                "Score": 77.0, "score": 77.0,
-                "Raw Score": 74.0, "raw_score": 74.0,
-                "RS Score": 42.0, "rs_score": 42.0,
-                "Confidence": 70.5, "confidence": 70.5,
-                "Price": 1152.80, "price": 1152.80,
-                "Entry": 1152.80, "entry": 1152.80,
-                "Stop Loss": 1249.10, "sl": 1249.10,
-                "Target 1": 960.20, "target_1": 960.20,
-                "Target 2": 850.00, "target_2": 850.00,
-                "Risk Reward": "1:2.0", "risk_reward": "1:2.0",
-                "Trend": "DOWNTREND", "trend": "DOWNTREND",
-                "Volume": "1.7x (Distribution)", "volume": "1.7x (Distribution)",
-                "Trade Grade": "B", "trade_grade": "B",
-                "Risk Grade": "MEDIUM", "risk_grade": "MEDIUM"
-            }
-        ]
-        total_universe = len(get_nifty200_symbols())
-        total_scanned = total_universe
-        buy_count = sum(1 for x in default_qual if x.get("signal") == "BUY")
-        sell_count = sum(1 for x in default_qual if x.get("signal") == "SELL")
-        watch_count = sum(1 for x in default_qual if x.get("signal") == "WATCH")
-        qualified_count = len(default_qual)
-        rejected_count = total_scanned - qualified_count
 
-        return {
-            "total_scanned": total_scanned,
-            "total_universe": total_universe,
-            "qualified_count": qualified_count,
-            "rejected_count": rejected_count,
-            "buy_count": buy_count,
-            "sell_count": sell_count,
-            "watch_count": watch_count,
-            "wait_count": 0,
-            "no_data_count": 0,
-            "error_count": 0,
-            "market_quality": "HIGH",
-            "exec_time": 0.01,
-            "qualified_results": default_qual
-        }
+        # Synchronous fallback execution when cache is unpopulated
+        logger.info("Cache empty on request. Executing live swing scan synchronously...")
+        service = SwingScannerService()
+        results = service.execute_swing_scan()
+        json_compatible_results = json.loads(json.dumps(results, default=str))
+
+        with _CACHE_LOCK:
+            _SCANNER_CACHE["data"] = json_compatible_results
+            _SCANNER_CACHE["last_updated"] = time.time()
+            _SCANNER_CACHE["is_scanning"] = False
+
+        return json_compatible_results
     except Exception as e:
-        logger.error(f"Error serving cached swing scan: {e}", exc_info=True)
+        logger.error(f"Error serving swing scan: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @v1_router.get("/scanner/intraday", tags=["Scanner"])

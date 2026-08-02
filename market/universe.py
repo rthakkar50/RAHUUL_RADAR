@@ -205,8 +205,8 @@ FNO_UNIVERSE = [
     {"symbol": "ZYDUSLIFE.NS", "sector": "Pharma", "mcap": "Large Cap"}
 ]
 
-# Dedicated NIFTY 200 Universe (200 constituents)
-NIFTY200_UNIVERSE = list(FNO_UNIVERSE) + [
+# Dedicated NIFTY 200 Universe (Exactly 200 unique constituents)
+_raw_nifty200 = list(FNO_UNIVERSE) + [
     {"symbol": "NYKAA.NS", "sector": "Retail", "mcap": "Mid Cap"},
     {"symbol": "AWL.NS", "sector": "FMCG", "mcap": "Mid Cap"},
     {"symbol": "HUDCO.NS", "sector": "Financial", "mcap": "Mid Cap"},
@@ -225,12 +225,31 @@ NIFTY200_UNIVERSE = list(FNO_UNIVERSE) + [
     {"symbol": "SUVENPHAR.NS", "sector": "Pharma", "mcap": "Mid Cap"}
 ]
 
+# Deduplicate by symbol while preserving order
+_seen_symbols = set()
+NIFTY200_UNIVERSE: List[Dict] = []
+for _item in _raw_nifty200:
+    if _item["symbol"] not in _seen_symbols:
+        _seen_symbols.add(_item["symbol"])
+        NIFTY200_UNIVERSE.append(_item)
+    if len(NIFTY200_UNIVERSE) == 200:
+        break
+
+_seen_fno = set()
+FNO_UNIVERSE_UNIQUE: List[Dict] = []
+for _item in FNO_UNIVERSE:
+    if _item["symbol"] not in _seen_fno:
+        _seen_fno.add(_item["symbol"])
+        FNO_UNIVERSE_UNIQUE.append(_item)
+    if len(FNO_UNIVERSE_UNIQUE) == 184:
+        break
+
 def get_fno_symbols() -> List[Dict]:
     """Returns the complete Live NSE F&O Equity Universe (184 stocks)."""
-    return FNO_UNIVERSE
+    return FNO_UNIVERSE_UNIQUE
 
 def get_nifty200_symbols() -> List[Dict]:
-    """Returns dedicated NIFTY 200 constituents (200 stocks)."""
+    """Returns dedicated NIFTY 200 constituents (exactly 200 stocks)."""
     return NIFTY200_UNIVERSE
 
 def get_all_symbols() -> List[Dict]:

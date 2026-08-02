@@ -226,7 +226,11 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(color: const Color(0xFF0B0E14), borderRadius: BorderRadius.circular(10)),
             child: CustomPaint(
-              painter: ChartPainter(indicator: _selectedIndicator),
+              painter: ChartPainter(
+                indicator: _selectedIndicator,
+                symbol: widget.result.symbol,
+                basePrice: widget.result.price,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -457,28 +461,139 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
 class ChartPainter extends CustomPainter {
   final String indicator;
-  ChartPainter({required this.indicator});
+  final String symbol;
+  final double basePrice;
+
+  ChartPainter({required this.indicator, this.symbol = 'DEFAULT', this.basePrice = 1000.0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final bgPaint = Paint()..color = const Color(0xFF0B0E14);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    final gridPaint = Paint()..color = Colors.white.withValues(alpha: 0.05)..strokeWidth = 1.0;
-    for (double i = 0; i < size.height; i += 30) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
+    // Draw Price Grid lines & Axis labels
+    final gridPaint = Paint()..color = Colors.white.withValues(alpha: 0.06)..strokeWidth = 1.0;
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+
+    final h = size.height - 25; // Save bottom 25px for time axis
+    final w = size.width - 45; // Save right 45px for price axis
+
+    for (int i = 0; i <= 4; i++) {
+      final y = (h / 4) * i;
+      canvas.drawLine(Offset(0, y), Offset(w, y), gridPaint);
+
+      final pxPrice = basePrice * (1.05 - (i * 0.025));
+      textPainter.text = TextSpan(text: '₹${pxPrice.toStringAsFixed(0)}', style: const TextStyle(color: Colors.grey, fontSize: 8));
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(w + 4, y - 5));
     }
 
-    final candleWidth = size.width / 12;
-    for (int i = 0; i < 10; i++) {
-      final isUp = i % 3 != 0;
-      final p = Paint()..color = isUp ? Colors.greenAccent : Colors.redAccent..strokeWidth = 2.0;
-      final x = (i + 1) * candleWidth;
-      final yTop = 30.0 + (i * 7) % 50;
-      final yBot = yTop + 40.0 + (i * 3) % 30;
-      canvas.drawLine(Offset(x, yTop - 10), Offset(x, yBot + 10), p);
-      canvas.drawRect(Rect.fromLTRB(x - 4, yTop, x + 4, yBot), p);
+    // Time Axis Labels
+    final times = ['09:15', '11:00', '12:30', '14:00', '15:30'];
+    for (int t = 0; t < times.length; t++) {
+      final tx = (w / (times.length - 1)) * t;
+      textPainter.text = TextSpan(text: times[t], style: const TextStyle(color: Colors.grey, fontSize: 8));
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(tx - 10, h + 8));
     }
+
+    // Generate unique OHLC sequence using symbol seed
+    final seed = symbol.codeUnits.fold(0, (sum, char) => sum + char);
+    final count = 16;
+    final candleWidth = w / count;
+
+    final emaPoints = <Offset>[];
+    final vwapPoints = <Offset>[];
+
+    for (int i = 0; i < count; i++) {
+      final randVal = ((seed * (i + 1) * 37) % 100) / 100.0;
+      final isUp = randVal > 0.42;
+      final color = isUp ? Colors.greenAccent : Colors.redAccent;
+      final candlePaint = Paint()..color = color..strokeWidth = 1.5;
+
+      final x = (i + 0.5) * candleWidth;
+      final openY = h * (0.25 + ((seed + i * 13) % 40) / 100.0);
+      final closeY = isUp ? openY - 15 - (randVal * 20) : openY + 15 + (randVal * 20);
+      final highY = (openY < closeY ? openY : closeY) - 8 - (randVal * 10);
+      final lowY = (openY > closeY ? openY : closeY) + 8 + (randVal * 10);
+
+      // Draw Wick
+      canvas.drawLine(Offset(x, highY), Offset(x, lowY), candlePaint);
+
+      // Draw Body
+      final bodyTop = openY < closeY ? openY : closeY;
+      final bodyHeight = (openY - closeY).abs().clamp(3.0, 40.0);
+      canvas.drawRect(Rect.fromLTWH(x - 3, bodyTop, 6, bodyHeight), candlePaint);
+
+      // Draw Volume Bar
+      final volHeight = (10 + (randVal * 25));
+      final volPaint = Paint()..color = color.withValues(alpha: 0.3);
+      canvas.drawRect(Rect.fromLTWH(x - 3, h - volHeight, 6, volHeight), volPaint);
+
+      // Calculate EMA & VWAP points
+      final emaY = (openY + closeY) / 2 + 5;
+      final vwapY = emaY - 8;
+      emaPoints.add(Offset(x, emaY));
+      vwapPoints.add(Offset(x, vwapY));
+    }
+
+    // Draw EMA Line (Cyan Overlay)
+    if (indicator.contains('EMA') || indicator.contains('VWAP') || indicator == 'EMA + VWAP') {
+      final emaPaint = Paint()
+        ..color = Colors.cyanAccent
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke;
+      final emaPath = Path()..moveTo(emaPoints[0].dx, emaPoints[0].dy);
+      for (int p = 1; p < emaPoints.length; p++) {
+        emaPath.lineTo(emaPoints[p].dx, emaPoints[p].dy);
+      }
+      canvas.drawPath(emaPath, emaPaint);
+
+      // Draw VWAP Line (Amber Overlay)
+      final vwapPaint = Paint()
+        ..color = Colors.amberAccent
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+      final vwapPath = Path()..moveTo(vwapPoints[0].dx, vwapPoints[0].dy);
+      for (int p = 1; p < vwapPoints.length; p++) {
+        vwapPath.lineTo(vwapPoints[p].dx, vwapPoints[p].dy);
+      }
+      canvas.drawPath(vwapPath, vwapPaint);
+    }
+
+    // Draw RSI / MACD indicator subchart if selected
+    if (indicator.contains('RSI')) {
+      final rsiPaint = Paint()..color = Colors.purpleAccent..strokeWidth = 1.5..style = PaintingStyle.stroke;
+      final rsiPath = Path()..moveTo(0, h * 0.7);
+      for (int r = 1; r <= 10; r++) {
+        rsiPath.lineTo((w / 10) * r, h * 0.7 + ((r % 2 == 0) ? -15 : 15));
+      }
+      canvas.drawPath(rsiPath, rsiPaint);
+    } else if (indicator.contains('MACD')) {
+      final macdPaint = Paint()..color = Colors.greenAccent..strokeWidth = 1.5..style = PaintingStyle.stroke;
+      final macdPath = Path()..moveTo(0, h * 0.65);
+      for (int m = 1; m <= 10; m++) {
+        macdPath.lineTo((w / 10) * m, h * 0.65 + ((m % 3 == 0) ? 12 : -12));
+      }
+      canvas.drawPath(macdPath, macdPaint);
+    }
+
+    // Draw Crosshair at active candle (Center-Right)
+    final crossX = w * 0.65;
+    final crossY = h * 0.45;
+    final crossPaint = Paint()..color = Colors.cyanAccent.withValues(alpha: 0.7)..strokeWidth = 1.0;
+    canvas.drawLine(Offset(crossX, 0), Offset(crossX, h), crossPaint);
+    canvas.drawLine(Offset(0, crossY), Offset(w, crossY), crossPaint);
+
+    // Crosshair Tooltip Callout Box
+    final boxPaint = Paint()..color = const Color(0xFF161B22);
+    final borderPaint = Paint()..color = Colors.cyanAccent..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(crossX - 45, crossY - 22, 90, 18), const Radius.circular(4)), boxPaint);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(crossX - 45, crossY - 22, 90, 18), const Radius.circular(4)), borderPaint);
+
+    textPainter.text = TextSpan(text: 'CMP: ₹${basePrice.toStringAsFixed(1)}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 9, fontWeight: FontWeight.bold));
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(crossX - 40, crossY - 19));
   }
 
   @override

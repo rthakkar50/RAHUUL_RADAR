@@ -446,6 +446,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       {'symbol': 'HAL.NS', 'company': 'Hindustan Aeronautics', 'sector': 'DEFENCE', 'price': '4820.00', 'exchange': 'NSE'},
       {'symbol': 'BEL.NS', 'company': 'Bharat Electronics', 'sector': 'DEFENCE', 'price': '295.00', 'exchange': 'NSE'},
       {'symbol': 'DIXON.NS', 'company': 'Dixon Technologies', 'sector': 'ELECTRONICS', 'price': '12400.00', 'exchange': 'NSE'},
+      {'symbol': 'BAJAJAUTO.NS', 'company': 'Bajaj Auto Ltd.', 'sector': 'AUTO', 'price': '11500.00', 'exchange': 'NSE'},
+      {'symbol': 'TRENT.NS', 'company': 'Trent Ltd.', 'sector': 'RETAIL', 'price': '5420.00', 'exchange': 'NSE'},
       {'symbol': 'ZOMATO.NS', 'company': 'Zomato Ltd.', 'sector': 'CONSUMER', 'price': '230.00', 'exchange': 'NSE'},
       {'symbol': 'IREDA.NS', 'company': 'Indian Renewable Energy', 'sector': 'ENERGY', 'price': '240.00', 'exchange': 'NSE'},
       {'symbol': 'JIOFIN.NS', 'company': 'Jio Financial Services', 'sector': 'FINANCE', 'price': '345.00', 'exchange': 'NSE'},
