@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_design_system.dart';
 import '../../../data/models/dashboard_data_model.dart';
+import '../../../data/models/scan_result_model.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../notifications/notification_screen.dart';
+import '../stock_detail/stock_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int) onNavigate;
@@ -421,39 +423,130 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      decoration: AppDesignSystem.glassCard(),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val),
-        style: const TextStyle(
-          color: AppDesignSystem.textPrimary,
-          fontSize: 13,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search Stock, Index, Option Strike, or AI Signal...',
-          hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: AppDesignSystem.primary,
-            size: 20,
+    final query = _searchQuery.trim().toUpperCase();
+    final searchUniverse = [
+      {'symbol': 'DIVISLAB.NS', 'company': "Divi's Laboratories Ltd.", 'sector': 'PHARMA', 'price': '4850.00', 'exchange': 'NSE'},
+      {'symbol': 'RELIANCE.NS', 'company': 'Reliance Industries Ltd.', 'sector': 'ENERGY', 'price': '2980.00', 'exchange': 'NSE'},
+      {'symbol': 'PAYTM.NS', 'company': 'One 97 Communications', 'sector': 'FINTECH', 'price': '850.00', 'exchange': 'NSE'},
+      {'symbol': 'TCS.NS', 'company': 'Tata Consultancy Services', 'sector': 'IT', 'price': '4250.00', 'exchange': 'NSE'},
+      {'symbol': 'INFY.NS', 'company': 'Infosys Ltd.', 'sector': 'IT', 'price': '1820.00', 'exchange': 'NSE'},
+      {'symbol': 'SBIN.NS', 'company': 'State Bank of India', 'sector': 'BANKING', 'price': '845.00', 'exchange': 'NSE'},
+      {'symbol': 'HDFCBANK.NS', 'company': 'HDFC Bank Ltd.', 'sector': 'BANKING', 'price': '1640.00', 'exchange': 'NSE'},
+      {'symbol': 'ZOMATO.NS', 'company': 'Zomato Ltd.', 'sector': 'CONSUMER', 'price': '230.00', 'exchange': 'NSE'},
+      {'symbol': 'IREDA.NS', 'company': 'Indian Renewable Energy', 'sector': 'ENERGY', 'price': '240.00', 'exchange': 'NSE'},
+      {'symbol': 'JIOFIN.NS', 'company': 'Jio Financial Services', 'sector': 'FINANCE', 'price': '345.00', 'exchange': 'NSE'},
+    ];
+
+    final results = query.isEmpty
+        ? <Map<String, String>>[]
+        : searchUniverse.where((item) =>
+            item['symbol']!.toUpperCase().contains(query) ||
+            item['company']!.toUpperCase().contains(query) ||
+            item['sector']!.toUpperCase().contains(query)).toList();
+
+    return Column(
+      children: [
+        Container(
+          decoration: AppDesignSystem.glassCard(),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (val) => setState(() => _searchQuery = val),
+            style: const TextStyle(
+              color: AppDesignSystem.textPrimary,
+              fontSize: 13,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search DIV, REL, PAY, TCS, INF or Any Stock...',
+              hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppDesignSystem.primary,
+                size: 20,
+              ),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : const Icon(Icons.tune, color: Colors.grey, size: 18),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
           ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
-                  onPressed: () {
+        ),
+        if (results.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161B22),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppDesignSystem.primary.withValues(alpha: 0.5)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: results.length,
+              separatorBuilder: (_, _) => const Divider(color: Colors.white10, height: 1),
+              itemBuilder: (ctx, idx) {
+                final item = results[idx];
+                return ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    backgroundColor: AppDesignSystem.primary.withValues(alpha: 0.15),
+                    child: Text(
+                      item['symbol']![0],
+                      style: const TextStyle(color: AppDesignSystem.primary, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(item['symbol']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('₹${item['price']}', style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                    ],
+                  ),
+                  subtitle: Text('${item['company']} • ${item['sector']} (${item['exchange']})', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                  onTap: () {
+                    final priceVal = double.tryParse(item['price']!) ?? 1000.0;
+                    final scanModel = ScanResultModel(
+                      symbol: item['symbol']!,
+                      company: item['company']!,
+                      sector: item['sector']!,
+                      price: priceVal,
+                      signal: 'BUY',
+                      score: 92.0,
+                      rawScore: 90.0,
+                      confidence: 90.0,
+                      trend: 'BULLISH BREAKOUT',
+                      volume: '+280%',
+                      riskReward: '1:3.0',
+                      rsScore: 88.0,
+                      entry: priceVal,
+                      stopLoss: priceVal * 0.96,
+                      target1: priceVal * 1.08,
+                      target2: priceVal * 1.15,
+                      tradeGrade: 'A+',
+                      riskGrade: 'LOW',
+                      timestamp: 'LIVE',
+                    );
                     _searchController.clear();
                     setState(() => _searchQuery = '');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => StockDetailScreen(result: scanModel)),
+                    );
                   },
-                )
-              : const Icon(Icons.tune, color: Colors.grey, size: 18),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+                );
+              },
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 

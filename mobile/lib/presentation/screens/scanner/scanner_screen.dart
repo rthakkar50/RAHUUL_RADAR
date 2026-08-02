@@ -506,7 +506,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   List<ScanResultModel> _mockIntradayData() {
     return [
       ScanResultModel(symbol: 'RELIANCE', company: 'Reliance Industries', sector: 'ENERGY', price: 2980.0, signal: 'BUY', score: 92.0, rawScore: 92.0, confidence: 91.0, trend: 'ORB BREAKOUT', volume: '+410%', riskReward: '1:3.5', rsScore: 88.0, entry: 2980.0, stopLoss: 2960.0, target1: 3020.0, target2: 3050.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
-      ScanResultModel(symbol: 'HDFCBANK', company: 'HDFC Bank Ltd.', sector: 'BANKING', price: 1640.0, signal: 'BUY', score: 89.0, rawScore: 89.0, confidence: 88.0, trend: 'VWAP CROSS', volume: '+320%', riskReward: '1:3.0', rsScore: 84.0, entry: 1640.0, stopLoss: 1625.0, target1: 1665.0, target2: 1680.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
+      ScanResultModel(symbol: 'INFY', company: 'Infosys Ltd.', sector: 'IT', price: 1820.0, signal: 'SELL', score: 86.0, rawScore: 86.0, confidence: 85.0, trend: 'SHORT BUILDUP', volume: '+350%', riskReward: '1:3.0', rsScore: 42.0, entry: 1820.0, stopLoss: 1845.0, target1: 1780.0, target2: 1750.0, tradeGrade: 'A', riskGrade: 'MODERATE', timestamp: 'LIVE'),
+      ScanResultModel(symbol: 'HDFCBANK', company: 'HDFC Bank Ltd.', sector: 'BANKING', price: 1640.0, signal: 'WATCH', score: 84.0, rawScore: 84.0, confidence: 82.0, trend: 'VWAP CONSOLIDATION', volume: '+320%', riskReward: '1:3.0', rsScore: 68.0, entry: 1640.0, stopLoss: 1625.0, target1: 1665.0, target2: 1680.0, tradeGrade: 'A', riskGrade: 'LOW', timestamp: 'LIVE'),
       ScanResultModel(symbol: 'SBIN', company: 'State Bank of India', sector: 'BANKING', price: 845.0, signal: 'BUY', score: 94.0, rawScore: 94.0, confidence: 93.0, trend: 'LONG BUILDUP', volume: '+390%', riskReward: '1:4.0', rsScore: 90.0, entry: 845.0, stopLoss: 835.0, target1: 865.0, target2: 880.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
     ];
   }
