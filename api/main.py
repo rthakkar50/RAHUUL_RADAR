@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import get_logger
 import time
+import os
 import sys
 import json
 from application.swing_scanner_service import SwingScannerService
@@ -193,22 +194,24 @@ def _run_enterprise_orchestration():
         
         final_swing = [s for s in merged_signals if s.get("source_engine") == "swing"]
         final_intra = [s for s in merged_signals if s.get("source_engine") == "intraday"]
+
+        display_swing = final_swing if final_swing else swing_signals
+        display_intra = final_intra if final_intra else (intra_signals if intra_signals else swing_signals)
         
         # Final Swing Cache Update
-        if final_swing:
-            json_swing["qualified_results"] = json.loads(json.dumps(final_swing, default=str))
-            with _CACHE_LOCK:
-                _SCANNER_CACHE["data"] = json_swing
-                _SCANNER_CACHE["last_updated"] = time.time()
-            _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
+        json_swing["qualified_results"] = json.loads(json.dumps(display_swing, default=str))
+        with _CACHE_LOCK:
+            _SCANNER_CACHE["data"] = json_swing
+            _SCANNER_CACHE["last_updated"] = time.time()
+        _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
             
         # Update Intraday Cache
         fno_symbols = get_fno_symbols()
         total_universe = len(fno_symbols)
-        qualified_count = len(final_intra)
-        buy_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
-        sell_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
-        watch_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+        qualified_count = len(display_intra)
+        buy_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
+        sell_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
+        watch_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
         
         intra_cache_res = {
             "total_universe": total_universe,
@@ -229,12 +232,13 @@ def _run_enterprise_orchestration():
             "scanner_health": {},
             "market_summary": {},
             "performance_metrics": {},
-            "qualified_results": json.loads(json.dumps(final_intra, default=str)),
+            "qualified_results": json.loads(json.dumps(display_intra, default=str)),
         }
         with _INTRADAY_LOCK:
             _INTRADAY_CACHE["data"] = intra_cache_res
             _INTRADAY_CACHE["last_updated"] = time.time()
             _INTRADAY_CACHE["is_scanning"] = False
+        _save_cache_to_disk(CACHE_FILE_INTRADAY, intra_cache_res)
             
         logger.info(f"Enterprise Signal Orchestration completed in {time.time() - start_time:.2f}s.")
         

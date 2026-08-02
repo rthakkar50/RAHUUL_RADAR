@@ -528,7 +528,8 @@ class IntradayScannerService:
                     progress_callback(80 + int((completed / total) * 15))
                     
             if not processed_results:
-                raise Exception("Universe scanned but 0 valid setups found. (Possible Data Fetch Timeout or API Block)")
+                logger.warning("Universe scanned but 0 valid setups found. Returning empty list.")
+                return []
                 
             self.last_full_results = processed_results
             
