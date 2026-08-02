@@ -43,39 +43,45 @@ class ScanResultModel {
 
   factory ScanResultModel.fromJson(Map<String, dynamic> json) {
     final p = (json['Price'] ?? json['price'] as num?)?.toDouble() ?? 0.0;
+    final sig = (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY';
+    final isBuy = sig.toUpperCase() != 'SELL';
+    final entryVal = (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p;
+    
+    double slVal = (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? (isBuy ? entryVal * 0.96 : entryVal * 1.04);
+    double t1Val = (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.08 : entryVal * 0.92);
+    double t2Val = (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.15 : entryVal * 0.85);
+
+    // Enforce target hierarchy validity
+    if (isBuy) {
+      if (slVal >= entryVal) slVal = entryVal * 0.96;
+      if (t1Val <= entryVal) t1Val = entryVal * 1.08;
+      if (t2Val <= t1Val) t2Val = t1Val * 1.06;
+    } else {
+      if (slVal <= entryVal) slVal = entryVal * 1.04;
+      if (t1Val >= entryVal) t1Val = entryVal * 0.92;
+      if (t2Val >= t1Val) t2Val = t1Val * 0.94;
+    }
+
     return ScanResultModel(
       symbol: (json['Symbol'] ?? json['symbol'])?.toString() ?? '',
       company: (json['Company'] ?? json['company'])?.toString() ?? '',
       sector: (json['Sector'] ?? json['sector'])?.toString() ?? 'GENERAL',
       price: p,
-      signal: (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY',
+      signal: sig,
       score: (json['Score'] ?? json['score'] as num?)?.toDouble() ?? 80.0,
-      rawScore:
-          (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
-      confidence:
-          (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ??
-          85.0,
+      rawScore: (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
+      confidence: (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ?? 85.0,
       trend: (json['Trend'] ?? json['trend'])?.toString() ?? 'BULLISH',
       volume: (json['Volume'] ?? json['volume'])?.toString() ?? '1.5x',
-      riskReward:
-          (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? '1:2.0',
-      rsScore:
-          (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 75.0,
-      entry: (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p,
-      stopLoss:
-          (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ??
-          (p > 0 ? p * 0.98 : 0.0),
-      target1:
-          (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ??
-          (p > 0 ? p * 1.04 : 0.0),
-      target2:
-          (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ??
-          (p > 0 ? p * 1.08 : 0.0),
-      tradeGrade:
-          (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
-      riskGrade:
-          (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
-      timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? '',
+      riskReward: (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? '1:3.0',
+      rsScore: (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 75.0,
+      entry: entryVal,
+      stopLoss: slVal,
+      target1: t1Val,
+      target2: t2Val,
+      tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
+      riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
+      timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? 'LIVE',
     );
   }
 }

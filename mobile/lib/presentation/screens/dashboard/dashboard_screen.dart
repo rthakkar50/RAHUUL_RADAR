@@ -432,12 +432,26 @@ class _DashboardScreenState extends State<DashboardScreen>
       {'symbol': 'INFY.NS', 'company': 'Infosys Ltd.', 'sector': 'IT', 'price': '1820.00', 'exchange': 'NSE'},
       {'symbol': 'SBIN.NS', 'company': 'State Bank of India', 'sector': 'BANKING', 'price': '845.00', 'exchange': 'NSE'},
       {'symbol': 'HDFCBANK.NS', 'company': 'HDFC Bank Ltd.', 'sector': 'BANKING', 'price': '1640.00', 'exchange': 'NSE'},
+      {'symbol': 'ICICIBANK.NS', 'company': 'ICICI Bank Ltd.', 'sector': 'BANKING', 'price': '1220.00', 'exchange': 'NSE'},
+      {'symbol': 'TATAMOTORS.NS', 'company': 'Tata Motors Ltd.', 'sector': 'AUTO', 'price': '1040.00', 'exchange': 'NSE'},
+      {'symbol': 'AXISBANK.NS', 'company': 'Axis Bank Ltd.', 'sector': 'BANKING', 'price': '1180.00', 'exchange': 'NSE'},
+      {'symbol': 'BAJFINANCE.NS', 'company': 'Bajaj Finance Ltd.', 'sector': 'FINANCE', 'price': '6850.00', 'exchange': 'NSE'},
+      {'symbol': 'BHARTIARTL.NS', 'company': 'Bharti Airtel Ltd.', 'sector': 'TELECOM', 'price': '1540.00', 'exchange': 'NSE'},
+      {'symbol': 'LT.NS', 'company': 'Larsen & Toubro Ltd.', 'sector': 'INFRA', 'price': '3620.00', 'exchange': 'NSE'},
+      {'symbol': 'MARUTI.NS', 'company': 'Maruti Suzuki India', 'sector': 'AUTO', 'price': '12400.00', 'exchange': 'NSE'},
+      {'symbol': 'SUNPHARMA.NS', 'company': 'Sun Pharmaceutical', 'sector': 'PHARMA', 'price': '1710.00', 'exchange': 'NSE'},
+      {'symbol': 'WIPRO.NS', 'company': 'Wipro Ltd.', 'sector': 'IT', 'price': '520.00', 'exchange': 'NSE'},
+      {'symbol': 'NTPC.NS', 'company': 'NTPC Ltd.', 'sector': 'POWER', 'price': '395.00', 'exchange': 'NSE'},
+      {'symbol': 'ONGC.NS', 'company': 'Oil & Natural Gas Corp', 'sector': 'ENERGY', 'price': '310.00', 'exchange': 'NSE'},
+      {'symbol': 'HAL.NS', 'company': 'Hindustan Aeronautics', 'sector': 'DEFENCE', 'price': '4820.00', 'exchange': 'NSE'},
+      {'symbol': 'BEL.NS', 'company': 'Bharat Electronics', 'sector': 'DEFENCE', 'price': '295.00', 'exchange': 'NSE'},
+      {'symbol': 'DIXON.NS', 'company': 'Dixon Technologies', 'sector': 'ELECTRONICS', 'price': '12400.00', 'exchange': 'NSE'},
       {'symbol': 'ZOMATO.NS', 'company': 'Zomato Ltd.', 'sector': 'CONSUMER', 'price': '230.00', 'exchange': 'NSE'},
       {'symbol': 'IREDA.NS', 'company': 'Indian Renewable Energy', 'sector': 'ENERGY', 'price': '240.00', 'exchange': 'NSE'},
       {'symbol': 'JIOFIN.NS', 'company': 'Jio Financial Services', 'sector': 'FINANCE', 'price': '345.00', 'exchange': 'NSE'},
     ];
 
-    final results = query.isEmpty
+    final results = query.length < 2
         ? <Map<String, String>>[]
         : searchUniverse.where((item) =>
             item['symbol']!.toUpperCase().contains(query) ||

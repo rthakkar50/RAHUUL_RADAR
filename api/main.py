@@ -273,75 +273,22 @@ async def run_swing_scanner():
         logger.error(f"Error serving cached swing scan: {e}", exc_info=True)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-# Intraday Scanner Endpoint
 @v1_router.get("/scanner/intraday", tags=["Scanner"])
 async def run_intraday_scanner():
-    logger.info("Intraday scanner endpoint called")
+    logger.info("Intraday scanner endpoint called - executing live scan over F&O universe")
     try:
+        service = SwingScannerService()
+        scan_output = service.execute_swing_scan()
         fno_symbols = get_fno_symbols()
         total_universe = len(fno_symbols)
+        
+        qualified_results = scan_output.get("qualified_results", [])
         total_scanned = total_universe
-        default_qual = [
-            {
-                "Symbol": "RELIANCE", "symbol": "RELIANCE",
-                "Company": "Reliance Industries Ltd.", "company": "Reliance Industries Ltd.",
-                "Sector": "ENERGY", "sector": "ENERGY",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 92.0, "score": 92.0,
-                "Confidence": 91.0, "confidence": 91.0,
-                "Price": 2980.00, "price": 2980.00,
-                "Entry": 2980.00, "entry": 2980.00,
-                "Stop Loss": 2960.00, "sl": 2960.00,
-                "Target 1": 3020.00, "target_1": 3020.00,
-                "Target 2": 3050.00, "target_2": 3050.00,
-                "Risk Reward": "1:3.5", "risk_reward": "1:3.5",
-                "Trend": "ORB BREAKOUT", "trend": "ORB BREAKOUT",
-                "Volume": "+410%", "volume": "+410%",
-                "Trade Grade": "A+", "trade_grade": "A+",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "SBIN", "symbol": "SBIN",
-                "Company": "State Bank of India", "company": "State Bank of India",
-                "Sector": "BANKING", "sector": "BANKING",
-                "Signal": "BUY", "signal": "BUY",
-                "Score": 94.0, "score": 94.0,
-                "Confidence": 93.0, "confidence": 93.0,
-                "Price": 845.00, "price": 845.00,
-                "Entry": 845.00, "entry": 845.00,
-                "Stop Loss": 835.00, "sl": 835.00,
-                "Target 1": 865.00, "target_1": 865.00,
-                "Target 2": 880.00, "target_2": 880.00,
-                "Risk Reward": "1:4.0", "risk_reward": "1:4.0",
-                "Trend": "LONG BUILDUP", "trend": "LONG BUILDUP",
-                "Volume": "+390%", "volume": "+390%",
-                "Trade Grade": "A+", "trade_grade": "A+",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            },
-            {
-                "Symbol": "HDFCBANK", "symbol": "HDFCBANK",
-                "Company": "HDFC Bank Ltd.", "company": "HDFC Bank Ltd.",
-                "Sector": "BANKING", "sector": "BANKING",
-                "Signal": "WATCH", "signal": "WATCH",
-                "Score": 84.0, "score": 84.0,
-                "Confidence": 82.0, "confidence": 82.0,
-                "Price": 1640.00, "price": 1640.00,
-                "Entry": 1640.00, "entry": 1640.00,
-                "Stop Loss": 1625.00, "sl": 1625.00,
-                "Target 1": 1665.00, "target_1": 1665.00,
-                "Target 2": 1680.00, "target_2": 1680.00,
-                "Risk Reward": "1:3.0", "risk_reward": "1:3.0",
-                "Trend": "VWAP CONSOLIDATION", "trend": "VWAP CONSOLIDATION",
-                "Volume": "+320%", "volume": "+320%",
-                "Trade Grade": "A", "trade_grade": "A",
-                "Risk Grade": "LOW", "risk_grade": "LOW"
-            }
-        ]
-        buy_count = sum(1 for x in default_qual if x.get("signal") == "BUY")
-        sell_count = sum(1 for x in default_qual if x.get("signal") == "SELL")
-        watch_count = sum(1 for x in default_qual if x.get("signal") == "WATCH")
-        qualified_count = len(default_qual)
-        rejected_count = total_scanned - qualified_count
+        buy_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
+        sell_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
+        watch_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+        qualified_count = len(qualified_results)
+        rejected_count = max(0, total_scanned - qualified_count)
 
         return {
             "total_scanned": total_scanned,
@@ -351,12 +298,12 @@ async def run_intraday_scanner():
             "buy_count": buy_count,
             "sell_count": sell_count,
             "watch_count": watch_count,
-            "wait_count": 0,
-            "no_data_count": 0,
-            "error_count": 0,
-            "market_quality": "HIGH",
-            "exec_time": 0.01,
-            "qualified_results": default_qual
+            "wait_count": scan_output.get("wait_count", 0),
+            "no_data_count": scan_output.get("no_data_count", 0),
+            "error_count": scan_output.get("error_count", 0),
+            "market_quality": scan_output.get("market_quality", "HIGH"),
+            "exec_time": scan_output.get("exec_time", 0.01),
+            "qualified_results": qualified_results
         }
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)

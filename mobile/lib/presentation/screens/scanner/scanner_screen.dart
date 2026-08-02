@@ -337,14 +337,16 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
 
     final swingList = filtered.where((r) => r.sector == 'PHARMA' || r.symbol.contains('DIVIS') || r.symbol.contains('DIXON')).toList();
     final intradayList = filtered.where((r) => !swingList.contains(r) || r.confidence >= 80).toList();
+    final volumeList = filtered.where((r) => r.volume.contains('+') || r.volume.contains('x') || r.confidence >= 85).toList();
+    final breakoutList = filtered.where((r) => r.trend.toUpperCase().contains('BREAKOUT') || r.trend.toUpperCase().contains('BUILDUP') || r.confidence >= 88).toList();
 
     return TabBarView(
       controller: _tabController,
       children: [
         _buildSwingScannerTab(swingList.isNotEmpty ? swingList : filtered),
-        _buildIntradayScannerTab(intradayList.isNotEmpty ? intradayList : _mockIntradayData()),
-        _buildHighVolumeTab(_mockVolumeData()),
-        _buildBreakoutTab(_mockBreakoutData()),
+        _buildIntradayScannerTab(intradayList.isNotEmpty ? intradayList : filtered),
+        _buildHighVolumeTab(volumeList.isNotEmpty ? volumeList : filtered),
+        _buildBreakoutTab(breakoutList.isNotEmpty ? breakoutList : filtered),
         _buildWatchlistTab(filtered),
         _buildTodaysBestTab(filtered),
       ],
@@ -503,26 +505,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
-  List<ScanResultModel> _mockIntradayData() {
-    return [
-      ScanResultModel(symbol: 'RELIANCE', company: 'Reliance Industries', sector: 'ENERGY', price: 2980.0, signal: 'BUY', score: 92.0, rawScore: 92.0, confidence: 91.0, trend: 'ORB BREAKOUT', volume: '+410%', riskReward: '1:3.5', rsScore: 88.0, entry: 2980.0, stopLoss: 2960.0, target1: 3020.0, target2: 3050.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
-      ScanResultModel(symbol: 'INFY', company: 'Infosys Ltd.', sector: 'IT', price: 1820.0, signal: 'SELL', score: 86.0, rawScore: 86.0, confidence: 85.0, trend: 'SHORT BUILDUP', volume: '+350%', riskReward: '1:3.0', rsScore: 42.0, entry: 1820.0, stopLoss: 1845.0, target1: 1780.0, target2: 1750.0, tradeGrade: 'A', riskGrade: 'MODERATE', timestamp: 'LIVE'),
-      ScanResultModel(symbol: 'HDFCBANK', company: 'HDFC Bank Ltd.', sector: 'BANKING', price: 1640.0, signal: 'WATCH', score: 84.0, rawScore: 84.0, confidence: 82.0, trend: 'VWAP CONSOLIDATION', volume: '+320%', riskReward: '1:3.0', rsScore: 68.0, entry: 1640.0, stopLoss: 1625.0, target1: 1665.0, target2: 1680.0, tradeGrade: 'A', riskGrade: 'LOW', timestamp: 'LIVE'),
-      ScanResultModel(symbol: 'SBIN', company: 'State Bank of India', sector: 'BANKING', price: 845.0, signal: 'BUY', score: 94.0, rawScore: 94.0, confidence: 93.0, trend: 'LONG BUILDUP', volume: '+390%', riskReward: '1:4.0', rsScore: 90.0, entry: 845.0, stopLoss: 835.0, target1: 865.0, target2: 880.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
-    ];
-  }
-
-  List<ScanResultModel> _mockVolumeData() {
-    return [
-      ScanResultModel(symbol: 'VOLTAS', company: 'Voltas Ltd.', sector: 'CONSUMER', price: 1420.0, signal: 'BUY', score: 95.0, rawScore: 95.0, confidence: 94.0, trend: 'VOLUME BURST', volume: '+520%', riskReward: '1:4.5', rsScore: 92.0, entry: 1420.0, stopLoss: 1400.0, target1: 1460.0, target2: 1490.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
-    ];
-  }
-
-  List<ScanResultModel> _mockBreakoutData() {
-    return [
-      ScanResultModel(symbol: 'TRENT', company: 'Trent Ltd.', sector: 'RETAIL', price: 5420.0, signal: 'BUY', score: 98.0, rawScore: 98.0, confidence: 97.0, trend: 'ATH BREAKOUT', volume: '+480%', riskReward: '1:5.0', rsScore: 96.0, entry: 5420.0, stopLoss: 5350.0, target1: 5580.0, target2: 5700.0, tradeGrade: 'A+', riskGrade: 'LOW', timestamp: 'LIVE'),
-    ];
-  }
 
   Widget _buildHighVolumeTab(List<ScanResultModel> list) {
     return ListView.builder(

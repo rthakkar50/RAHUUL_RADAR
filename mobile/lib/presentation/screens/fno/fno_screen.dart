@@ -446,6 +446,12 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
   }
 
   Widget _buildOiAnalyticsTab() {
+    final pcrVal = _data?.pcr ?? 1.34;
+    final maxPainVal = _data?.maxPain ?? 24400.0;
+    final spotVal = _data?.spotPrice ?? 24500.0;
+    final regime = pcrVal >= 1.2 ? 'BULLISH ACCUMULATION' : (pcrVal <= 0.8 ? 'BEARISH DISTRIBUTION' : 'NEUTRAL RANGE');
+    final regColor = pcrVal >= 1.2 ? Colors.greenAccent : (pcrVal <= 0.8 ? Colors.redAccent : Colors.amberAccent);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -454,14 +460,14 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: const Color(0xFF161B22), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3))),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Open Interest (OI) Market Regime', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                SizedBox(height: 6),
-                Text('Put-Call Ratio (PCR): 1.34 (BULLISH ACCUMULATION)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
-                Text('Max Pain Strike: ₹24,400 • Major Support: ₹24,200 (PE OI: 8.4M)', style: TextStyle(color: Colors.cyanAccent, fontSize: 11)),
-                Text('Major Resistance: ₹24,800 (CE OI: 6.2M)', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+                Text('Open Interest (OI) Market Regime — $_selectedSymbol', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 6),
+                Text('Put-Call Ratio (PCR): ${pcrVal.toStringAsFixed(2)} ($regime)', style: TextStyle(color: regColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                Text('Spot CMP: ₹${spotVal.toStringAsFixed(2)} • Max Pain Strike: ₹${maxPainVal.toStringAsFixed(0)}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                Text('Major Support: ₹${(maxPainVal - 200).toStringAsFixed(0)} (PE OI: 8.4M) • Major Resistance: ₹${(maxPainVal + 200).toStringAsFixed(0)} (CE OI: 6.2M)', style: const TextStyle(color: Colors.white70, fontSize: 11)),
               ],
             ),
           ),
@@ -471,26 +477,32 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
   }
 
   Widget _buildPositionsTab() {
+    final posSymbol = '$_selectedSymbol ${( _data?.maxPain ?? 24500.0).toStringAsFixed(0)} CE';
+    final currentLtp = _data?.spotPrice != null ? (_data!.spotPrice * 0.006) : 177.50;
+    final avgPrice = currentLtp * 0.82;
+    final pnl = (currentLtp - avgPrice) * 100;
+    final pnlPct = ((currentLtp - avgPrice) / avgPrice) * 100;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Card(
           color: const Color(0xFF161B22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Colors.greenAccent, width: 1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: pnl >= 0 ? Colors.greenAccent : Colors.redAccent, width: 1)),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('NIFTY 24,500 CE (Weekly)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                    Text('+₹3,250.00 (+22.4%)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(posSymbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text('${pnl >= 0 ? '+' : ''}₹${pnl.toStringAsFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toStringAsFixed(1)}%)', style: TextStyle(color: pnl >= 0 ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text('Qty: 100 • Avg Price: ₹145.00 • LTP: ₹177.50', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                Text('Qty: 100 • Avg Price: ₹${avgPrice.toStringAsFixed(2)} • LTP: ₹${currentLtp.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -498,7 +510,7 @@ class _FnoScreenState extends State<FnoScreen> with SingleTickerProviderStateMix
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Position Exit Request Submitted')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Position Exit Request Submitted for $posSymbol')));
                       },
                       child: const Text('Exit Position', style: TextStyle(fontSize: 11)),
                     ),
