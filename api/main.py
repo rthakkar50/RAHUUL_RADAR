@@ -6,6 +6,7 @@ import time
 import sys
 import json
 from application.swing_scanner_service import SwingScannerService
+from application.intraday_scanner_service import IntradayScannerService
 from market.universe import get_fno_symbols, get_nifty200_symbols
 
 logger = get_logger(__name__)
@@ -50,6 +51,7 @@ async def root():
     return {"message": "Welcome to RAHUUL_RADAR Mobile API", "version": "1.0.0"}
 
 from datetime import datetime
+from core.signal_orchestrator import SignalOrchestrator
 
 def _get_provider_metadata(mode: str = "LIVE") -> dict:
     """Returns standardized provider and market status metadata for SPRINT-161 compliance."""
@@ -110,62 +112,58 @@ def _get_intraday_cache_ttl() -> float:
         return 120.0  # 2 minutes during market open
     return 900.0      # 15 minutes during market closed
 
-def _run_background_scan():
-    global _SCANNER_CACHE
+_ORCHESTRATOR_LOCK = threading.Lock()
+_ORCHESTRATION_IS_RUNNING = False
+
+def _run_enterprise_orchestration():
+    global _SCANNER_CACHE, _INTRADAY_CACHE, _ORCHESTRATION_IS_RUNNING
     try:
-        with _CACHE_LOCK:
-            if _SCANNER_CACHE["is_scanning"]:
+        with _ORCHESTRATOR_LOCK:
+            if _ORCHESTRATION_IS_RUNNING:
                 return
-            _SCANNER_CACHE["is_scanning"] = True
-        
-        logger.info("Executing background swing scan...")
+            _ORCHESTRATION_IS_RUNNING = True
+            
+        logger.info("Executing Enterprise Signal Orchestration Pipeline...")
         start_time = time.time()
-        service = SwingScannerService()
-        results = service.execute_swing_scan()
         
-        # Ensure JSON safety
-        json_compatible_results = json.loads(json.dumps(results, default=str))
+        # 1. Run Engines
+        swing_service = SwingScannerService()
+        swing_res = swing_service.execute_swing_scan()
+        swing_signals = swing_res.get("qualified_results", [])
         
+        intra_service = IntradayScannerService()
+        intra_raw = intra_service.execute_intraday_scan()
+        
+        # 2. Orchestrate
+        orchestrator = SignalOrchestrator()
+        merged_signals = orchestrator.merge_and_resolve({
+            "swing": swing_signals,
+            "intraday": intra_raw
+        })
+        
+        # 3. Split back out based on source
+        final_swing = [s for s in merged_signals if s.get("source_engine") == "swing"]
+        final_intra = [s for s in merged_signals if s.get("source_engine") == "intraday"]
+        
+        # Update Swing Cache
+        json_swing = json.loads(json.dumps(swing_res, default=str))
+        json_swing["qualified_results"] = json.loads(json.dumps(final_swing, default=str))
         with _CACHE_LOCK:
-            _SCANNER_CACHE["data"] = json_compatible_results
+            _SCANNER_CACHE["data"] = json_swing
             _SCANNER_CACHE["last_updated"] = time.time()
             _SCANNER_CACHE["is_scanning"] = False
-        logger.info(f"Background swing scan completed and cached in {time.time() - start_time:.2f}s.")
-    except Exception as e:
-        logger.error(f"Error executing background swing scan: {e}", exc_info=True)
-        with _CACHE_LOCK:
-            _SCANNER_CACHE["is_scanning"] = False
-
-def _run_background_intraday_scan():
-    global _INTRADAY_CACHE
-    try:
-        with _INTRADAY_LOCK:
-            if _INTRADAY_CACHE["is_scanning"]:
-                return
-            _INTRADAY_CACHE["is_scanning"] = True
-        
-        logger.info("Executing background intraday scan...")
-        start_time = time.time()
-        service = IntradayScannerService()
-        results = service.execute_intraday_scan()
-        
-        # Ensure JSON safety
-        json_compatible_results = json.loads(json.dumps(results, default=str))
-        
-        # Wrap in expected response shape
-        qualified_results = json_compatible_results
+            
+        # Update Intraday Cache
         fno_symbols = get_fno_symbols()
         total_universe = len(fno_symbols)
-        total_scanned = len(qualified_results) # In intraday, we don't have total_scanned returned directly, assume length for now or adjust logic
-        qualified_count = len(qualified_results)
+        qualified_count = len(final_intra)
+        buy_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
+        sell_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
+        watch_count = sum(1 for x in final_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
         
-        buy_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
-        sell_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
-        watch_count = sum(1 for x in qualified_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
-
-        res = {
+        intra_cache_res = {
             "total_universe": total_universe,
-            "total_scanned": total_universe, # Approximated
+            "total_scanned": total_universe, 
             "qualified_count": qualified_count,
             "filter_rejected_count": total_universe - qualified_count,
             "no_data_count": 0,
@@ -182,18 +180,30 @@ def _run_background_intraday_scan():
             "scanner_health": {},
             "market_summary": {},
             "performance_metrics": {},
-            "qualified_results": qualified_results,
+            "qualified_results": json.loads(json.dumps(final_intra, default=str)),
         }
-
         with _INTRADAY_LOCK:
-            _INTRADAY_CACHE["data"] = res
+            _INTRADAY_CACHE["data"] = intra_cache_res
             _INTRADAY_CACHE["last_updated"] = time.time()
             _INTRADAY_CACHE["is_scanning"] = False
-        logger.info(f"Background intraday scan completed and cached in {time.time() - start_time:.2f}s.")
+            
+        logger.info(f"Enterprise Signal Orchestration completed in {time.time() - start_time:.2f}s.")
+        
     except Exception as e:
-        logger.error(f"Error executing background intraday scan: {e}", exc_info=True)
+        logger.error(f"Error executing Enterprise Orchestration: {e}", exc_info=True)
+    finally:
+        with _ORCHESTRATOR_LOCK:
+            _ORCHESTRATION_IS_RUNNING = False
+        with _CACHE_LOCK:
+            _SCANNER_CACHE["is_scanning"] = False
         with _INTRADAY_LOCK:
             _INTRADAY_CACHE["is_scanning"] = False
+
+def _run_background_scan():
+    _run_enterprise_orchestration()
+
+def _run_background_intraday_scan():
+    _run_enterprise_orchestration()
 
 @app.on_event("startup")
 async def startup_event():
@@ -214,15 +224,17 @@ async def run_swing_scanner(debug: bool = False):
             is_scanning = _SCANNER_CACHE["is_scanning"]
         
         if data is None:
-            logger.info("Cache empty on request. Executing live swing scan synchronously...")
-            service = SwingScannerService()
-            results = service.execute_swing_scan()
-            data = json.loads(json.dumps(results, default=str))
-
+            logger.info("Cache empty on request. Executing live orchestrated scan synchronously...")
+            _run_enterprise_orchestration()
+            
+            # Now cache should be populated
             with _CACHE_LOCK:
-                _SCANNER_CACHE["data"] = data
-                _SCANNER_CACHE["last_updated"] = time.time()
-                _SCANNER_CACHE["is_scanning"] = False
+                data = _SCANNER_CACHE.get("data")
+            
+            if data is None:
+                raise Exception("Orchestration failed to populate swing cache")
+
+
         else:
             if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
                 logger.info("Cache expired. Triggering background refresh...")
@@ -252,44 +264,16 @@ async def run_intraday_scanner(debug: bool = False):
         ttl = _get_intraday_cache_ttl()
         
         if data is None:
-            logger.info("Intraday cache empty. Executing live intraday scan synchronously...")
-            service = IntradayScannerService()
-            raw_results = service.execute_intraday_scan()
-            json_compatible_results = json.loads(json.dumps(raw_results, default=str))
-            
-            fno_symbols = get_fno_symbols()
-            total_universe = len(fno_symbols)
-            qualified_count = len(json_compatible_results)
-            buy_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "BUY")
-            sell_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "SELL")
-            watch_count = sum(1 for x in json_compatible_results if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
-
-            data = {
-                "total_universe": total_universe,
-                "total_scanned": total_universe, 
-                "qualified_count": qualified_count,
-                "filter_rejected_count": total_universe - qualified_count,
-                "no_data_count": 0,
-                "buy_count": buy_count,
-                "watch_count": watch_count,
-                "sell_count": sell_count,
-                "rejected_count": total_universe - qualified_count,
-                "wait_count": 0,
-                "error_count": 0,
-                "market_quality": "HIGH",
-                "exec_time": 0.01,
-                "rejection_analytics": {},
-                "pipeline_stages": [],
-                "scanner_health": {},
-                "market_summary": {},
-                "performance_metrics": {},
-                "qualified_results": json_compatible_results,
-            }
+            logger.info("Intraday cache empty. Executing live orchestrated scan synchronously...")
+            _run_enterprise_orchestration()
 
             with _INTRADAY_LOCK:
-                _INTRADAY_CACHE["data"] = data
-                _INTRADAY_CACHE["last_updated"] = time.time()
-                _INTRADAY_CACHE["is_scanning"] = False
+                data = _INTRADAY_CACHE.get("data")
+            
+            if data is None:
+                raise Exception("Orchestration failed to populate intraday cache")
+            
+
         else:
             if current_time - last_updated > ttl and not is_scanning:
                 logger.info(f"Intraday cache expired (TTL {ttl}s). Triggering background refresh...")
