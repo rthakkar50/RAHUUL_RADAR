@@ -661,9 +661,20 @@ class SwingScannerService:
             error_count = scan_stats.get("errors", 0)
             wait_count = len(processed_results) - num_qualified
 
+            buy_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "BUY")
+            sell_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "SELL")
+            watch_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "WATCH")
+            qualified_count = len(qualified_results)
+            rejected_count = len(stock_list) - qualified_count
+
             return {
                 "total_scanned": len(processed_results),
                 "total_universe": len(stock_list),
+                "qualified_count": qualified_count,
+                "rejected_count": rejected_count,
+                "buy_count": buy_count,
+                "sell_count": sell_count,
+                "watch_count": watch_count,
                 "qualified_results": qualified_results,
                 "wait_count": wait_count,
                 "no_data_count": no_data_count,
