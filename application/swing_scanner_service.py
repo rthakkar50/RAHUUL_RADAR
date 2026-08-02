@@ -951,6 +951,11 @@ class SwingScannerService:
                 "cpu_usage_pct": cpu_pct
             }
 
+            # SCANNER COVERAGE & FILTER PIPELINE DOCUMENTATION:
+            # 1. Total Universe (e.g. 200 NIFTY symbols) = configured target universe.
+            # 2. Total Scanned / Downloaded (e.g. 37 symbols) = symbols with valid live market indicator data available (especially during weekend/off-market hours).
+            # 3. Qualified (e.g. 20 symbols) = symbols that passed the 7-stage scanner filter pipeline (BUY + WATCH).
+            # 4. Rejected = total_universe - qualified_count.
             return {
                 "total_scanned": len(processed_results),
                 "total_universe": len(stock_list),
