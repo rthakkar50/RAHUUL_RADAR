@@ -494,13 +494,35 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
+  Widget _loadingState(String msg) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(color: Colors.cyanAccent),
+          const SizedBox(height: 12),
+          Text(msg, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSwingScannerTab(List<ScanResultModel> list) {
-    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+    if (_isSwingLoading && list.isEmpty) {
+      return _loadingState('Loading Scanner...');
+    }
+
+    if (!_isSwingLoading && list.isEmpty) {
+      return _emptyState('No qualified opportunities available.');
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: list.length,
+      itemCount: list.length + 1,
       itemBuilder: (ctx, i) {
+        if (i == list.length) {
+          return AdvancedDiagnosticsWidget(response: _swingResponse);
+        }
         final item = list[i];
         final isHeld = _heldSymbols.contains(item.symbol);
         final isPending = _pendingOrderSymbols.contains(item.symbol);
@@ -529,12 +551,21 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildIntradayScannerTab(List<ScanResultModel> list) {
-    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+    if (_isIntradayLoading && list.isEmpty) {
+      return _loadingState('Loading Scanner...');
+    }
+
+    if (!_isIntradayLoading && list.isEmpty) {
+      return _emptyState('No qualified opportunities available.');
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: list.length,
+      itemCount: list.length + 1,
       itemBuilder: (ctx, i) {
+        if (i == list.length) {
+          return AdvancedDiagnosticsWidget(response: _intradayResponse);
+        }
         final item = list[i];
         final isHeld = _heldSymbols.contains(item.symbol);
         final isPending = _pendingOrderSymbols.contains(item.symbol);
