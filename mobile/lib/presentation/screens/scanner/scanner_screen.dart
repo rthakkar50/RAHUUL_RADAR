@@ -457,7 +457,16 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     final intradayFiltered = intradayAll.where((r) => r.symbol.contains(_searchQuery) || r.sector.contains(_searchQuery)).toList();
 
     // DATA SOURCE: /api/v1/scanner/swing
-    final swingList = swingFiltered.where((r) => r.signal.toUpperCase() == 'BUY' || r.signal.toUpperCase() == 'WATCH').toList();
+    final swingList = swingFiltered.where((r) {
+      final sig = r.signal.toUpperCase();
+      return sig == 'BUY' ||
+          sig == 'STRONG_BUY' ||
+          sig == 'INSTITUTIONAL_BUY' ||
+          sig == 'SELL' ||
+          sig == 'STRONG_SELL' ||
+          sig == 'INSTITUTIONAL_SELL' ||
+          sig == 'WATCH';
+    }).toList();
 
     // DATA SOURCE: /api/v1/scanner/intraday
     // Intraday API only returns intraday-specific results, no further filtering needed
