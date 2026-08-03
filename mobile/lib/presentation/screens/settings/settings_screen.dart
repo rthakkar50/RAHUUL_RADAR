@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_config.dart';
+import '../../../core/network/network_manager.dart';
 import 'broker_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -11,10 +12,10 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _ipController = TextEditingController(
-    text: ApiConfig.localIp,
+    text: NetworkManager.instance.userSavedUrl,
   );
   final TextEditingController _portController = TextEditingController(
-    text: ApiConfig.port,
+    text: '8000',
   );
 
   bool _telegramEnabled = true;
@@ -40,8 +41,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('API Configuration Saved & Tested! Server: ${ApiConfig.serverType} (${ApiConfig.lastLatencyMs}ms)'),
-          backgroundColor: ApiConfig.connectionState == ServerConnectionState.offline ? Colors.redAccent : Colors.green,
+          content: Text('API Configuration Saved! Active Server: ${NetworkManager.instance.serverType} (${NetworkManager.instance.latencyMs}ms)'),
+          backgroundColor: NetworkManager.instance.state == NetworkState.offline ? Colors.redAccent : Colors.green,
         ),
       );
     }
@@ -49,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _runManualTest() async {
     setState(() => _isTesting = true);
-    final details = await ApiConfig.testConnectionDetails();
+    final details = await NetworkManager.instance.runFullDiagnostics();
     setState(() => _isTesting = false);
 
     if (!mounted) return;
@@ -57,12 +58,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161B22),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         final diag = details['diagnostics'] as Map<String, dynamic>;
-        return Padding(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -72,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Network Diagnostics Report',
+                    'Network Diagnostics & Telemetry',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -83,15 +85,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(color: Colors.white10),
               const SizedBox(height: 8),
-              _diagRow('Resolved URL', details['resolvedUrl'] ?? 'N/A', Colors.cyanAccent),
-              _diagRow('Server Type', details['serverName'] ?? 'N/A', Colors.amberAccent),
+              _diagRow('Current URL', details['currentUrl'] ?? 'N/A', Colors.cyanAccent),
+              _diagRow('Server Type', details['serverType'] ?? 'N/A', Colors.amberAccent),
+              _diagRow('Discovery Source', details['discoverySource'] ?? 'N/A', Colors.blueAccent),
+              _diagRow('Last Working URL', details['lastWorkingUrl'] ?? 'N/A', Colors.white70),
               _diagRow('Latency', '${details['latencyMs']} ms', Colors.greenAccent),
               _diagRow('HTTP Status', '${details['httpStatus']}', Colors.white),
-              _diagRow('API Version', details['apiVersion'] ?? 'N/A', Colors.white),
               _diagRow('Python Version', details['pythonVersion'] ?? 'N/A', Colors.white70),
-              _diagRow('Scanner Status', details['scannerStatus'] ?? 'N/A', Colors.greenAccent),
+              _diagRow('Market Status', details['marketStatus'] ?? 'N/A', Colors.greenAccent),
+              _diagRow('Failure Reason', details['failureReason'] ?? 'None', Colors.orangeAccent),
               const SizedBox(height: 12),
-              const Text('Layer Diagnostics:', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+              const Text('Network Layer Checks:', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Wrap(
                 spacing: 8,
@@ -122,7 +126,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          Text(val, style: TextStyle(color: valColor, fontSize: 12, fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(
+              val,
+              textAlign: TextAlign.right,
+              style: TextStyle(color: valColor, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );
@@ -130,22 +140,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ApiConfig.connectionState;
+    final state = NetworkManager.instance.state;
     Color statusColor = Colors.greenAccent;
-    String statusText = 'ONLINE (${ApiConfig.serverType.toUpperCase()})';
+    String statusText = 'ONLINE (${NetworkManager.instance.serverType.toUpperCase()})';
 
-    if (state == ServerConnectionState.local) {
+    if (state == NetworkState.local) {
       statusColor = Colors.cyanAccent;
       statusText = 'LOCAL MODE';
-    } else if (state == ServerConnectionState.wakingServer) {
+    } else if (state == NetworkState.render) {
       statusColor = Colors.amberAccent;
-      statusText = 'WAKING CLOUD SERVER';
-    } else if (state == ServerConnectionState.offline) {
+      statusText = 'RENDER CLOUD';
+    } else if (state == NetworkState.tunnel) {
+      statusColor = Colors.purpleAccent;
+      statusText = 'DYNAMIC TUNNEL';
+    } else if (state == NetworkState.offline || state == NetworkState.error) {
       statusColor = Colors.redAccent;
       statusText = 'OFFLINE';
-    } else if (state == ServerConnectionState.checking || state == ServerConnectionState.connecting) {
+    } else if (state == NetworkState.checking || state == NetworkState.discovering || state == NetworkState.connecting) {
       statusColor = Colors.orangeAccent;
-      statusText = 'CONNECTING...';
+      statusText = 'DISCOVERING...';
     }
 
     return Scaffold(
@@ -160,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionTitle('Live Server Connection & Health'),
+          _sectionTitle('Enterprise Network Manager Status'),
           _buildCard([
             ListTile(
               leading: Container(
@@ -185,14 +198,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      '${ApiConfig.lastLatencyMs} ms',
+                      '${NetworkManager.instance.latencyMs} ms',
                       style: const TextStyle(color: Colors.white70, fontSize: 10),
                     ),
                   ),
                 ],
               ),
               subtitle: Text(
-                ApiConfig.statusMessage,
+                'Source: ${NetworkManager.instance.discoverySource}',
                 style: const TextStyle(color: Colors.grey, fontSize: 11),
               ),
               trailing: _isTesting
@@ -201,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: const Icon(Icons.refresh, color: Colors.cyanAccent, size: 20),
                       onPressed: () async {
                         setState(() => _isTesting = true);
-                        await ApiConfig.autoDiscoverReachableServer();
+                        await NetworkManager.instance.startPlatformAwareDiscovery();
                         setState(() => _isTesting = false);
                       },
                     ),
@@ -211,10 +224,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  _diagRow('Active Base URL', ApiConfig.baseUrl, Colors.cyanAccent),
-                  _diagRow('Server Type', ApiConfig.serverType, Colors.amberAccent),
-                  _diagRow('Python Version', ApiConfig.pythonVersion, Colors.white70),
-                  _diagRow('Market Status', ApiConfig.marketStatus, Colors.greenAccent),
+                  _diagRow('Active Base URL', NetworkManager.instance.baseUrl, Colors.cyanAccent),
+                  _diagRow('Last Working URL', NetworkManager.instance.lastWorkingUrl, Colors.white70),
+                  _diagRow('Server Type', NetworkManager.instance.serverType, Colors.amberAccent),
+                  _diagRow('Python Version', NetworkManager.instance.pythonVersion, Colors.white70),
+                  _diagRow('Market Status', NetworkManager.instance.marketStatus, Colors.greenAccent),
                 ],
               ),
             ),
@@ -226,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _isTesting ? null : _runManualTest,
                       icon: const Icon(Icons.speed, size: 16),
-                      label: const Text('Test Connection'),
+                      label: const Text('Test Connection & Diagnostics'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.cyanAccent,
                         side: const BorderSide(color: Colors.cyanAccent),
@@ -239,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
           const SizedBox(height: 16),
 
-          _sectionTitle('API Endpoint & Server Network'),
+          _sectionTitle('API Endpoint Configuration'),
           _buildCard([
             ListTile(
               title: const Text(
@@ -251,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               subtitle: Text(
-                ApiConfig.baseUrl,
+                NetworkManager.instance.baseUrl,
                 style: const TextStyle(color: Colors.cyanAccent, fontSize: 11),
               ),
               trailing: const Icon(
@@ -269,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: _ipController,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: const InputDecoration(
-                  labelText: 'Custom Server URL / IP',
+                  labelText: 'Custom Server / Tunnel URL',
                   labelStyle: TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(),
                 ),
@@ -282,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _saveApiSettings,
                   icon: const Icon(Icons.save, size: 16),
-                  label: const Text('Save & Reconnect'),
+                  label: const Text('Save & Discover'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                   ),
@@ -366,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               subtitle: Text(
-                'v6.5.7 Gold Master • Built for Multi-Tenant Quant Trading',
+                'v6.6.0 Enterprise Master • Platform-Aware Network Architecture',
                 style: TextStyle(color: Colors.grey, fontSize: 11),
               ),
             ),
