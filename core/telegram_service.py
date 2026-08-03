@@ -275,10 +275,10 @@ class TelegramService:
         status = {"api": False, "db": False, "scanner": False, "paper": False, "ts": ts}
 
         try:
-            req = urllib.request.Request("http://127.0.0.1:8000/api/v1/health")
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    status["api"] = True
+            from core.backend_url_resolver import BackendUrlResolver
+            res = BackendUrlResolver.get_instance().fetch_api_with_retry("/api/v1/health")
+            if res and res.get("status") == "online":
+                status["api"] = True
         except Exception:
             status["api"] = False
 

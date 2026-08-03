@@ -35,14 +35,8 @@ class TelegramIntelligence:
         return self.service.sanitize_text(text)
 
     def _fetch_api(self, endpoint: str, method: str = "GET") -> dict:
-        try:
-            req = urllib.request.Request(f"http://127.0.0.1:8000{endpoint}", method=method)
-            with urllib.request.urlopen(req, timeout=8) as resp:
-                if resp.status == 200:
-                    return json.loads(resp.read().decode())
-        except Exception as e:
-            self.service.error_logger.error(f"_fetch_api failed for endpoint {endpoint}: {e}")
-        return {}
+        from core.backend_url_resolver import BackendUrlResolver
+        return BackendUrlResolver.get_instance().fetch_api_with_retry(endpoint, method=method)
 
     def get_system_health(self) -> str:
         data = self._fetch_api("/api/v1/health")
