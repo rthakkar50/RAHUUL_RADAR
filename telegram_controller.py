@@ -284,6 +284,12 @@ def handle_text_command(text, token, chat_id):
             reply = intel.get_best_scanner_report()
         elif cmd in ("/market", "/marketai"):
             reply = intel.get_market_intelligence_report()
+        elif cmd == "/marketbreadth":
+            reply = intel.get_market_breadth_report()
+        elif cmd == "/sectors":
+            reply = intel.get_sector_rotation_report()
+        elif cmd == "/regime":
+            reply = intel.get_market_regime_report()
         elif cmd == "/portfolioai":
             reply = intel.get_portfolio_ai_report()
         elif cmd == "/risk":
