@@ -19,10 +19,10 @@ class ApiConfig {
   // Candidate endpoints for multi-network auto-failover (Production Cloud, Localtunnel, Local Fallback)
   static final List<String> _candidateIps = [
     'https://rahuul-radar.onrender.com',
-    'odd-vans-shave.loca.lt',
-    '140.238.161.80',
-    '10.0.2.2',
-    '127.0.0.1',
+    'http://192.168.29.57:8000',
+    'http://192.168.29.45:8000',
+    'http://10.0.2.2:8000',
+    'http://127.0.0.1:8000',
   ];
   static List<String> get candidateIps => _candidateIps;
 
@@ -43,7 +43,7 @@ class ApiConfig {
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _localIp = prefs.getString(keyIp) ?? 'https://rahuul-radar.onrender.com';
-    _port = prefs.getString(keyPort) ?? '443';
+    _port = prefs.getString(keyPort) ?? '8000';
     _env = prefs.getString(keyEnv) ?? 'Production';
     _activeIp = _localIp;
 
@@ -53,13 +53,12 @@ class ApiConfig {
 
   static Future<String> autoDiscoverReachableServer() async {
     final candidates = [
-      'http://127.0.0.1:8000',
       'https://rahuul-radar.onrender.com',
+      'http://192.168.29.57:8000',
+      'http://192.168.29.45:8000',
+      'http://10.0.2.2:8000',
+      'http://127.0.0.1:8000',
       _localIp,
-      'odd-vans-shave.loca.lt',
-      '140.238.161.80',
-      '10.0.2.2',
-      '127.0.0.1',
     ].where((ip) => ip.trim().isNotEmpty).toSet().toList();
 
     final completer = Completer<String>();

@@ -265,6 +265,66 @@ async def startup_event():
     logger.info("Starting initial background intraday scan on boot...")
     threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
 
+def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_universe: int = 200) -> dict:
+    """Normalizes raw cache data into a canonical response dictionary guaranteed to never throw AttributeError."""
+    meta = _get_provider_metadata()
+    
+    if data is None:
+        return {
+            "total_universe": total_universe,
+            "total_scanned": 0,
+            "qualified_count": 0,
+            "filter_rejected_count": 0,
+            "buy_count": 0,
+            "sell_count": 0,
+            "watch_count": 0,
+            "qualified_results": [],
+            "is_scanning": is_scanning,
+            "status": "SCANNING" if is_scanning else "COMPLETED",
+            **meta
+        }
+        
+    if isinstance(data, list):
+        buy_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
+        sell_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
+        watch_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+        res_dict = {
+            "total_universe": total_universe,
+            "total_scanned": total_universe,
+            "qualified_count": len(data),
+            "filter_rejected_count": max(0, total_universe - len(data)),
+            "buy_count": buy_c,
+            "sell_count": sell_c,
+            "watch_count": watch_c,
+            "qualified_results": data,
+            "is_scanning": is_scanning,
+            "status": "COMPLETED",
+            **meta
+        }
+        return res_dict
+        
+    if isinstance(data, dict):
+        res_dict = dict(data)  # Shallow copy to avoid mutating cache in place
+        res_dict.update(meta)
+        if "qualified_results" not in res_dict or not isinstance(res_dict["qualified_results"], list):
+            res_dict["qualified_results"] = []
+        return res_dict
+
+    # Fallback for unexpected data types
+    return {
+        "total_universe": total_universe,
+        "total_scanned": 0,
+        "qualified_count": 0,
+        "filter_rejected_count": 0,
+        "buy_count": 0,
+        "sell_count": 0,
+        "watch_count": 0,
+        "qualified_results": [],
+        "is_scanning": is_scanning,
+        "status": "COMPLETED",
+        **meta
+    }
+
 # Swing Scanner Endpoint (Returns instantly from cache)
 @v1_router.get("/scanner/swing", tags=["Scanner"])
 async def run_swing_scanner(debug: bool = False):
@@ -272,45 +332,43 @@ async def run_swing_scanner(debug: bool = False):
     try:
         current_time = time.time()
         with _CACHE_LOCK:
-            data = _SCANNER_CACHE["data"]
+            raw_data = _SCANNER_CACHE["data"]
             last_updated = _SCANNER_CACHE["last_updated"]
             is_scanning = _SCANNER_CACHE["is_scanning"]
         
-        if data is None:
+        if raw_data is None:
             logger.info("Cache empty on request. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
                 threading.Thread(target=_run_background_scan, daemon=True).start()
-            
-            meta = _get_provider_metadata()
-            return {
-                "total_universe": 200,
-                "total_scanned": 0,
-                "qualified_count": 0,
-                "filter_rejected_count": 0,
-                "buy_count": 0,
-                "sell_count": 0,
-                "watch_count": 0,
-                "qualified_results": [],
-                "is_scanning": True,
-                "status": "SCANNING",
-                **meta
-            }
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
 
-        else:
-            if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
-                logger.info("Cache expired. Triggering background refresh...")
-                threading.Thread(target=_run_background_scan, daemon=True).start()
+        if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
+            logger.info("Cache expired. Triggering background refresh...")
+            threading.Thread(target=_run_background_scan, daemon=True).start()
 
-        meta = _get_provider_metadata()
-        data.update(meta)
+        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=200)
 
         if not debug:
-            clean_data = {k: v for k, v in data.items() if k != "symbol_decision_traces"}
+            clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
             return clean_data
-        return data
+        return resp_dict
     except Exception as e:
         logger.error(f"Error serving swing scan: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        meta = _get_provider_metadata()
+        return {
+            "total_universe": 200,
+            "total_scanned": 0,
+            "qualified_count": 0,
+            "filter_rejected_count": 0,
+            "buy_count": 0,
+            "sell_count": 0,
+            "watch_count": 0,
+            "qualified_results": [],
+            "is_scanning": False,
+            "status": "ERROR_FALLBACK",
+            "error_detail": str(e),
+            **meta
+        }
 
 @v1_router.get("/scanner/intraday", tags=["Scanner"])
 async def run_intraday_scanner(debug: bool = False):
@@ -318,48 +376,45 @@ async def run_intraday_scanner(debug: bool = False):
     try:
         current_time = time.time()
         with _INTRADAY_LOCK:
-            data = _INTRADAY_CACHE["data"]
+            raw_data = _INTRADAY_CACHE["data"]
             last_updated = _INTRADAY_CACHE["last_updated"]
             is_scanning = _INTRADAY_CACHE["is_scanning"]
         
         ttl = _get_intraday_cache_ttl()
         
-        if data is None:
+        if raw_data is None:
             logger.info("Intraday cache empty. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
                 threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
 
-            meta = _get_provider_metadata()
-            return {
-                "total_universe": 184,
-                "total_scanned": 0,
-                "qualified_count": 0,
-                "filter_rejected_count": 0,
-                "buy_count": 0,
-                "sell_count": 0,
-                "watch_count": 0,
-                "qualified_results": [],
-                "is_scanning": True,
-                "status": "SCANNING",
-                **meta
-            }
-            
+        if current_time - last_updated > ttl and not is_scanning:
+            logger.info(f"Intraday cache expired (TTL {ttl}s). Triggering background refresh...")
+            threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
 
-        else:
-            if current_time - last_updated > ttl and not is_scanning:
-                logger.info(f"Intraday cache expired (TTL {ttl}s). Triggering background refresh...")
-                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
-
-        meta = _get_provider_metadata()
-        data.update(meta)
+        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=184)
 
         if not debug:
-            clean_data = {k: v for k, v in data.items() if k != "symbol_decision_traces"}
+            clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
             return clean_data
-        return data
+        return resp_dict
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        meta = _get_provider_metadata()
+        return {
+            "total_universe": 184,
+            "total_scanned": 0,
+            "qualified_count": 0,
+            "filter_rejected_count": 0,
+            "buy_count": 0,
+            "sell_count": 0,
+            "watch_count": 0,
+            "qualified_results": [],
+            "is_scanning": False,
+            "status": "ERROR_FALLBACK",
+            "error_detail": str(e),
+            **meta
+        }
 
 @v1_router.get("/scanner/audit", tags=["Scanner"])
 async def get_scanner_audit():
