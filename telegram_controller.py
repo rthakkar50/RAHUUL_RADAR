@@ -316,6 +316,16 @@ def handle_text_command(text, token, chat_id):
             reply = intel.generate_midday_report()
         elif cmd == "/eod_report":
             reply = intel.generate_eod_report()
+        elif cmd == "/analytics":
+            reply = intel.get_analytics_report()
+        elif cmd == "/strategy":
+            reply = intel.get_strategy_report()
+        elif cmd == "/heatmap":
+            reply = intel.get_heatmap_report()
+        elif cmd == "/replay":
+            reply = intel.get_replay_report()
+        elif cmd == "/report":
+            reply = intel.get_full_report()
         elif cmd == "/export":
             fmt = arg.lower() if arg else "csv"
             export_path = intel.generate_export_file(fmt, "portfolio")
