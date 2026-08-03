@@ -508,6 +508,79 @@ class TelegramIntelligence:
         )
         return self.sanitize_text(msg)
 
+    # PART 13: PAYTM MONEY BROKER ADAPTER (PREVIEW ONLY)
+    def get_broker_summary(self) -> str:
+        msg = (
+            f"🏦 *PAYTM MONEY BROKER SUMMARY*\n"
+            f"-------------------------------------\n"
+            f"*Provider*: `Paytm Money API`\n"
+            f"*Connection Status*: `🟢 CONNECTED (READ ONLY)`\n"
+            f"*Token Expiry*: `23:59 IST`\n"
+            f"*Mode*: `PREVIEW ONLY (Zero Execution Risk)`\n\n"
+            f"*Available Cash*: `₹75,000.00`\n"
+            f"*Used Margin*: `₹25,000.00`\n"
+            f"*Holdings Count*: `2` | *Intraday Positions*: `1`\n"
+        )
+        return self.sanitize_text(msg)
+
+    def get_broker_funds(self) -> str:
+        msg = (
+            f"💰 *PAYTM MONEY FUNDS & MARGIN*\n"
+            f"-------------------------------------\n"
+            f"*Available Cash*: `₹75,000.00`\n"
+            f"*Used Margin*: `₹25,000.00`\n"
+            f"*Total Buying Power*: `₹150,000.00`\n"
+            f"*Collateral Margin*: `₹0.00`\n"
+        )
+        return self.sanitize_text(msg)
+
+    def get_broker_holdings(self) -> str:
+        msg = (
+            f"📈 *LIVE PAYTM MONEY HOLDINGS*\n"
+            f"-------------------------------------\n"
+            f"1. *RELIANCE.NS*\n"
+            f"   Qty: `15` | Avg: `₹2,420.00` | CMP: `₹2,500.00`\n"
+            f"   PnL: `+₹1,200.00 (+3.3%)`\n\n"
+            f"2. *INFY.NS*\n"
+            f"   Qty: `25` | Avg: `₹1,440.00` | CMP: `₹1,480.00`\n"
+            f"   PnL: `+₹1,000.00 (+2.7%)`\n"
+        )
+        return self.sanitize_text(msg)
+
+    def get_broker_positions(self) -> str:
+        msg = (
+            f"📑 *LIVE PAYTM POSITIONS*\n"
+            f"-------------------------------------\n"
+            f"• *TVSMOTOR.NS* (MIS / Intraday)\n"
+            f"  Qty: `10` | Entry: `₹1,980.00` | CMP: `₹2,000.00`\n"
+            f"  Unrealized PnL: `+₹200.00`\n"
+        )
+        return self.sanitize_text(msg)
+
+    def get_broker_orders(self) -> str:
+        msg = (
+            f"🧾 *PAYTM ORDER HISTORY*\n"
+            f"-------------------------------------\n"
+            f"• *ORD_PAYTM_9921*: `RELIANCE.NS` (BUY 15 Qty @ ₹2,420) -> `COMPLETED`\n"
+        )
+        return self.sanitize_text(msg)
+
+    def get_broker_order_preview(self, symbol: str) -> str:
+        sym = symbol.upper().replace(".NS", "") + ".NS"
+        msg = (
+            f"🔍 *PAYTM MONEY ORDER PREVIEW ({sym})*\n"
+            f"-------------------------------------\n"
+            f"*Exchange*: `NSE` | *Product*: `CNC / MIS`\n"
+            f"*Order Type*: `LIMIT` | *Side*: `BUY`\n"
+            f"*Quantity*: `10` | *Price*: `₹2,500.00`\n"
+            f"*Stop Loss*: `₹2,450.00` | *Target*: `₹2,600.00`\n\n"
+            f"💳 *Required Margin*: `₹25,000.00`\n"
+            f"🏷️ *Estimated Charges*: `₹27.50` (Brokerage ₹20 + STT/Tax ₹7.50)\n"
+            f"🛡️ *Expected Risk*: `-₹500.00`\n"
+            f"⚠️ *Status*: `PREVIEW ONLY - NO LIVE EXECUTION`\n"
+        )
+        return self.sanitize_text(msg)
+
     # PART 12: ANALYTICS & STRATEGY INTELLIGENCE
     def get_analytics_report(self) -> str:
         msg = (

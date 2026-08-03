@@ -316,6 +316,18 @@ def handle_text_command(text, token, chat_id):
             reply = intel.generate_midday_report()
         elif cmd == "/eod_report":
             reply = intel.generate_eod_report()
+        elif cmd == "/broker":
+            reply = intel.get_broker_summary()
+        elif cmd == "/funds":
+            reply = intel.get_broker_funds()
+        elif cmd == "/holdings":
+            reply = intel.get_broker_holdings()
+        elif cmd == "/positions":
+            reply = intel.get_broker_positions()
+        elif cmd == "/orders":
+            reply = intel.get_broker_orders()
+        elif cmd == "/preview":
+            reply = intel.get_broker_order_preview(arg if arg else "RELIANCE")
         elif cmd == "/analytics":
             reply = intel.get_analytics_report()
         elif cmd == "/strategy":
