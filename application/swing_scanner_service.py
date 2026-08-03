@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Union
 
 from config.config import AppConfig
-from market.yahoo_provider import YahooFinanceProvider
+from market.market_data_manager import MarketDataManager
 from market.dhan_provider import DhanProvider
 from core.trend_engine import TrendEngine
 from core.momentum_engine import MomentumEngine
@@ -100,31 +100,9 @@ class SwingScannerService:
         logger.info(f"Input: progress_callback present = {progress_callback is not None}")
         
         try:
-            if getattr(self.config, 'data_provider', 'yahoo') == 'dhan':
-                data_provider = DhanProvider(
-                    client_id=getattr(self.config, 'dhan_client_id', ''),
-                    access_token=getattr(self.config, 'dhan_access_token', '')
-                )
-            else:
-                data_provider = YahooFinanceProvider()
-                
-            logger.info("Connecting to data provider...")
-            data_provider.connect()
-            
-            from market.market_data_manager import MarketDataManager
-            from market.paytm_provider import PaytmMoneyProvider
-            
-            try:
-                paytm_provider = PaytmMoneyProvider()
-                paytm_provider.connect()
-            except Exception as e:
-                logger.warning(f"Paytm API Connection/Init Error: {e}. Falling back to Yahoo data.")
-                paytm_provider = None
-
-            manager = MarketDataManager(
-                yahoo_provider=data_provider, 
-                paytm_provider=paytm_provider
-            )
+            manager = MarketDataManager()
+            manager.connect()
+            data_provider = manager
             
             logger.info("Fetching Symbol Universe...")
             universe_start = time.time()

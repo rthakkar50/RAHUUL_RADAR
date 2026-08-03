@@ -118,13 +118,41 @@ class MarketDataProvider(ABC):
     def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
         """
         Retrieves the option chain for a given symbol and optional expiry.
-        
-        Args:
-            symbol: The underlying symbol.
-            expiry: Optional expiry date string.
-            
-        Returns:
-            Dict containing option chain data.
+        """
+        pass
+
+    @abstractmethod
+    def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+        """
+        Retrieves historical daily/weekly OHLCV data.
+        """
+        pass
+
+    @abstractmethod
+    def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
+        """
+        Retrieves live intraday candles/ticks.
+        """
+        pass
+
+    @abstractmethod
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        """
+        Retrieves live price quote.
+        """
+        pass
+
+    @abstractmethod
+    def health(self) -> Dict[str, Any]:
+        """
+        Returns health status dictionary for the provider.
+        """
+        pass
+
+    @abstractmethod
+    def latency(self) -> float:
+        """
+        Returns measured API latency in milliseconds.
         """
         pass
 
@@ -175,3 +203,18 @@ class MockMarketDataProvider(MarketDataProvider):
 
     def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
         return {}
+
+    def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+        return []
+
+    def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
+        return []
+
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        return {"symbol": symbol, "last_price": 0.0}
+
+    def health(self) -> Dict[str, Any]:
+        return {"status": "HEALTHY", "provider": "Mock"}
+
+    def latency(self) -> float:
+        return 1.0

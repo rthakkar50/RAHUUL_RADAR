@@ -399,3 +399,24 @@ class YahooFinanceProvider(MarketDataProvider):
     def get_stock_data(self, symbol: str, period: str = "1mo", interval: str = "1d") -> pd.DataFrame:
         """Alias for fetch_stock_data."""
         return self.fetch_stock_data(symbol, period, interval)
+
+    def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+        """TASK-2: Historical Provider ONLY (Daily / Weekly)."""
+        return self.get_ohlcv(symbol, interval=interval, period=period)
+
+    def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
+        """Yahoo does NOT serve live intraday signals under SPRINT-193 rules."""
+        logger.debug(f"YahooFinanceProvider: Intraday historical requested for {symbol}")
+        return self.get_ohlcv(symbol, interval=interval, period=period)
+
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        ltp = self.get_last_price(symbol)
+        vol = self.get_volume(symbol)
+        return {"symbol": symbol, "last_price": ltp, "volume": vol, "provider": "YahooFinance"}
+
+    def health(self) -> Dict[str, Any]:
+        from market.provider_health_manager import ProviderHealthManager
+        return ProviderHealthManager.get_instance().providers.get("YahooFinance", {"status": "HEALTHY"})
+
+    def latency(self) -> float:
+        return self.stats.get("average_latency_ms", 15.0)

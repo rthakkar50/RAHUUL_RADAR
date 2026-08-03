@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, QTimer, Signal
 from application.paper_trading_service import PaperTradingEngine
-from market.yahoo_provider import YahooFinanceProvider
+from market.market_data_manager import MarketDataManager
 from market.paytm_websocket import PaytmLiveBroadcast
 from config.config import AppConfig
 
@@ -12,7 +12,7 @@ class PaperMarketUpdater(QObject):
         super().__init__()
         self.interval_ms = interval_ms
         self.paper = PaperTradingEngine.get_instance()
-        self.provider = YahooFinanceProvider()
+        self.provider = MarketDataManager()
         
         config = AppConfig()
         config.load()

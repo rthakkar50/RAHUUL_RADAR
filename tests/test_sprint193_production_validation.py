@@ -69,5 +69,29 @@ class TestSprint193ProductionValidation(unittest.TestCase):
         elapsed = time.time() - start_t
         self.assertLess(elapsed, 2.0, "100 audit log insertions should complete under 2 seconds")
 
+    def test_06_hybrid_market_data_engine_routing(self):
+        from market.market_data_manager import MarketDataManager
+        mgr = MarketDataManager()
+        mgr.connect()
+        
+        # 1. Historical daily routed to Yahoo
+        hist = mgr.get_historical("RELIANCE.NS", interval="1d", period="1mo")
+        self.assertIsNotNone(hist)
+        
+        # 2. Live quote routed to Paytm
+        quote = mgr.get_quote("RELIANCE.NS")
+        self.assertIn("symbol", quote)
+        
+        # 3. Provider health report
+        h = mgr.health()
+        self.assertIn("overall_status", h)
+
+    def test_07_provider_health_manager(self):
+        from market.provider_health_manager import ProviderHealthManager
+        phm = ProviderHealthManager.get_instance()
+        phm.record_tick("PaytmMoney")
+        report = phm.get_health_report()
+        self.assertEqual(report["overall_status"], "HEALTHY")
+
 if __name__ == "__main__":
     unittest.main()

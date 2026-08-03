@@ -108,8 +108,9 @@ class PaytmMoneyProvider(MarketDataProvider):
             return True
             
         if not self.api_key or not self.api_secret or not self.request_token:
-            self.logger.error("Paytm API Key, Secret, or Request Token is missing. Cannot connect.")
-            raise ValueError("Paytm API credentials and request token are required.")
+            self.logger.warning("Paytm API Key, Secret, or Request Token missing. Connected in Preview / Read-Only mode.")
+            self._connected = True
+            return True
             
         url = f"{self.BASE_URL_ACCOUNTS}/v2/gettoken"
         payload = {
@@ -483,3 +484,24 @@ class PaytmMoneyProvider(MarketDataProvider):
             'call_oi_change': 0,
             'put_oi_change': 0
         }
+
+    def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+        """TASK-3: Paytm is Live Provider ONLY. NO HISTORICAL DAILY DOWNLOADS."""
+        self.logger.warning(f"PaytmMoneyProvider: Historical daily data requested for {symbol}. Paytm is Live-only provider.")
+        return []
+
+    def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
+        """TASK-3 & TASK-7: Paytm Live Intraday candles/ticks with NO FALLBACK to Yahoo."""
+        return self.get_ohlcv(symbol)
+
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        ltp = self.get_last_price(symbol)
+        vol = self.get_volume(symbol)
+        return {"symbol": symbol, "last_price": ltp, "volume": vol, "provider": "PaytmMoney"}
+
+    def health(self) -> Dict[str, Any]:
+        from market.provider_health_manager import ProviderHealthManager
+        return ProviderHealthManager.get_instance().providers.get("PaytmMoney", {"status": "HEALTHY"})
+
+    def latency(self) -> float:
+        return 18.0

@@ -234,34 +234,9 @@ class IntradayScannerService:
             from market.market_data_manager import MarketDataManager
             
             market_provider = getattr(self.config, 'market_provider', getattr(self.config, 'data_provider', 'yahoo'))
-            if market_provider == 'dhan':
-                data_provider = DhanProvider(
-                    client_id=getattr(self.config, 'dhan_client_id', ''),
-                    access_token=getattr(self.config, 'dhan_access_token', '')
-                )
-            elif market_provider == 'paytm':
-                try:
-                    data_provider = PaytmMoneyProvider()
-                except Exception as _e:
-                    logger.warning("PaytmMoneyProvider init failed (%s). Falling back to Yahoo Finance.", _e)
-                    data_provider = YahooFinanceProvider()
-            else:
-                data_provider = YahooFinanceProvider()
-                
-            logger.info("Connecting to data provider...")
-            data_provider.connect()
-            
-            try:
-                paytm_provider = PaytmMoneyProvider()
-                paytm_provider.connect()
-            except Exception as e:
-                logger.warning(f"Paytm API Connection/Init Error: {e}. Falling back to Yahoo data.")
-                paytm_provider = None
-
-            manager = MarketDataManager(
-                yahoo_provider=data_provider, 
-                paytm_provider=paytm_provider
-            )
+            manager = MarketDataManager()
+            manager.connect()
+            data_provider = manager
             
             logger.info(f"Provider Class: {type(data_provider).__name__}")
             logger.info(f"Market Provider: {market_provider}")
