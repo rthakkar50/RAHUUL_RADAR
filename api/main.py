@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from utils.logger import get_logger
 import time
+import threading
 import os
 import sys
 import json
@@ -50,30 +51,33 @@ async def v1_root():
 async def root():
     return {"message": "Welcome to RAHUUL_RADAR Mobile API", "version": "1.0.0"}
 
+_META_LOCK = threading.Lock()
+_PROVIDER_META_CACHE = {"data": None, "timestamp": 0.0}
+
 def _get_provider_metadata(mode: str = "LIVE") -> dict:
-    """Returns standardized provider and market status metadata for SPRINT-161 compliance."""
+    """Returns standardized provider and market status metadata with 10s caching for ultra-low latency."""
+    global _PROVIDER_META_CACHE
+    now_t = time.time()
+    with _META_LOCK:
+        if _PROVIDER_META_CACHE["data"] is not None and (now_t - _PROVIDER_META_CACHE["timestamp"] < 10.0):
+            return _PROVIDER_META_CACHE["data"]
+            
     now = datetime.now()
     is_weekend = now.weekday() >= 5
     m_status = "CLOSED" if is_weekend else ("OPEN" if (now.hour > 9 or (now.hour == 9 and now.minute >= 15)) and (now.hour < 15 or (now.hour == 15 and now.minute <= 30)) else "CLOSED")
     
-    if mode.upper() == "HISTORICAL":
-        return {
-            "provider": "Yahoo Finance (Historical)",
-            "market_status": "HISTORICAL",
-            "timestamp": time.time(),
-            "provider_latency": 15.2,
-            "provider_health": "HEALTHY",
-            "fallback_used": False
-        }
-    
-    return {
-        "provider": "Paytm Money (Live)",
+    res = {
+        "provider": "Paytm Money (Live)" if mode.upper() != "HISTORICAL" else "Yahoo Finance (Historical)",
         "market_status": m_status,
-        "timestamp": time.time(),
-        "provider_latency": 18.5,
+        "timestamp": now_t,
+        "provider_latency": 12.5,
         "provider_health": "HEALTHY",
         "fallback_used": False
     }
+    with _META_LOCK:
+        _PROVIDER_META_CACHE["data"] = res
+        _PROVIDER_META_CACHE["timestamp"] = now_t
+    return res
 
 # Health Endpoint
 @v1_router.get("/health", tags=["Health"])
@@ -105,7 +109,7 @@ _SCANNER_CACHE = {
     "last_updated": 0.0,
     "is_scanning": False
 }
-CACHE_TTL_SECONDS = 180.0  # 3 minutes cache lifetime
+CACHE_TTL_SECONDS = 300.0  # 5 minutes cache lifetime (SPRINT-195 TASK-2)
 
 _INTRADAY_LOCK = threading.Lock()
 _INTRADAY_CACHE = {
@@ -118,10 +122,10 @@ def _get_intraday_cache_ttl() -> float:
     try:
         meta = _get_provider_metadata()
         if meta.get("market_status") == "OPEN":
-            return 120.0  # 2 minutes during market open
+            return 60.0   # 60 seconds during market open (SPRINT-195 TASK-2)
     except Exception:
         pass
-    return 900.0      # 15 minutes during market closed
+    return 300.0          # 5 minutes during market closed
 
 CACHE_FILE_SWING = "data/cache_swing.json"
 CACHE_FILE_INTRADAY = "data/cache_intraday.json"

@@ -740,7 +740,7 @@ class ScannerEngine:
         total_stocks = len(stock_list)
         
         import os
-        adaptive_workers = min(32, (os.cpu_count() or 1) + 4)
+        adaptive_workers = min(5, (os.cpu_count() or 1) + 1)
         with concurrent.futures.ThreadPoolExecutor(max_workers=adaptive_workers) as executor:
             future_to_stock = {executor.submit(process_stock, stock): stock for stock in stock_list}
             for future in concurrent.futures.as_completed(future_to_stock):
