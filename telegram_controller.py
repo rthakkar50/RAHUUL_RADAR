@@ -276,6 +276,10 @@ def handle_text_command(text, token, chat_id):
             reply = intel.get_market_news()
         elif cmd == "/copilot":
             reply = intel.get_copilot_analysis(arg if arg else "RELIANCE")
+        elif cmd in ("/strategy", "/liststrategy"):
+            reply = intel.list_strategies()
+        elif cmd == "/runstrategy":
+            reply = intel.run_custom_strategy(arg)
         elif cmd == "/explain":
             reply = intel.explain_stock_decision(arg if arg else "RELIANCE")
         elif cmd == "/paper":
