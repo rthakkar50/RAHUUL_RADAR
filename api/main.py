@@ -84,7 +84,18 @@ def _get_provider_metadata(mode: str = "LIVE") -> dict:
 @v1_router.get("/health", tags=["Health"])
 async def health_check():
     logger.info("Health check endpoint called")
-    meta = _get_provider_metadata()
+    try:
+        meta = _get_provider_metadata()
+    except Exception as e:
+        logger.warning(f"Error fetching provider metadata in health check: {e}")
+        meta = {
+            "provider": "Paytm / Yahoo (Degraded)",
+            "market_status": "CLOSED",
+            "timestamp": time.time(),
+            "provider_latency": 0.0,
+            "provider_health": "DEGRADED",
+            "fallback_used": True
+        }
     return {
         "status": "online",
         "python_version": sys.version,
@@ -109,9 +120,12 @@ _INTRADAY_CACHE = {
 }
 
 def _get_intraday_cache_ttl() -> float:
-    meta = _get_provider_metadata()
-    if meta.get("market_status") == "OPEN":
-        return 120.0  # 2 minutes during market open
+    try:
+        meta = _get_provider_metadata()
+        if meta.get("market_status") == "OPEN":
+            return 120.0  # 2 minutes during market open
+    except Exception:
+        pass
     return 900.0      # 15 minutes during market closed
 
 CACHE_FILE_SWING = "data/cache_swing.json"
@@ -131,25 +145,35 @@ def _load_cache_from_disk():
         if os.path.exists(CACHE_FILE_SWING):
             with open(CACHE_FILE_SWING, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if data and data.get("qualified_results"):
+                if data and isinstance(data, dict) and data.get("qualified_results"):
                     with _CACHE_LOCK:
                         _SCANNER_CACHE["data"] = data
                         _SCANNER_CACHE["last_updated"] = time.time()
                     logger.info(f"Loaded {len(data.get('qualified_results', []))} swing results from disk cache.")
     except Exception as e:
-        logger.warning(f"Failed to load swing cache from disk: {e}")
+        logger.warning(f"Failed to load swing cache from disk, removing corrupt file: {e}")
+        try:
+            if os.path.exists(CACHE_FILE_SWING):
+                os.remove(CACHE_FILE_SWING)
+        except Exception:
+            pass
 
     try:
         if os.path.exists(CACHE_FILE_INTRADAY):
             with open(CACHE_FILE_INTRADAY, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if data and data.get("qualified_results"):
+                if data and isinstance(data, dict) and data.get("qualified_results"):
                     with _INTRADAY_LOCK:
                         _INTRADAY_CACHE["data"] = data
                         _INTRADAY_CACHE["last_updated"] = time.time()
                     logger.info(f"Loaded {len(data.get('qualified_results', []))} intraday results from disk cache.")
     except Exception as e:
-        logger.warning(f"Failed to load intraday cache from disk: {e}")
+        logger.warning(f"Failed to load intraday cache from disk, removing corrupt file: {e}")
+        try:
+            if os.path.exists(CACHE_FILE_INTRADAY):
+                os.remove(CACHE_FILE_INTRADAY)
+        except Exception:
+            pass
 
 # Load disk cache on module import
 _load_cache_from_disk()
@@ -258,12 +282,14 @@ def _run_background_scan():
 
 def _delayed_startup_scan():
     time.sleep(5)  # Short delay for uvicorn port binding
-    # Only run live network scan if disk cache was missing or empty
-    if _SCANNER_CACHE.get("data") is None or _INTRADAY_CACHE.get("data") is None:
-        logger.info("Cache empty on startup. Running initial enterprise signal orchestration...")
-        _run_enterprise_orchestration()
-    else:
-        logger.info("Instant disk cache active. Skipping heavy background startup download to ensure zero latency.")
+    try:
+        if _SCANNER_CACHE.get("data") is None or _INTRADAY_CACHE.get("data") is None:
+            logger.info("Cache empty on startup. Running initial enterprise signal orchestration...")
+            _run_enterprise_orchestration()
+        else:
+            logger.info("Instant disk cache active. Skipping heavy background startup download to ensure zero latency.")
+    except Exception as e:
+        logger.warning(f"Background startup scan encountered error (isolated): {e}")
 
 @app.on_event("startup")
 async def startup_event():
