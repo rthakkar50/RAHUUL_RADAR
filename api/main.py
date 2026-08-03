@@ -257,8 +257,13 @@ def _run_background_scan():
     _run_enterprise_orchestration()
 
 def _delayed_startup_scan():
-    time.sleep(15)  # Allow uvicorn to bind port and pass Render health check before scanning
-    _run_enterprise_orchestration()
+    time.sleep(5)  # Short delay for uvicorn port binding
+    # Only run live network scan if disk cache was missing or empty
+    if _SCANNER_CACHE.get("data") is None or _INTRADAY_CACHE.get("data") is None:
+        logger.info("Cache empty on startup. Running initial enterprise signal orchestration...")
+        _run_enterprise_orchestration()
+    else:
+        logger.info("Instant disk cache active. Skipping heavy background startup download to ensure zero latency.")
 
 @app.on_event("startup")
 async def startup_event():
@@ -420,29 +425,38 @@ async def run_intraday_scanner(debug: bool = False):
 async def get_scanner_audit():
     logger.info("Scanner Audit endpoint called")
     try:
-        service = SwingScannerService()
-        data = service.execute_swing_scan()
+        with _CACHE_LOCK:
+            data = _SCANNER_CACHE["data"]
+        if not data or not isinstance(data, dict):
+            data = {}
         meta = _get_provider_metadata()
         return {
-            "universe_summary": data.get("universe_audit", {}),
+            "universe_audit": data.get("universe_audit", {}),
             "symbol_status_report": data.get("symbol_status_report", []),
             "provider_statistics": data.get("provider_statistics", {}),
             "sell_signal_validation": data.get("sell_signal_validation", {}),
             "breadth_validation": data.get("breadth_validation", {}),
             "pipeline_reconciliation": data.get("pipeline_reconciliation", {}),
-            "csv_download_url": "/api/v1/scanner/audit/csv",
             **meta
         }
     except Exception as e:
         logger.error(f"Error serving scanner audit: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        meta = _get_provider_metadata()
+        return {
+            "universe_audit": {},
+            "symbol_status_report": [],
+            "provider_statistics": {},
+            **meta
+        }
 
 @v1_router.get("/market", tags=["Market"])
 async def get_market_overview():
     logger.info("Market overview endpoint called")
     try:
-        service = SwingScannerService()
-        data = service.execute_swing_scan()
+        with _CACHE_LOCK:
+            data = _SCANNER_CACHE["data"]
+        if not data or not isinstance(data, dict):
+            data = {}
         meta = _get_provider_metadata()
         return {
             "market_summary": data.get("market_summary", {}),
@@ -452,7 +466,13 @@ async def get_market_overview():
         }
     except Exception as e:
         logger.error(f"Error serving market overview: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        meta = _get_provider_metadata()
+        return {
+            "market_summary": {},
+            "scanner_health": {},
+            "performance_metrics": {},
+            **meta
+        }
 
 @v1_router.get("/scanner/audit/csv", tags=["Scanner"])
 async def get_scanner_audit_csv():
