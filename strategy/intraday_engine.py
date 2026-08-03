@@ -245,7 +245,13 @@ class IntradayEngine:
         if latest['Volume'] >= (3.0 * latest['Vol_MA']): conf_score += 10 # Institutional Participation
         if latest['ADX'] > 35: conf_score += 5 # Very strong trend
         if (signal == "BUY" and rs_score > 70) or (signal == "SELL" and rs_score < 30): conf_score += 5
-        if market_trend == htf_trend and market_trend != "NEUTRAL": conf_score += 5
+        is_trend_aligned = False
+        if market_trend in ["BULL", "STRONG_BULL", "BULLISH"] and htf_trend == "BULLISH":
+            is_trend_aligned = True
+        elif market_trend in ["BEAR", "STRONG_BEAR", "BEARISH"] and htf_trend == "BEARISH":
+            is_trend_aligned = True
+            
+        if is_trend_aligned: conf_score += 5
         
         # Option AI Check (Sprint 71)
         try:

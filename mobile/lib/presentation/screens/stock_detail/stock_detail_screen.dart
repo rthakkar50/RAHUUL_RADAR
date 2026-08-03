@@ -23,9 +23,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     final result = widget.result;
     final isBuy = result.signal.toUpperCase().contains('BUY');
     final sigColor = isBuy ? Colors.greenAccent : Colors.redAccent;
-    final target3 = result.entry > 0
-        ? (isBuy ? result.entry * 1.25 : result.entry * 0.75)
-        : 0.0;
+    final target3 = result.target3;
 
     final related = _getRelatedStocks(result.sector, result.symbol);
 

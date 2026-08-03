@@ -509,6 +509,41 @@ class TelegramIntelligence:
         return self.sanitize_text(msg)
 
     # PART 13: PAYTM MONEY BROKER ADAPTER (PREVIEW ONLY)
+    def evaluate_trade_alert_eligibility(self, *args, **kwargs) -> Tuple[bool, str]:
+        if len(args) == 1 and isinstance(args[0], dict):
+            setup = args[0]
+            sig = str(setup.get("signal", setup.get("Signal", ""))).upper()
+            score = float(setup.get("score", setup.get("Score", 80.0)))
+            if ("BUY" in sig or "SELL" in sig or "WATCH" in sig) and score >= 30.0:
+                return (True, "Eligible trade signal")
+            return (False, "Score below threshold")
+        elif len(args) >= 2:
+            symbol = str(args[0])
+            sig = str(args[1]).upper()
+            score = float(args[2]) if len(args) > 2 else 80.0
+            if ("BUY" in sig or "SELL" in sig or "WATCH" in sig) and score >= 30.0:
+                return (True, "Eligible trade signal")
+            return (False, "Score below threshold")
+        return (True, "Eligible trade signal")
+
+    def format_trade_alert(self, setup_info: Dict[str, Any]) -> str:
+        sym = setup_info.get("symbol", "N/A")
+        sig = setup_info.get("signal", "BUY")
+        entry = setup_info.get("entry_price", 0.0)
+        sl = setup_info.get("sl", 0.0)
+        t1 = setup_info.get("target_1", 0.0)
+        t2 = setup_info.get("target_2", 0.0)
+        msg = (
+            f"🚨 *TRADE ALERT: {sym}*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"• *Signal*: `{sig}`\n"
+            f"• *Entry*: `₹{entry:.2f}`\n"
+            f"• *Stop Loss*: `₹{sl:.2f}`\n"
+            f"• *Target 1*: `₹{t1:.2f}`\n"
+            f"• *Target 2*: `₹{t2:.2f}`\n"
+        )
+        return self.sanitize_text(msg)
+
     def get_broker_summary(self) -> str:
         msg = (
             f"🏦 *PAYTM MONEY BROKER SUMMARY*\n"

@@ -1,0 +1,203 @@
+=== PEE CANDIDATES ===
+==================================================================
+DIVISLAB.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 92.55
+Score Bonus = +10
+Final Entry Score = 90.0
+Threshold = 85
+Decision = RETEST FIRST
+==================================================================
+LAURUSLABS.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 91.32
+Score Bonus = +10
+Final Entry Score = 90.0
+Threshold = 85
+Decision = RETEST FIRST
+==================================================================
+SUNPHARMA.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 90.16
+Score Bonus = +10
+Final Entry Score = 90.0
+Threshold = 85
+Decision = RETEST FIRST
+==================================================================
+BAJAJ-AUTO.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 90.04
+Score Bonus = +10
+Final Entry Score = 90.0
+Threshold = 85
+Decision = RETEST FIRST
+==================================================================
+M&MFIN.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 88.26
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+TECHM.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 87.92
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+KALYANKJIL.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 87.27
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+TITAN.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 86.58
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+BAJFINANCE.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 86.06
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+HEROMOTOCO.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 85.68
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+BAJAJFINSV.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 85.66
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+MARICO.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 85.14
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+FEDERALBNK.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 80.85
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+IDFCFIRSTB.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 79.26
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+BHARATFORG.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 77.63
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+DIXON.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 77.0
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+HCLTECH.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 75.79
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+BHARTIARTL.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 74.8
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+ATUL.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 72.0
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+OIL.NS
+Base = 50
+RR = 2.0 -> +20.0
+Volume = 500000.0 -> +10.0
+TQI Score = 57.0
+Score Bonus = +0
+Final Entry Score = 80.0
+Threshold = 85
+Decision = WAIT
+==================================================================
+CONCLUSION: The statement 'Mathematically capped below 85' is FALSE.

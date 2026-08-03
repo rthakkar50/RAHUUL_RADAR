@@ -1,0 +1,23 @@
+Scanner Output
+↓
+Trend: MISSING
+Momentum: 85.0
+Volume: 1000000
+Risk: 1:2.0
+Confidence: 90.0
+AI Score: 82.0
+↓
+Arguments passed to PrecisionEntryEngine
+↓
+Fields received inside PrecisionEntryEngine
+↓
+Compare
+Expected vs Received
+Expected: 'Trend'
+Received: MISSING
+
+Highlight every missing field:
+-> Trend
+
+
+CRITICAL DATA MAPPING BUG

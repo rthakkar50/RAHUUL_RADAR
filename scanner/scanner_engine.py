@@ -480,8 +480,8 @@ class ScannerEngine:
 
                 # OPTIONS: require at least 15m confirmation; skip if both disagree
                 if mode == "OPTIONS":
-                    if not mtf_15m_bull and not mtf_1h_bull:
-                        logger.info(f"Skipping {stock.symbol}: No MTF confirmation (15m+1H both bearish).")
+                    if mtf_15m_bull != mtf_1h_bull:
+                        logger.info(f"Skipping {stock.symbol}: No MTF confirmation (15m and 1H disagree).")
                         return ScanResult(
                             symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
                             trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
@@ -499,8 +499,17 @@ class ScannerEngine:
                     oi_activity = oi_bias if oi_bias else "N/A"
                     logger.info(f"{stock.symbol} | PCR: {pcr_value} | OI Bias: {oi_bias}")
                     # Hard block: if OI clearly against the trade direction, skip
-                    if oi_bias == "BEARISH":
+                    if mtf_15m_bull and oi_bias == "BEARISH":
                         logger.info(f"Skipping {stock.symbol}: OI Bias is BEARISH — not suitable for CALL buying.")
+                        return ScanResult(
+                            symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
+                            trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,
+                            volume_score=0.0, volatility_score=0.0, relative_strength_score=0.0, risk_score=0.0, mtf_score=0.0,
+                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+                            status="EXCLUDED"
+                        )
+                    elif not mtf_15m_bull and oi_bias == "BULLISH":
+                        logger.info(f"Skipping {stock.symbol}: OI Bias is BULLISH — not suitable for PUT buying.")
                         return ScanResult(
                             symbol=stock.symbol, company_name=stock.company_name, sector=stock.sector,
                             trend_direction="N/A", trend_score=0.0, momentum_score=0.0, structure_score=0.0,

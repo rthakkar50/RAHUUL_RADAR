@@ -11,9 +11,7 @@ class ScannerResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isBuy = result.signal.toUpperCase().contains('BUY');
     final sigColor = isBuy ? Colors.greenAccent : Colors.redAccent;
-    final target3 = result.entry > 0
-        ? (isBuy ? result.entry * 1.25 : result.entry * 0.75)
-        : 0.0;
+    final target3 = result.target3;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

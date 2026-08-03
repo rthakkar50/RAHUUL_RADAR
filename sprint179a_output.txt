@@ -1,0 +1,285 @@
+==================================================================
+SPRINT-179A: TOP 20 BUY CANDIDATES SUB-ENGINE BREAKDOWN
+==================================================================
+Symbol          | Trend  | Mom    | Vol    | Struct | Risk   | AI Score | Mkt Adj | Final TQI
+------------------------------------------------------------------------------------------
+DIVISLAB.NS     | 29.5   | 24.5   | 9.5    | 24.5   | 9.5    | 95.0     | 5.0     | 92.55    
+LAURUSLABS.NS   | 29.0   | 24.0   | 9.5    | 24.5   | 9.0    | 94.0     | 5.0     | 91.32    
+SUNPHARMA.NS    | 28.5   | 24.0   | 9.0    | 24.0   | 9.0    | 93.0     | 5.0     | 90.16    
+BAJAJ-AUTO.NS   | 28.5   | 23.5   | 9.0    | 24.0   | 9.0    | 93.0     | 5.0     | 90.04    
+M&MFIN.NS       | 28.0   | 23.0   | 8.5    | 23.5   | 8.5    | 90.0     | 4.5     | 88.26    
+TECHM.NS        | 27.5   | 23.0   | 8.5    | 23.5   | 8.5    | 89.5     | 4.5     | 87.92    
+KALYANKJIL.NS   | 27.0   | 23.0   | 8.5    | 23.0   | 8.0    | 89.0     | 4.5     | 87.27    
+TITAN.NS        | 27.0   | 22.5   | 8.0    | 23.0   | 8.0    | 88.5     | 4.0     | 86.58    
+BAJFINANCE.NS   | 26.5   | 22.5   | 8.0    | 23.0   | 8.0    | 88.0     | 4.0     | 86.06    
+HEROMOTOCO.NS   | 26.5   | 22.0   | 8.0    | 22.5   | 8.0    | 87.5     | 4.0     | 85.68    
+BAJAJFINSV.NS   | 26.5   | 22.0   | 8.0    | 22.5   | 8.0    | 87.5     | 4.0     | 85.66    
+MARICO.NS       | 26.0   | 22.0   | 8.0    | 22.5   | 7.5    | 87.0     | 4.0     | 85.14    
+FEDERALBNK.NS   | 25.0   | 20.5   | 7.5    | 21.0   | 7.5    | 83.0     | 3.5     | 80.85    
+IDFCFIRSTB.NS   | 24.5   | 20.0   | 7.5    | 21.0   | 7.0    | 82.0     | 3.5     | 79.26    
+BHARATFORG.NS   | 24.0   | 19.5   | 7.0    | 20.5   | 7.0    | 80.0     | 3.0     | 77.63    
+DIXON.NS        | 24.0   | 19.5   | 7.0    | 20.0   | 7.0    | 79.5     | 3.0     | 77.00    
+HCLTECH.NS      | 23.5   | 19.0   | 7.0    | 20.0   | 6.5    | 78.5     | 3.0     | 75.79    
+BHARTIARTL.NS   | 23.0   | 19.0   | 6.5    | 19.5   | 6.5    | 77.5     | 2.5     | 74.80    
+ATUL.NS         | 22.0   | 18.0   | 6.5    | 19.0   | 6.0    | 75.0     | 2.5     | 72.00    
+OIL.NS          | 18.0   | 14.0   | 5.0    | 15.0   | 5.0    | 60.0     | 1.5     | 57.00    
+
+============================================================
+DETAILED DEDUCTION BREAKDOWN FOR CANDIDATES (85 <= TQI < 90)
+============================================================
+
+------------------------------------------------------------------
+SYMBOL: M&MFIN.NS (TQI: 88.26)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -10.00
+Reason: AI consensus score (90.0%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -2.00
+Reason: Trend score (28.0/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -2.00
+Reason: Momentum score (23.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Risk / RR
+Lost Points: -1.50
+Reason: RR component (1:1.7) below maximum 1:4.0 ceiling
+
+Component: Structure Engine
+Lost Points: -1.50
+Reason: Structure score (23.5/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -1.50
+Reason: Volume surge ratio (8.5/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -0.50
+Reason: Market context bonus (4.5/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: TECHM.NS (TQI: 87.92)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -10.50
+Reason: AI consensus score (89.5%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -2.50
+Reason: Trend score (27.5/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -2.00
+Reason: Momentum score (23.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Risk / RR
+Lost Points: -1.50
+Reason: RR component (1:1.7) below maximum 1:4.0 ceiling
+
+Component: Structure Engine
+Lost Points: -1.50
+Reason: Structure score (23.5/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -1.50
+Reason: Volume surge ratio (8.5/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -0.50
+Reason: Market context bonus (4.5/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: KALYANKJIL.NS (TQI: 87.27)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -11.00
+Reason: AI consensus score (89.0%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -3.00
+Reason: Trend score (27.0/30) lost points due to ADX/EMA alignment gap
+
+Component: Risk / RR
+Lost Points: -2.00
+Reason: RR component (1:1.6) below maximum 1:4.0 ceiling
+
+Component: Momentum Engine
+Lost Points: -2.00
+Reason: Momentum score (23.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Structure Engine
+Lost Points: -2.00
+Reason: Structure score (23.0/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -1.50
+Reason: Volume surge ratio (8.5/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -0.50
+Reason: Market context bonus (4.5/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: TITAN.NS (TQI: 86.58)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -11.50
+Reason: AI consensus score (88.5%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -3.00
+Reason: Trend score (27.0/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -2.50
+Reason: Momentum score (22.5/25) lost points due to RSI non-oversold/overbought state
+
+Component: Risk / RR
+Lost Points: -2.00
+Reason: RR component (1:1.6) below maximum 1:4.0 ceiling
+
+Component: Structure Engine
+Lost Points: -2.00
+Reason: Structure score (23.0/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -2.00
+Reason: Volume surge ratio (8.0/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -1.00
+Reason: Market context bonus (4.0/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: BAJFINANCE.NS (TQI: 86.06)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -12.00
+Reason: AI consensus score (88.0%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -3.50
+Reason: Trend score (26.5/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -2.50
+Reason: Momentum score (22.5/25) lost points due to RSI non-oversold/overbought state
+
+Component: Risk / RR
+Lost Points: -2.00
+Reason: RR component (1:1.6) below maximum 1:4.0 ceiling
+
+Component: Structure Engine
+Lost Points: -2.00
+Reason: Structure score (23.0/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -2.00
+Reason: Volume surge ratio (8.0/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -1.00
+Reason: Market context bonus (4.0/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: HEROMOTOCO.NS (TQI: 85.68)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -12.50
+Reason: AI consensus score (87.5%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -3.50
+Reason: Trend score (26.5/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -3.00
+Reason: Momentum score (22.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Structure Engine
+Lost Points: -2.50
+Reason: Structure score (22.5/25) missing key breakout level proximity
+
+Component: Risk / RR
+Lost Points: -2.00
+Reason: RR component (1:1.6) below maximum 1:4.0 ceiling
+
+Component: Volume Engine
+Lost Points: -2.00
+Reason: Volume surge ratio (8.0/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -1.00
+Reason: Market context bonus (4.0/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: BAJAJFINSV.NS (TQI: 85.66)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -12.50
+Reason: AI consensus score (87.5%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -3.50
+Reason: Trend score (26.5/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -3.00
+Reason: Momentum score (22.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Structure Engine
+Lost Points: -2.50
+Reason: Structure score (22.5/25) missing key breakout level proximity
+
+Component: Risk / RR
+Lost Points: -2.00
+Reason: RR component (1:1.6) below maximum 1:4.0 ceiling
+
+Component: Volume Engine
+Lost Points: -2.00
+Reason: Volume surge ratio (8.0/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -1.00
+Reason: Market context bonus (4.0/5.0) capped by neutral/sideways market bias
+
+
+------------------------------------------------------------------
+SYMBOL: MARICO.NS (TQI: 85.14)
+------------------------------------------------------------------
+Component: AI / Confidence
+Lost Points: -13.00
+Reason: AI consensus score (87.0%) below 100% full agreement
+
+Component: Trend Engine
+Lost Points: -4.00
+Reason: Trend score (26.0/30) lost points due to ADX/EMA alignment gap
+
+Component: Momentum Engine
+Lost Points: -3.00
+Reason: Momentum score (22.0/25) lost points due to RSI non-oversold/overbought state
+
+Component: Risk / RR
+Lost Points: -2.50
+Reason: RR component (1:1.5) below maximum 1:4.0 ceiling
+
+Component: Structure Engine
+Lost Points: -2.50
+Reason: Structure score (22.5/25) missing key breakout level proximity
+
+Component: Volume Engine
+Lost Points: -2.00
+Reason: Volume surge ratio (8.0/10) below 10x max multiplier
+
+Component: Market Adjustment
+Lost Points: -1.00
+Reason: Market context bonus (4.0/5.0) capped by neutral/sideways market bias
+

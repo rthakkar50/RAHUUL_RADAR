@@ -829,12 +829,13 @@ class SwingScannerService:
                 "average_latency_ms": round((exec_time * 1000) / max(1, configured_universe), 1)
             })
 
-            paytm_stats = getattr(paytm_provider, 'stats', {
+            paytm_p = getattr(data_provider, 'paytm', None)
+            paytm_stats = getattr(paytm_p, 'stats', {
                 "success": 0,
-                "fallback_count": configured_universe if paytm_provider is None else 0,
+                "fallback_count": configured_universe if paytm_p is None else 0,
                 "cache_hits": 0,
                 "cache_misses": 0
-            }) if paytm_provider else {
+            }) if paytm_p else {
                 "success": 0,
                 "fallback_count": configured_universe,
                 "cache_hits": 0,

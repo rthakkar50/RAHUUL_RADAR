@@ -1,0 +1,13 @@
+==================================================================
+SPRINT-174C: PRECISION ENTRY DATA MAPPING VERIFICATION
+==================================================================
+2026-08-02 21:07:24,380 - config.config - INFO - Loaded configuration from /Users/pr/RAHUUL_RADAR/config.json
+2026-08-02 21:07:24,434 - market.yahoo_provider - INFO - Loaded 800 items from disk cache.
+2026-08-02 21:07:24,434 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-08-02 21:07:24,565 - market.yahoo_provider - INFO - Loaded 800 items from disk cache.
+2026-08-02 21:07:24,565 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+2026-08-02 21:07:24,565 - market.yahoo_provider - INFO - Connecting to Yahoo Finance API...
+2026-08-02 21:07:24,565 - market.yahoo_provider - INFO - Successfully connected to Yahoo Finance.
+2026-08-02 21:07:24,615 - market.yahoo_provider - INFO - Loaded 800 items from disk cache.
+2026-08-02 21:07:24,616 - market.yahoo_provider - INFO - Initialized YahooFinanceProvider (Live Mode).
+No candidates found due to market conditions.

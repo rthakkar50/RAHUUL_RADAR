@@ -547,6 +547,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       stopLoss: priceVal * 0.96,
                       target1: priceVal * 1.08,
                       target2: priceVal * 1.15,
+                      target3: priceVal * 1.25,
                       tradeGrade: 'A+',
                       riskGrade: 'LOW',
                       timestamp: 'LIVE',

@@ -1,0 +1,469 @@
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:24:    recommendation: str = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:39:        trade_direction: str = "BUY"
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:44:        recommendation = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:51:        if trade_direction.upper() == "BUY":
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:53:                reasons.append("BUY Trade: Stop Loss must be below Entry Price.")
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:56:                reasons.append("BUY Trade: Target must be above Entry Price.")
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:58:        elif trade_direction.upper() == "SELL":
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:60:                reasons.append("SELL Trade: Stop Loss must be above Entry Price.")
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:63:                reasons.append("SELL Trade: Target must be below Entry Price.")
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:142:        if direction in ("BUY", "BULL", "BULLISH"):
+/Users/pr/RAHUUL_RADAR/core/risk_reward_engine.py:166:        if direction in ("BUY", "BULL", "BULLISH"):
+/Users/pr/RAHUUL_RADAR/core/paper_portfolio_engine.py:95:                if pos.direction == 'BUY':
+/Users/pr/RAHUUL_RADAR/core/paper_portfolio_engine.py:126:            if pos.direction == 'BUY':
+/Users/pr/RAHUUL_RADAR/core/trade_lock_engine.py:67:        e.g., BUY to SELL or SELL to BUY.
+/Users/pr/RAHUUL_RADAR/core/trade_lock_engine.py:68:        Does NOT flip for BUY -> STRONG_BUY or BUY -> WATCH.
+/Users/pr/RAHUUL_RADAR/core/trade_lock_engine.py:70:        locked_base = "BUY" if "BUY" in locked_signal else "SELL" if "SELL" in locked_signal else "WATCH"
+/Users/pr/RAHUUL_RADAR/core/trade_lock_engine.py:71:        new_base = "BUY" if "BUY" in new_signal else "SELL" if "SELL" in new_signal else "WATCH"
+/Users/pr/RAHUUL_RADAR/core/trade_lock_engine.py:73:        if locked_base in ["BUY", "SELL"] and new_base in ["BUY", "SELL"]:
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:5:    a symbol was given a BUY, SELL, WATCH, or REJECT status, without modifying
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:35:        decision = str(data.get("decision", "WATCH")).upper()
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:159:        if decision in ["REJECT", "WATCH", "WAIT"]:
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:181:                    recommendations.append("Wait for ADX expansion.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:194:                recommendations.append("Wait for confidence confirmation.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:209:                    recommendations.append("Wait for Elite Engine promotion.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:217:            add_engine_fail(te, "Trend Engine", "Critical", "Wait for trend alignment.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:218:            add_engine_fail(me, "Momentum Engine", "Medium", "Wait for momentum confirmation.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:220:            add_engine_fail(av, "Anchored VWAP", "Medium", "Wait for AVWAP support.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:221:            add_engine_fail(ve, "Volume", "Medium", "Watch for volume breakout.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:223:            add_engine_fail(sec, "Sector Strength", "Minor", "Wait for sector tailwind.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:224:            add_engine_fail(sm, "Smart Money", "Medium", "Watch for institutional footprints.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:225:            add_engine_fail(mr, "Market Regime", "Medium", "Wait for regime shift.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:226:            add_engine_fail(rr, "Risk Reward", "Critical", "Wait for better RR entry.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:227:            add_engine_fail(iv, "Institutional Validation", "Medium", "Wait for institutional validation.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:228:            add_engine_fail(fb, "False Breakout", "Critical", "Wait for trap clearance.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:233:                recommendations.append("Wait for Elite Selection metrics to align.")
+/Users/pr/RAHUUL_RADAR/core/xai_engine.py:253:        elif decision in ["BUY", "SELL"]:
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:176:            if "BUY" in sig: 
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:179:            elif "SELL" in sig: 
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:182:            elif "WATCH" in sig: watch_c += 1
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:190:            f"*BUY*: `{buy_c}` | *SELL*: `{sell_c}` | *WATCH*: `{watch_c}`\n"
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:194:            f"*Top BUY*: {', '.join(top_buy) if top_buy else 'None'}\n"
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:195:            f"*Top SELL*: {', '.join(top_sell) if top_sell else 'None'}\n"
+/Users/pr/RAHUUL_RADAR/core/telegram_intelligence.py:240:                f"• *{h.get('symbol')}* (`{h.get('direction', 'BUY')}`)\n"
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:15:        if decision == "BUY" and trend == "BEAR":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:17:        if decision == "SELL" and trend == "BULL":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:40:        if decision == "BUY" and sec == "WEAK":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:42:        if decision == "SELL" and sec == "STRONG":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:49:        if decision == "BUY" and rs == "WEAK":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:51:        if decision == "SELL" and rs == "STRONG":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:58:        if decision == "BUY" and oc == "BEARISH":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:60:        if decision == "SELL" and oc == "BULLISH":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:71:    def detect(self, data: Dict[str, Any], decision: str = "WATCH") -> Dict[str, Any]:
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:77:            decision: Intended signal direction (BUY/SELL).
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:84:        if decision == "WATCH":
+/Users/pr/RAHUUL_RADAR/core/false_signal_detector.py:85:            return self.build_rejection_report(False, ["No active signal to validate (WATCH)."])
+/Users/pr/RAHUUL_RADAR/core/avwap_engine.py:4:Does not generate standalone BUY/SELL signals.
+/Users/pr/RAHUUL_RADAR/core/paper_position_manager.py:46:        if pos.direction == 'BUY':
+/Users/pr/RAHUUL_RADAR/core/paper_position_manager.py:51:        else: # SELL
+/Users/pr/RAHUUL_RADAR/core/paper_position_manager.py:72:        if pos.direction == 'BUY':
+/Users/pr/RAHUUL_RADAR/core/paper_position_manager.py:98:        else: # SELL
+/Users/pr/RAHUUL_RADAR/core/ai_exit_manager.py:42:            direction=data.get("direction", "BUY"),
+/Users/pr/RAHUUL_RADAR/core/ai_exit_manager.py:130:    This engine never creates BUY or SELL signals; it only manages existing trades.
+/Users/pr/RAHUUL_RADAR/core/ai_exit_manager.py:178:        is_buy = direction in ("BUY", "BULL", "BULLISH")
+/Users/pr/RAHUUL_RADAR/core/ai_exit_manager.py:239:        is_buy = direction in ("BUY", "BULL", "BULLISH")
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:21:    decision: str = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:43:            decision = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:61:                decision = "Strong Buy Environment"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:66:                decision = "Strong Sell Environment"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:81:                decision = "Wait for Confirmation"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:82:                reasons.append("Wait: Daily is Bullish but 4H entry timeframe is Bearish. No immediate entry.")
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:86:                decision = "Wait for Confirmation"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:87:                reasons.append("Wait: Daily is Bearish but 4H entry timeframe is Bullish. No immediate entry.")
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:91:                decision = "Wait for Confirmation"
+/Users/pr/RAHUUL_RADAR/core/mtf_engine.py:96:                decision = "Wait for Confirmation"
+/Users/pr/RAHUUL_RADAR/core/precision_entry_engine.py:29:        if "BUY" in signal:
+/Users/pr/RAHUUL_RADAR/core/precision_entry_engine.py:31:        elif "SELL" in signal:
+/Users/pr/RAHUUL_RADAR/core/precision_entry_engine.py:56:            decision = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:68:            if direction == "BUY" and current_close > prev_close:
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:71:            elif direction == "SELL" and current_close < prev_close:
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:89:                if direction == "BUY" and slope > 0:
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:91:                    reasons.append("OBV Trend supports BUY direction")
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:92:                elif direction == "SELL" and slope < 0:
+/Users/pr/RAHUUL_RADAR/core/volume_engine.py:94:                    reasons.append("OBV Trend supports SELL direction")
+/Users/pr/RAHUUL_RADAR/core/confidence_calibration_engine.py:34:    signal_direction: str = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/confidence_calibration_engine.py:138:        dir_mult = 1 if inputs.signal_direction in ["BUY", "STRONG_BUY"] else -1 if inputs.signal_direction in ["SELL", "STRONG_SELL"] else 0
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:8:        "INSTITUTIONAL_BUY": 70,
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:10:        "BUY": 50,
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:11:        "WATCH": 40,
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:12:        "SELL": 30,
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:14:        "INSTITUTIONAL_SELL": 10,
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:26:        if sig == "BUY":
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:28:                return "INSTITUTIONAL_BUY"
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:31:        elif sig == "SELL":
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:33:                return "INSTITUTIONAL_SELL"
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:86:        vwap_status = "Above" if "BUY" in signal else "Below" # Simulated for explanation
+/Users/pr/RAHUUL_RADAR/core/signal_orchestrator.py:157:            current_signal = str(winner.get("Signal", "WATCH"))
+/Users/pr/RAHUUL_RADAR/core/smart_entry_optimizer.py:112:    This engine never generates BUY or SELL signals; it only evaluates entry quality.
+/Users/pr/RAHUUL_RADAR/core/smart_entry_optimizer.py:183:        direction = candidate.signal_direction.upper() if candidate else "BUY"
+/Users/pr/RAHUUL_RADAR/core/smart_entry_optimizer.py:196:        direction = candidate.signal_direction.upper() if candidate else "BUY"
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:59:        if decision == "WATCH":
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:94:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:96:        if decision == "BUY":
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:127:        elif decision == "SELL":
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:166:            decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:167:            # Return modified setup but technically it's a WATCH now. 
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:168:            # The prompt says "Reject setup, Convert to WATCH"
+/Users/pr/RAHUUL_RADAR/core/trade_setup_engine.py:169:            # We can still return the setup but with the signal changed to WATCH so the user can inspect it.
+/Users/pr/RAHUUL_RADAR/core/trade_journal_analytics.py:74:        longs = len(df[df['signal'] == 'BUY'])
+/Users/pr/RAHUUL_RADAR/core/trade_journal_analytics.py:75:        shorts = len(df[df['signal'].isin(['SELL', 'SHORT'])])
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_risk_engine.py:29:        action: str = "BUY",
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_risk_engine.py:50:        stop_loss = round(max(entry_price - sl_points if action == "BUY" else entry_price + sl_points, 0.5), 2)
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_risk_engine.py:53:        target_1 = round(entry_price + (sl_points * 1.5) if action == "BUY" else max(entry_price - (sl_points * 1.5), 0.5), 2)
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_risk_engine.py:54:        target_2 = round(entry_price + (sl_points * 2.5) if action == "BUY" else max(entry_price - (sl_points * 2.5), 0.5), 2)
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_risk_engine.py:55:        target_3 = round(entry_price + (sl_points * 4.0) if action == "BUY" else max(entry_price - (sl_points * 4.0), 0.5), 2)
+Binary file /Users/pr/RAHUUL_RADAR/core/fno_engine/__pycache__/fno_signal_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/fno_engine/__pycache__/fno_ai_engine.cpython-314.pyc matches
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_ai_engine.py:6:Outputs Action (BUY, SELL, WAIT), Confidence (0-100), and Rationale.
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_ai_engine.py:98:            action = "BUY"
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_ai_engine.py:101:            action = "SELL"
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_ai_engine.py:104:            action = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_signal_engine.py:118:        option_type = "CE" if action in ("BUY", "WAIT") else "PE"
+/Users/pr/RAHUUL_RADAR/core/fno_engine/fno_signal_engine.py:129:            action="BUY" if action == "BUY" else "SELL"
+/Users/pr/RAHUUL_RADAR/core/market_regime_engine.py:29:            "Recommended Behaviour": "Wait for market data."
+/Users/pr/RAHUUL_RADAR/core/market_regime_engine.py:132:                behaviour = "Allow more BUY opportunities. Reduce SELL opportunities."
+/Users/pr/RAHUUL_RADAR/core/market_regime_engine.py:134:                behaviour = "Allow more SELL opportunities. Reduce BUY opportunities."
+/Users/pr/RAHUUL_RADAR/core/trade_priority_engine.py:5:Capped at MAX_PER_CATEGORY per category (BUY, SELL, WATCH).
+/Users/pr/RAHUUL_RADAR/core/trade_priority_engine.py:86:            if "BUY" in sig: sig_key = "BUY"
+/Users/pr/RAHUUL_RADAR/core/trade_priority_engine.py:87:            elif "SELL" in sig: sig_key = "SELL"
+/Users/pr/RAHUUL_RADAR/core/trade_priority_engine.py:89:            elif "WATCH" in sig: sig_key = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:7:1. BUY threshold raised: 50 → 60 (SWING), 50 → 55 (INTRADAY)
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:8:2. Volume confirmation MANDATORY for BUY
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:10:4. ADX > 20 required for BUY
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:12:6. Confidence minimum 60% for BUY
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:382:        decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:386:                decision = "BUY"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:387:                reasons.append(f"🟢 Score ({adjusted_score:.1f}) >= {BUY_THRESHOLD_OPTIONS} + Volume + ADX + Confidence → [BUY]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:389:                decision = "SELL"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:390:                reasons.append(f"🔴 Score ({adjusted_score:.1f}) <= {SELL_THRESHOLD_OPTIONS} → [SELL]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:392:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:393:                reasons.append(f"🟡 Score ({adjusted_score:.1f}) between {SELL_THRESHOLD_OPTIONS}-{BUY_THRESHOLD_OPTIONS} → [WATCH]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:397:                decision = "BUY"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:398:                reasons.append(f"🟢 Score ({adjusted_score:.1f}) >= {BUY_THRESHOLD_INTRADAY} + Volume + ADX + Confidence → [BUY]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:400:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:401:                reasons.append(f"🟡 Score ({adjusted_score:.1f}) in {WATCH_THRESHOLD_LOWER}-{BUY_THRESHOLD_INTRADAY} → [WATCH]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:403:                decision = "SELL"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:404:                reasons.append(f"🔴 Score ({adjusted_score:.1f}) below {WATCH_THRESHOLD_LOWER} → [SELL]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:407:                decision = "BUY"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:408:                reasons.append(f"🟢 Score ({adjusted_score:.1f}) >= {BUY_THRESHOLD_SWING} + Volume + ADX + Confidence → [BUY]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:410:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:411:                reasons.append(f"🟡 Score ({adjusted_score:.1f}) in {WATCH_THRESHOLD_LOWER}-{BUY_THRESHOLD_SWING} → [WATCH]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:413:                decision = "SELL"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:414:                reasons.append(f"🔴 Score ({adjusted_score:.1f}) below {WATCH_THRESHOLD_LOWER} → [SELL]")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:452:            if decision == "BUY" and pcr > 1.3:
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:453:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:454:                reasons.append("[F&O VETO] PCR > 1.3 (extreme bearish) - Downgraded to WATCH")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:455:            elif decision == "SELL" and pcr < 0.7:
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:456:                decision = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:457:                reasons.append("[F&O VETO] PCR < 0.7 (extreme bullish) - Downgraded to WATCH")
+/Users/pr/RAHUUL_RADAR/core/decision_engine.py:466:        if decision == "BUY" and entry_price and entry_price > 0:
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:70:        Checks if the scan resulted in a BUY signal.
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:71:        Note: This strictly checks for BUY, use is_strong_buy() for the highest tier.
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:74:            bool: True if BUY, else False.
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:76:        return self.signal == SignalStrength.BUY
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:80:        Checks if the scan resulted in a WATCH signal.
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:83:            bool: True if WATCH, else False.
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:85:        return self.signal == SignalStrength.WATCH
+/Users/pr/RAHUUL_RADAR/core/models/domain_models.py:89:        Checks if the scan resulted in a WEAK or AVOID signal (interpreted as Sell/Short conditions).
+Binary file /Users/pr/RAHUUL_RADAR/core/models/__pycache__/domain_models.cpython-314.pyc matches
+/Users/pr/RAHUUL_RADAR/core/models/paper_portfolio_models.py:9:    direction: str # BUY / SELL
+/Users/pr/RAHUUL_RADAR/core/explanation_formatter.py:31:        decision = str(data.get("decision", "WATCH")).upper()
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:42:            if predicted_signal == "BUY":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:47:            if predicted_signal == "SELL":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:54:            if predicted_signal == "BUY":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:59:            if predicted_signal == "SELL":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:75:            if predicted_signal == "BUY":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:80:            if predicted_signal == "SELL":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:96:            if predicted_signal == "BUY":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/explainable_ai.py:98:            elif predicted_signal == "SELL":
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:56:                classes = getattr(model, "classes_", ["BUY", "HOLD", "SELL"])
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:62:            probs = {"BUY": 0.70, "SELL": 0.10, "HOLD": 0.20}
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:65:        buy_prob = float(probs.get("BUY", 0.0))
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:66:        sell_prob = float(probs.get("SELL", 0.0))
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:84:            predicted_signal = "BUY"
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:86:            predicted_signal = "SELL"
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:95:                "BUY": round(buy_prob, 4),
+/Users/pr/RAHUUL_RADAR/core/ai_v2/prediction_engine.py:96:                "SELL": round(sell_prob, 4),
+/Users/pr/RAHUUL_RADAR/core/ai_v2/model_manager.py:31:            return {"BUY": 0.33, "SELL": 0.33, "HOLD": 0.34}
+/Users/pr/RAHUUL_RADAR/core/ai_v2/model_manager.py:55:            "BUY": round(buy_score / total, 4),
+/Users/pr/RAHUUL_RADAR/core/ai_v2/model_manager.py:56:            "SELL": round(sell_score / total, 4),
+/Users/pr/RAHUUL_RADAR/core/ai_v2/confidence_engine.py:40:        signal_prob = probs.get(signal, 0.34) if signal in ("BUY", "SELL") else max(probs.values(), default=0.34)
+/Users/pr/RAHUUL_RADAR/core/ai_v2/confidence_engine.py:53:        if signal == "BUY" and close_price >= ema_200:
+/Users/pr/RAHUUL_RADAR/core/ai_v2/confidence_engine.py:55:        elif signal == "SELL" and close_price <= ema_200:
+/Users/pr/RAHUUL_RADAR/core/ai_v2/confidence_engine.py:73:        if signal == "BUY" and ("Bull" in regime or "Strong" in regime or "Neutral" in regime):
+/Users/pr/RAHUUL_RADAR/core/ai_v2/confidence_engine.py:75:        elif signal == "SELL" and ("Bear" in regime or "Weak" in regime or "Neutral" in regime):
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/smart_entry_optimizer.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/market_regime_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/trade_execution_center.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/paytm_order_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/master_ai_decision_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/master_ai_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/volume_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/paper_position_manager.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/risk_reward_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/live_risk_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/decision_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/decision_explanation_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/false_signal_detector.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/trade_lock_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/trade_priority_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/avwap_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/adx_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/ai_exit_manager.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/mtf_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/paper_portfolio_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/trade_execution_readiness_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/telegram_intelligence.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/core/__pycache__/xai_engine.cpython-314.pyc matches
+/Users/pr/RAHUUL_RADAR/core/paytm_order_engine.py:29:    Handles preview generation, order execution (Market Buy/Sell, Limit Buy/Sell, SL, SL-M),
+/Users/pr/RAHUUL_RADAR/core/paytm_order_engine.py:151:        if action_clean not in ("BUY", "SELL"):
+/Users/pr/RAHUUL_RADAR/core/paytm_order_engine.py:152:            raise ValueError(f"Invalid action: {action}. Must be BUY or SELL.")
+/Users/pr/RAHUUL_RADAR/core/paytm_order_engine.py:174:        stt_charges = (trade_value * 0.00025) if action_clean == "SELL" else 0.0
+/Users/pr/RAHUUL_RADAR/core/trade_execution_center.py:170:        if not req.action or req.action not in ["BUY", "SELL"]: errors.append("Missing or invalid action")
+/Users/pr/RAHUUL_RADAR/core/trade_execution_center.py:174:        if req.action == "BUY" and req.stop_loss >= req.entry_price: errors.append("Invalid stop loss for BUY")
+/Users/pr/RAHUUL_RADAR/core/trade_execution_center.py:175:        if req.action == "SELL" and req.stop_loss > 0 and req.stop_loss <= req.entry_price: errors.append("Invalid stop loss for SELL")
+/Users/pr/RAHUUL_RADAR/core/trade_execution_center.py:296:        sim_price = req.entry_price * (1 + (slip/100.0) if req.action == "BUY" else 1 - (slip/100.0))
+/Users/pr/RAHUUL_RADAR/core/elite_selection_engine.py:49:            trade_grade = "★★★☆☆ WATCH"
+/Users/pr/RAHUUL_RADAR/core/signal_quality_filter.py:14:        is_buy = (signal == "BUY")
+/Users/pr/RAHUUL_RADAR/core/signal_quality_filter.py:15:        is_sell = (signal == "SELL")
+/Users/pr/RAHUUL_RADAR/core/trade_lifecycle_engine.py:80:            "Direction": "BUY" if "BUY" in str(trade_data.get("Signal", "")) else "SELL",
+/Users/pr/RAHUUL_RADAR/core/trade_lifecycle_engine.py:158:            if trade.get("Direction") == "BUY":
+/Users/pr/RAHUUL_RADAR/core/trade_lifecycle_engine.py:194:            if trade.get("Direction") == "BUY":
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:124:        if original_signal == "BUY" and stock_trend_bullish and sec_trend == "Bullish" and market_bullish:
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:130:        elif original_signal == "SELL" and stock_trend_bearish and sec_trend == "Bearish" and market_bearish:
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:135:        if original_signal == "BUY" and rs_score > 80:
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:136:            rs_note = "Increased BUY Confidence (RS > 80)"
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:137:        elif original_signal == "SELL" and rs_score < 30:
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:138:            rs_note = "Increased SELL Confidence (RS < 30)"
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:207:                rating = "★★★★★ STRONG BUY"
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:209:                rating = "★★★★ GOOD BUY"
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:213:                rating = "WATCH"
+/Users/pr/RAHUUL_RADAR/core/master_ai_engine.py:219:            final_action = "ACCEPTED" if status == "ACCEPTED" and score >= 70 else "WATCH"
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:44:    action: str                   # BUY | SELL
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:281:            if action.upper() == "BUY":
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:303:            elif action.upper() == "SELL" and symbol in self.open_positions:
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:544:        if not self.tracker.auto_trading and request.action.upper() == "BUY":
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:560:        # Already have an open BUY position for the same symbol?
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:561:        if request.action.upper() == "BUY" and request.symbol in self.tracker.open_positions:
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:565:                reasons=[f"Repeated BUY blocked: Already have an open long position in {request.symbol}."],
+/Users/pr/RAHUUL_RADAR/core/live_risk_engine.py:592:        if request.action.upper() == "BUY" and snap["open_trade_count"] >= self.config.max_open_trades:
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:13:            # Fetch ALL trades including WATCH, REJECTED if they were ever saved.
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:32:        buys = len(executed[executed['signal'] == 'BUY'])
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:33:        sells = len(executed[executed['signal'].isin(['SELL', 'SHORT'])])
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:130:        # Requires WATCH and REJECTED tracking to be fully accurate
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:131:        buys = len(df[df['signal'] == 'BUY'])
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:132:        sells = len(df[df['signal'].isin(['SELL', 'SHORT'])])
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:133:        watch = len(df[df['signal'] == 'WATCH'])
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:138:            "buy": buys,
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:139:            "sell": sells,
+/Users/pr/RAHUUL_RADAR/core/institutional_analytics_engine.py:140:            "watch": watch,
+/Users/pr/RAHUUL_RADAR/core/signal_explainer.py:57:        decision = data.get("decision", "WATCH")
+/Users/pr/RAHUUL_RADAR/core/signal_explainer.py:60:        if decision == "BUY" and score >= 80:
+/Users/pr/RAHUUL_RADAR/core/signal_explainer.py:62:        elif decision == "SELL" and score >= 80:
+/Users/pr/RAHUUL_RADAR/core/signal_explainer.py:78:            "decision": data.get("decision", "WATCH"),
+/Users/pr/RAHUUL_RADAR/core/adx_engine.py:4:Does not generate standalone BUY/SELL signals.
+/Users/pr/RAHUUL_RADAR/core/adx_engine.py:111:                score = 85 + int((adx - 35) * (15.0 / 15.0)) # 85 to 100 (Wait, max is 95?)
+/Users/pr/RAHUUL_RADAR/core/adx_engine.py:138:                reasons.append(f"BUY Validated (+DI > -DI and ADX > 22).")
+/Users/pr/RAHUUL_RADAR/core/adx_engine.py:140:                reasons.append(f"SELL Validated (-DI > +DI and ADX > 22).")
+/Users/pr/RAHUUL_RADAR/core/trade_execution_readiness_engine.py:51:            return ExecutionResult("RETEST FIRST", 85.0, "Breakout already occurred. Price is extended. Wait for pullback.")
+/Users/pr/RAHUUL_RADAR/core/trade_execution_readiness_engine.py:53:        # 4. Wait (Pending confirmations)
+/Users/pr/RAHUUL_RADAR/core/trade_execution_readiness_engine.py:69:            status = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/decision_explanation_engine.py:4:for every AI decision (BUY, SELL, WAIT, REJECT).
+/Users/pr/RAHUUL_RADAR/core/decision_explanation_engine.py:119:        if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/core/decision_explanation_engine.py:150:            if signal in ["BUY", "STRONG_BUY"]:
+/Users/pr/RAHUUL_RADAR/core/decision_explanation_engine.py:162:            elif signal in ["SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/core/master_signal_pipeline.py:40:    def run(self, *args, decision: str = "WATCH", confidence: float = 0.0, **kwargs):
+/Users/pr/RAHUUL_RADAR/core/master_signal_pipeline.py:113:    def _run_validation(self, *args, decision: str = "WATCH", confidence: float = 0.0, symbol: str = "UNKNOWN", **kwargs):
+/Users/pr/RAHUUL_RADAR/core/master_signal_pipeline.py:314:                decision = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:13:    BUY = "BUY"
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:14:    SELL = "SELL"
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:16:    WAIT = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:30:    WAIT = "WAIT"
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:241:            return DecisionAction.SELL.value
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:244:            return DecisionAction.BUY.value
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:246:            return DecisionAction.SELL.value
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:248:        return DecisionAction.WAIT.value
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:281:            status = DecisionStatus.WAIT.value if status != DecisionStatus.BLOCKED.value else status
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:285:            status = DecisionStatus.WAIT.value if status != DecisionStatus.BLOCKED.value else status
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:297:        elif status == DecisionStatus.WAIT.value:
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:299:        elif action == DecisionAction.BUY.value:
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:300:            return "Strong technical alignment supporting BUY Execution."
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:301:        elif action == DecisionAction.SELL.value:
+/Users/pr/RAHUUL_RADAR/core/master_ai_decision_engine.py:302:            return "Strong technical alignment supporting SELL Execution."
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:383:                    return []   # Return empty — unsafe to buy options
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:416:                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:428:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:442:                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:475:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:494:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:587:                    "BUY": SignalStrength.BUY,
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:588:                    "WATCH": SignalStrength.WATCH,
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:589:                    "SELL": SignalStrength.SELL
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:591:                mapped_signal = signal_map.get(decision_result.decision, SignalStrength.WATCH)
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py.save:643:                    total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:394:                    return []   # Return empty — unsafe to buy options
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:430:                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:442:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:456:                        total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:489:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:508:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:517:                            total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:649:                    "BUY": SignalStrength.BUY,
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:650:                    "WATCH": SignalStrength.WATCH,
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:651:                    "SELL": SignalStrength.SELL
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:653:                mapped_signal = signal_map.get(decision_result.decision, SignalStrength.WATCH)
+/Users/pr/RAHUUL_RADAR/scanner/scanner_engine.py:734:                    total_score=0.0, price=0.0, volume=0.0, signal=SignalStrength.WATCH, timestamp=datetime.now(),
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:167:        signal = "WAIT"
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:191:                        signal = "BUY"
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:206:                        signal = "SELL"
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:212:        if signal == "WAIT":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:218:        if signal == "BUY" and rs_score < 50:
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:219:            return self._empty_result(symbol, "Relative Weakness (BUY rejected)")
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:220:        if signal == "SELL" and rs_score > 50:
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:221:            return self._empty_result(symbol, "Relative Strength (SELL rejected)")
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:227:        if signal == "BUY":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:231:        else: # SELL
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:247:        if (signal == "BUY" and rs_score > 70) or (signal == "SELL" and rs_score < 30): conf_score += 5
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:293:                            if signal == "BUY" and ai_sentiment == "Bearish":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:295:                            elif signal == "SELL" and ai_sentiment == "Bullish":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:297:                            elif signal == "BUY" and ai_sentiment == "Bullish":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:299:                            elif signal == "SELL" and ai_sentiment == "Bearish":
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:338:            "volume_status": "Inst. Buying" if signal == "BUY" and conf_score >= 90 else "Volume Spike",
+/Users/pr/RAHUUL_RADAR/strategy/intraday_engine.py:353:            "symbol": symbol, "signal": "WAIT", "score": 0, "entry": 0.0,
+/Users/pr/RAHUUL_RADAR/strategy/eve_engine.py:12:    Does NOT generate BUY/SELL signals. Validates entry quality.
+/Users/pr/RAHUUL_RADAR/strategy/eve_engine.py:22:        if signal not in ["BUY", "SELL"]:
+/Users/pr/RAHUUL_RADAR/strategy/eve_engine.py:95:            decision = "WAIT"
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:35:        signal = position.get("signal", "BUY")
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:42:        if signal == "BUY":
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:63:        if signal == "BUY":
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:77:        else: # SELL
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:92:        if signal == "BUY" and current_price <= new_sl:
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:97:        elif signal == "SELL" and current_price >= new_sl:
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:110:            if signal == "BUY" and current_price < vwap:
+/Users/pr/RAHUUL_RADAR/strategy/eme_engine.py:113:            elif signal == "SELL" and current_price > vwap:
+/Users/pr/RAHUUL_RADAR/strategy/ranking_engine.py:315:        if score >= 50: return "Watch"
+/Users/pr/RAHUUL_RADAR/strategy/validation_engine.py:116:            return self._wait(symbol, "HTF Momentum Data Unavailable (Wait)")
+/Users/pr/RAHUUL_RADAR/strategy/validation_engine.py:126:            return self._wait(symbol, "HTF Structure Data Unavailable (Wait)")
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:26:                "ltme_health": 0, "ltme_status": "WAIT", "ltme_alerts": "No Data",
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:31:        signal = position.get("signal", "BUY")
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:36:        if signal == "BUY" and market_trend == "DOWNTREND":
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:40:        elif signal == "SELL" and market_trend == "UPTREND":
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:46:        if signal == "BUY" and sector_trend == "DOWNTREND":
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:50:        elif signal == "SELL" and sector_trend == "UPTREND":
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:66:        if signal == "BUY" and current_price < vwap:
+/Users/pr/RAHUUL_RADAR/strategy/ltme_engine.py:69:        elif signal == "SELL" and current_price > vwap:
+/Users/pr/RAHUUL_RADAR/strategy/uasd_engine.py:126:        direction = engine_results.get("direction", "WAIT")
+/Users/pr/RAHUUL_RADAR/strategy/uasd_engine.py:144:            "signal": "WAIT",
+Binary file /Users/pr/RAHUUL_RADAR/strategy/__pycache__/eve_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/strategy/__pycache__/sie_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/strategy/__pycache__/intraday_engine.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/strategy/__pycache__/fbde_engine.cpython-314.pyc matches
+/Users/pr/RAHUUL_RADAR/strategy/trfa_engine.py:23:        signal = trade_data.get("signal", "BUY")
+/Users/pr/RAHUUL_RADAR/strategy/cpe_engine.py:133:            status = "WAIT"
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:19:        if signal not in ["BUY", "SELL"]:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:35:        if signal == "BUY" and wick_up > body:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:38:        elif signal == "SELL" and wick_dn > body:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:53:        if signal == "BUY" and latest.close < close_ma:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:56:        elif signal == "SELL" and latest.close > close_ma:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:61:        if signal == "BUY" and market_trend == "DOWNTREND":
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:64:        elif signal == "SELL" and market_trend == "UPTREND":
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:76:        if signal == "BUY" and gap > 0.02 and latest.close < latest.open:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:79:        elif signal == "SELL" and gap < -0.02 and latest.close > latest.open:
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:96:            status = f"VALID {'BREAKOUT' if signal == 'BUY' else 'BREAKDOWN'}"
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:99:            status = "WAIT"
+/Users/pr/RAHUUL_RADAR/strategy/fbde_engine.py:100:            final_reason = " | ".join(reasons) if reasons else "Wait for confirmation"
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:50:            direction = original.get('signal', 'BUY')
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:53:                # If BUY, SL can only move UP (Trailing)
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:54:                if direction == "BUY" and new_sl < orig_sl:
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:55:                    msg = f"SECURITY VIOLATION: Attempted to widen BUY stop loss from {orig_sl} to {new_sl}."
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:58:                # If SELL, SL can only move DOWN (Trailing)
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:59:                if direction == "SELL" and new_sl > orig_sl:
+/Users/pr/RAHUUL_RADAR/strategy/sie_engine.py:60:                    msg = f"SECURITY VIOLATION: Attempted to widen SELL stop loss from {orig_sl} to {new_sl}."
+/Users/pr/RAHUUL_RADAR/strategy/discovery_engine.py:99:                return self._reject(symbol, "Pre-Market / Early Open Volatility (Wait until 9:30 AM)")
+/Users/pr/RAHUUL_RADAR/application/watchlist_service.py:90:                "Signal": "WAIT",
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:144:        if "BUY" in signal and pcr > 1.3:
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:145:            return False, f"PCR {pcr:.2f} > 1.3 (extreme bearish, avoid BUY)"
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:147:        if "SELL" in signal and pcr < 0.7:
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:148:            return False, f"PCR {pcr:.2f} < 0.7 (extreme bullish, avoid SELL)"
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:352:                    if decision_str not in ["WAIT", "NO_DATA", "EXCLUDED"]:
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:370:                            if ie_res.get("status") == "WAIT" or ie_res.get("signal") == "WAIT":
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:371:                                decision_str = "WAIT"
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:377:                    if decision_str in ["WAIT", "NO_DATA", "EXCLUDED"]:
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:403:                    if decision_str in ["SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:459:                        action=decision_str if decision_str in ["BUY", "SELL"] else "BUY",
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:556:            buys = [res for res in elite_candidates if "BUY" in str(res.get("Signal", ""))]
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:557:            watches = [res for res in elite_candidates if "WATCH" in str(res.get("Signal", ""))]
+/Users/pr/RAHUUL_RADAR/application/intraday_scanner_service.py:558:            sells = [res for res in elite_candidates if "SELL" in str(res.get("Signal", ""))]
+/Users/pr/RAHUUL_RADAR/application/scalping_scanner_service.py:216:                if decision_str in ["SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/application/scalping_scanner_service.py:260:                    action=decision_str if decision_str in ["BUY", "SELL"] else "BUY",
+Binary file /Users/pr/RAHUUL_RADAR/application/__pycache__/swing_scanner_service.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/application/__pycache__/intraday_scanner_service.cpython-314.pyc matches
+Binary file /Users/pr/RAHUUL_RADAR/application/__pycache__/scanner_toolbar_service.cpython-314.pyc matches
+/Users/pr/RAHUUL_RADAR/application/chart_workspace_service.py:28:                "signal": scan_data.get("Signal", "WAIT"),
+/Users/pr/RAHUUL_RADAR/application/chart_workspace_service.py:39:                "master_ai": scan_data.get("Signal", "WAIT")
+/Users/pr/RAHUUL_RADAR/application/chart_workspace_service.py:51:                "latest_signal": scan_data.get("Signal", "WAIT"),
+/Users/pr/RAHUUL_RADAR/application/portfolio_service.py:43:        wins = [p for p in closed_positions if (p.get("exit_price", p.get("current_price", 0.0)) - p.get("avg_entry", 0.0)) * (1 if p.get("side", "BUY") == "BUY" else -1) > 0]
+/Users/pr/RAHUUL_RADAR/application/trade_manager.py:226:                is_buy = t['signal'] == 'BUY'
+/Users/pr/RAHUUL_RADAR/application/trade_manager.py:273:            is_buy = t['signal'] == 'BUY'
+/Users/pr/RAHUUL_RADAR/application/priority_queue_service.py:18:            signal = result.get("Signal", "WAIT")
+/Users/pr/RAHUUL_RADAR/application/priority_queue_service.py:20:            if signal in ["BUY", "SELL"]:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:260:                if decision_str in ["SELL", "STRONG_SELL"] and bullish_score <= 50:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:279:                    if decision_str in ["BUY", "STRONG_BUY", "WATCH"]:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:284:                    elif decision_str in ["SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:306:                    decision_str = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:307:                    logger.debug(f"Downgraded to WATCH: {symbol} | Reason: {valid_reason}")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:310:                    pipeline_res["reasons"].append(f"Downgraded to WATCH: {valid_reason}")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:340:                if trend_str in ["BEAR", "BEARISH", "STRONG_BEAR"] and decision_str == "BUY":
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:341:                    logger.warning(f"Signal/Trend Conflict for {symbol}: Trend is {trend_display} but Signal is BUY.")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:430:                        "passed_quality_gates": (is_valid and (decision_str not in ["WATCH", "NEUTRAL"])),
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:599:                if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:605:                        item["Signal"] = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:606:                        signal = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:610:                if signal == "WATCH" and score >= min_score and conf >= min_conf and rr >= min_rr:
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:613:                        inferred_dir = "BUY" if "BULL" in trend_upper else "SELL"
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:622:                if item["Signal"] == "WATCH":
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:624:                    has_specific_downgrade = any(r for r in item["_reasons"] if "below directional threshold" in r or "Invalid" in r or "RR below" in r or "Downgraded to WATCH" in r)
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:644:                is_accepted = item["Signal"] in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL", "READY"]
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:695:            best_buy = next((item for item in qualified_results if "BUY" in item.get("Signal", "")), None)
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:696:            best_sell = next((item for item in qualified_results if "SELL" in item.get("Signal", "")), None)
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:721:            buy_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "BUY")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:722:            sell_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "SELL")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:723:            watch_count = sum(1 for x in qualified_results if x.get("Signal", x.get("signal")) == "WATCH")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:764:                    dec_val = p_item.get("Signal", "WATCH")
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:871:            # SELL Signal Audit
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:872:            raw_sell_candidates = sum(1 for item in processed_results if item.get("Signal") in ["SELL", "STRONG_SELL"])
+/Users/pr/RAHUUL_RADAR/application/swing_scanner_service.py:881:                    f"SELL logic triggers correctly when bearish conditions are met; {raw_sell_candidates} raw candidates generated, "
+/Users/pr/RAHUUL_RADAR/application/institutional_dashboard_service.py:81:            md.append(f"- **BUY Trades:** {s1.get('buy_trades')} | **SELL Trades:** {s1.get('sell_trades')}")
+/Users/pr/RAHUUL_RADAR/application/institutional_dashboard_service.py:105:            md.append(f"- **BUY:** {s3.get('buy')}")
+/Users/pr/RAHUUL_RADAR/application/institutional_dashboard_service.py:106:            md.append(f"- **SELL:** {s3.get('sell')}")
+/Users/pr/RAHUUL_RADAR/application/institutional_dashboard_service.py:107:            md.append(f"- **WATCH:** {s3.get('watch')}")
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:115:        # Signal Classification based on Score (45+ for BUY/SELL, 25+ for WATCH)
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:117:            signal = "BUY" if direction == "BULLISH" else "SELL"
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:119:            signal = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:134:        explanations.append(f"• Confidence only {result.get('confidence', 0)}%" if signal == "WATCH" else f"• Confidence {result.get('confidence', 0)}%")
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:136:        if signal == "WATCH":
+/Users/pr/RAHUUL_RADAR/application/intraday_quality_gate.py:150:            trigger_text = f"If {' and '.join(triggers)}, upgrade to {'BUY' if direction == 'BULLISH' else 'SELL'}."
+/Users/pr/RAHUUL_RADAR/application/alert_service.py:70:            signal = r.get("Signal", "WAIT")
+/Users/pr/RAHUUL_RADAR/application/alert_service.py:75:            if signal == "BUY" and float(conf) >= 80.0:
+/Users/pr/RAHUUL_RADAR/application/alert_service.py:76:                alert = self.create_alert("BUY Signal", symbol, signal, conf, "Critical", "High confidence BUY signal detected", "Green")
+/Users/pr/RAHUUL_RADAR/application/alert_service.py:78:            elif signal == "SELL" and float(conf) >= 80.0:
+/Users/pr/RAHUUL_RADAR/application/alert_service.py:79:                alert = self.create_alert("SELL Signal", symbol, signal, conf, "Critical", "High confidence SELL signal detected", "Red")
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:23:        original_signal = str(scan_data.get("Signal", "WAIT")).upper()
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:36:        if "BUY" in original_signal or "SELL" in original_signal:
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:44:                trade_grade = "★★ Watch"
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:48:        if "WAIT" in original_signal or "AVOID" in original_signal or "WATCH" in original_signal:
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:49:            final_signal = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:51:            if "BUY" in original_signal:
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:53:            elif "SELL" in original_signal:
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:56:                final_signal = "WATCH"
+/Users/pr/RAHUUL_RADAR/application/decision_explanation_service.py:109:        # Prioritize positive bullets for BUY/SELL, negative bullets for NO TRADE
+/Users/pr/RAHUUL_RADAR/application/scanner_toolbar_service.py:24:            if qf in ["BUY", "SELL", "WATCH"]:
+/Users/pr/RAHUUL_RADAR/application/trade_workspace_service.py:26:            "signal": scan_data.get("Signal", "WAIT"),
+/Users/pr/RAHUUL_RADAR/application/trade_workspace_service.py:30:            "readiness": "Ready" if scan_data.get("Signal") in ["BUY", "SELL"] else "Wait"
+/Users/pr/RAHUUL_RADAR/application/trade_workspace_service.py:89:            "current_signal": scan_data.get("Signal", "WAIT"),
+/Users/pr/RAHUUL_RADAR/application/trade_workspace_service.py:103:            "decision": scan_data.get("Signal", "WAIT")
+/Users/pr/RAHUUL_RADAR/application/signal_quality_service.py:109:            return {"total": 0, "buy": 0, "sell": 0, "watch": 0}
+/Users/pr/RAHUUL_RADAR/application/signal_quality_service.py:111:        buy = sum(1 for s in signals if s.get("action", "").upper() == "BUY")
+/Users/pr/RAHUUL_RADAR/application/signal_quality_service.py:112:        sell = sum(1 for s in signals if s.get("action", "").upper() == "SELL")
+/Users/pr/RAHUUL_RADAR/application/signal_quality_service.py:113:        watch = sum(1 for s in signals if s.get("action", "").upper() == "WATCH")
+/Users/pr/RAHUUL_RADAR/application/signal_quality_service.py:115:        return {"total": total, "buy": buy, "sell": sell, "watch": watch}

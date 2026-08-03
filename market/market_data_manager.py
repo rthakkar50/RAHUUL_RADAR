@@ -50,6 +50,10 @@ class MarketDataManager(MarketDataProvider):
             return self.yahoo.get_ohlcv(symbol, interval=interval, period=period)
         raise NotImplementedError("Yahoo Provider is not initialized for historical data.")
 
+    def get_history(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+        """Alias for get_historical to ensure 100% backward compatibility."""
+        return self.get_historical(symbol, interval=interval, period=period)
+
     def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
         """
         Live Intraday routing -> Paytm ONLY (TASK-4). NO FALLBACK TO YAHOO (TASK-7).

@@ -285,7 +285,7 @@ class IntradayScannerService:
                 sector_engine=sector_rotation_service,
                 relative_strength_engine=self.engines["relative_strength"]
             )
-            scanner.paytm_provider = paytm_provider
+            scanner.paytm_provider = getattr(data_provider, 'paytm', None)
             
             if progress_callback:
                 progress_callback(20)
