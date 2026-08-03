@@ -180,6 +180,34 @@ _load_cache_from_disk()
 _ORCHESTRATOR_LOCK = threading.Lock()
 _ORCHESTRATION_IS_RUNNING = False
 
+def _is_valid_complete_cache(new_data: dict, existing_data: dict) -> bool:
+    """
+    SPRINT-196F Cache Consistency Validation:
+    Returns True if new_data is a complete scan result and should overwrite existing cache.
+    Prevents partial payloads (e.g. total_scanned < 100) from overwriting valid complete cache.
+    """
+    if not new_data or not isinstance(new_data, dict):
+        return False
+        
+    new_scanned = new_data.get("total_scanned", 0)
+    new_qualified = len(new_data.get("qualified_results", []))
+    
+    if not existing_data or not isinstance(existing_data, dict):
+        return new_scanned >= 50 or new_qualified > 0
+        
+    existing_scanned = existing_data.get("total_scanned", 0)
+    existing_qualified = len(existing_data.get("qualified_results", []))
+    
+    if existing_scanned >= 100 and new_scanned < 100:
+        logger.warning(f"[SPRINT-196F Cache Lock] Rejected partial cache update (New scanned: {new_scanned} < Existing: {existing_scanned}). Retaining existing valid cache.")
+        return False
+        
+    if existing_qualified > 0 and new_qualified == 0 and new_scanned < 100:
+        logger.warning(f"[SPRINT-196F Cache Lock] Rejected empty cache update (New qualified: 0 < Existing: {existing_qualified}). Retaining existing valid cache.")
+        return False
+
+    return True
+
 def _run_enterprise_orchestration():
     global _SCANNER_CACHE, _INTRADAY_CACHE, _ORCHESTRATION_IS_RUNNING
     try:
@@ -201,13 +229,17 @@ def _run_enterprise_orchestration():
         swing_res = swing_service.execute_swing_scan()
         swing_signals = swing_res.get("qualified_results", [])
 
-        # Update Swing Cache immediately so UI gets results without waiting for Intraday
+        # Update Swing Cache immediately if valid & complete
         json_swing = json.loads(json.dumps(swing_res, default=str))
         with _CACHE_LOCK:
-            _SCANNER_CACHE["data"] = json_swing
-            _SCANNER_CACHE["last_updated"] = time.time()
+            existing_swing = _SCANNER_CACHE.get("data")
+            if _is_valid_complete_cache(json_swing, existing_swing):
+                _SCANNER_CACHE["data"] = json_swing
+                _SCANNER_CACHE["last_updated"] = time.time()
+                _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
+            else:
+                logger.info("[SPRINT-196F] Preserved existing valid Swing cache over partial scan payload.")
             _SCANNER_CACHE["is_scanning"] = False
-        _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
         
         # 2. Run Intraday Scan
         intra_service = IntradayScannerService()
@@ -230,9 +262,13 @@ def _run_enterprise_orchestration():
         # Final Swing Cache Update
         json_swing["qualified_results"] = json.loads(json.dumps(display_swing, default=str))
         with _CACHE_LOCK:
-            _SCANNER_CACHE["data"] = json_swing
-            _SCANNER_CACHE["last_updated"] = time.time()
-        _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
+            existing_swing = _SCANNER_CACHE.get("data")
+            if _is_valid_complete_cache(json_swing, existing_swing):
+                _SCANNER_CACHE["data"] = json_swing
+                _SCANNER_CACHE["last_updated"] = time.time()
+                _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
+            else:
+                logger.info("[SPRINT-196F] Preserved existing valid Swing cache on final orchestration.")
             
         # Update Intraday Cache
         fno_symbols = get_fno_symbols()
