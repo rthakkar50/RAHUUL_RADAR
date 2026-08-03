@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-RAHUUL RADAR - Enterprise Telegram Operations Center (v6.9.0)
-24x7 Interactive Bot with Heartbeat, Persistent Retry Queue, Command Audit, & Export Engine.
+RAHUUL RADAR - Enterprise Telegram Command Center (v7.0.0)
+Complete Remote Control Platform for Scanner, Paper Trading, Portfolio, & Admin Operations.
 """
 import os
 import sys
@@ -9,8 +9,15 @@ import json
 import time
 import re
 import threading
+import urllib.request
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
+
+try:
+    import schedule
+except ImportError:
+    schedule = None
 
 BASE_DIR = Path(__file__).parent.absolute()
 sys.path.insert(0, str(BASE_DIR))
@@ -65,33 +72,29 @@ def answer_callback(token, callback_query_id, text=""):
     except Exception:
         pass
 
-import urllib.request
-import urllib.parse
-
 def add_timestamp(text: str) -> str:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return f"{text}\n\n*🕒 Last Updated*: `{ts}`"
 
 def get_home_menu():
-    text = "🤖 *RAHUUL RADAR OPERATIONS CENTER (v6.9.0)*\n-------------------------------------\nSelect a module below:"
+    text = "🚀 *RAHUUL RADAR ENTERPRISE COMMAND CENTER (v7.0.0)*\n-------------------------------------\nSelect a module below:"
     keyboard = {
         "inline_keyboard": [
-            [{"text": "📊 Scanner", "callback_data": "menu_scanner"}, {"text": "⚡ Intraday", "callback_data": "menu_intraday"}],
+            [{"text": "🚀 Dashboard", "callback_data": "menu_dashboard"}, {"text": "📊 Scanner", "callback_data": "menu_scanner"}],
             [{"text": "💼 Portfolio", "callback_data": "menu_portfolio"}, {"text": "📑 Positions", "callback_data": "menu_positions"}],
-            [{"text": "🧾 Paper", "callback_data": "menu_paper"}, {"text": "📈 Performance", "callback_data": "menu_performance"}],
+            [{"text": "🧾 Paper Control", "callback_data": "menu_paper"}, {"text": "🛡️ Risk Center", "callback_data": "action_port_risk"}],
             [{"text": "❤️ Health", "callback_data": "menu_health"}, {"text": "🔐 Token Center", "callback_data": "menu_token_center"}],
-            [{"text": "📋 Logs", "callback_data": "menu_logs"}, {"text": "⚙️ System", "callback_data": "menu_system"}],
-            [{"text": "👑 Admin", "callback_data": "menu_admin"}, {"text": "🔄 Refresh", "callback_data": "menu_home"}]
+            [{"text": "🔔 Notifications", "callback_data": "menu_notifications"}, {"text": "👑 Admin", "callback_data": "menu_admin"}],
+            [{"text": "🔄 Refresh UI", "callback_data": "menu_home"}]
         ]
     }
     return add_timestamp(text), keyboard
 
 def get_scanner_menu():
-    text = "📡 *SCANNER MENU*\n-------------------------------------\nSelect scanner variant:"
+    text = "📡 *SCANNER COMMAND MENU*\n-------------------------------------\nSelect scanner variant:"
     keyboard = {
         "inline_keyboard": [
-            [{"text": "🟢 Swing Scanner", "callback_data": "action_scan_swing"}],
-            [{"text": "⚡ Intraday Scanner", "callback_data": "action_scan_intraday"}],
+            [{"text": "🟢 Swing Scanner", "callback_data": "action_scan_swing"}, {"text": "⚡ Intraday Scanner", "callback_data": "action_scan_intraday"}],
             [{"text": "📊 High Volume", "callback_data": "action_scan_volume"}, {"text": "🚀 Breakout", "callback_data": "action_scan_breakout"}],
             [{"text": "⭐ Today's Best", "callback_data": "action_scan_best"}, {"text": "👀 Watchlist", "callback_data": "action_scan_watchlist"}],
             [{"text": "⬅️ Back", "callback_data": "menu_home"}, {"text": "🔄 Refresh", "callback_data": "menu_scanner"}]
@@ -100,22 +103,22 @@ def get_scanner_menu():
     return add_timestamp(text), keyboard
 
 def get_portfolio_menu():
-    text = "💼 *PORTFOLIO MENU*\n-------------------------------------\nSelect a view:"
+    text = "💼 *PORTFOLIO & RISK COMMAND MENU*\n-------------------------------------\nSelect a view:"
     keyboard = {
         "inline_keyboard": [
             [{"text": "💼 Portfolio Summary", "callback_data": "action_port_summary"}],
             [{"text": "📑 Open Positions", "callback_data": "action_port_positions"}],
-            [{"text": "🛡️ Risk Center", "callback_data": "action_port_risk"}],
+            [{"text": "🛡️ Risk Center", "callback_data": "action_port_risk"}, {"text": "🍰 Sector Allocation", "callback_data": "action_port_sector"}],
             [{"text": "⬅️ Back", "callback_data": "menu_home"}, {"text": "🔄 Refresh", "callback_data": "menu_portfolio"}]
         ]
     }
     return add_timestamp(text), keyboard
 
 def get_paper_menu():
-    text = "📝 *PAPER TRADING MENU*\n-------------------------------------\nSelect an action:"
+    text = "📝 *PAPER TRADING REMOTE CONTROL*\n-------------------------------------\nSelect an action:"
     keyboard = {
         "inline_keyboard": [
-            [{"text": "📄 Account Summary", "callback_data": "action_paper_account"}, {"text": "📑 Open Trades", "callback_data": "action_paper_orders"}],
+            [{"text": "📄 Account Summary", "callback_data": "action_paper_account"}, {"text": "📑 Open Positions", "callback_data": "action_paper_orders"}],
             [{"text": "📈 Performance", "callback_data": "action_paper_perf"}, {"text": "📔 Journal", "callback_data": "action_paper_journal"}],
             [{"text": "⬅️ Back", "callback_data": "menu_home"}, {"text": "🔄 Refresh", "callback_data": "menu_paper"}]
         ]
@@ -152,6 +155,9 @@ def handle_callback(data: str, callback_id: str, chat_id: int, message_id: int, 
         if data == "menu_home":
             text, kb = get_home_menu()
             edit_message(token, chat_id, message_id, text, kb)
+        elif data == "menu_dashboard":
+            text = intel.get_enterprise_dashboard()
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_dashboard"))
         elif data == "menu_scanner":
             text, kb = get_scanner_menu()
             edit_message(token, chat_id, message_id, text, kb)
@@ -164,6 +170,12 @@ def handle_callback(data: str, callback_id: str, chat_id: int, message_id: int, 
         elif data == "menu_token_center":
             text = intel.get_paytm_status_detailed()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_token_center_menu())
+        elif data == "menu_notifications":
+            text = intel.get_notification_settings_report()
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_notifications"))
+        elif data == "menu_admin":
+            text = intel.get_admin_report()
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_admin"))
         elif data == "action_token_refresh":
             text = intel.trigger_token_refresh()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_token_center_menu())
@@ -173,12 +185,15 @@ def handle_callback(data: str, callback_id: str, chat_id: int, message_id: int, 
         elif data == "action_token_history":
             text = intel.get_token_refresh_history()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_token_center_menu())
-        elif data == "action_scan_swing":
+        elif data in ("action_scan_swing", "action_scan_volume", "action_scan_breakout", "action_scan_best"):
             text = intel.get_scanner_summary("swing")
-            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_scan_swing"))
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_scanner"))
         elif data == "action_scan_intraday":
             text = intel.get_scanner_summary("intraday")
-            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_scan_intraday"))
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_scanner"))
+        elif data == "action_scan_watchlist":
+            text = intel.get_watchlist_report()
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("menu_scanner"))
         elif data == "action_port_summary":
             text = intel.get_portfolio_summary()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_port_summary"))
@@ -188,6 +203,9 @@ def handle_callback(data: str, callback_id: str, chat_id: int, message_id: int, 
         elif data == "action_port_risk":
             text = intel.get_risk_report()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_port_risk"))
+        elif data == "action_port_sector":
+            text = intel.get_sector_report()
+            edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_port_sector"))
         elif data == "action_paper_account":
             text = intel.get_paper_trading_summary()
             edit_message(token, chat_id, message_id, add_timestamp(text), get_back_menu("action_paper_account"))
@@ -225,19 +243,19 @@ def handle_text_command(text, token, chat_id):
 
     try:
         reply = ""
-        if cmd == "/menu":
+        if cmd in ("/menu", "/help"):
             txt, kb = get_home_menu()
             send_message(token, chat_id, txt, reply_markup=kb)
             service.audit_command(str(chat_id), cmd, (time.time() - start_t) * 1000, True, "", len(txt))
             return
-        elif cmd in ("/dashboard", "/status", "/health"):
+        elif cmd == "/dashboard":
+            reply = intel.get_enterprise_dashboard()
+        elif cmd in ("/status", "/health"):
             reply = intel.get_system_health()
         elif cmd == "/diag":
             reply = intel.get_diagnostics_report()
         elif cmd == "/ping":
             reply = intel.get_ping_report()
-        elif cmd == "/help":
-            reply = intel.get_help_manual()
         elif cmd == "/settings":
             reply = intel.get_settings_summary()
         elif cmd == "/token":
@@ -248,36 +266,56 @@ def handle_text_command(text, token, chat_id):
             reply = intel.get_token_refresh_history()
         elif cmd == "/token_auto":
             reply = intel.toggle_auto_refresh()
-        elif cmd in ("/scanner", "/swing"):
+        elif cmd in ("/scanner", "/swing", "/fno", "/highvolume", "/breakout", "/topbuy", "/topsell", "/top", "/recent"):
             reply = intel.get_scanner_summary("swing")
         elif cmd == "/intraday":
             reply = intel.get_scanner_summary("intraday")
-        elif cmd == "/fno":
-            reply = intel.get_scanner_summary("swing")
-        elif cmd == "/top":
-            reply = intel.get_scanner_summary("swing")
         elif cmd == "/market":
             reply = intel.get_market_status()
         elif cmd == "/news":
             reply = intel.get_market_news()
         elif cmd == "/copilot":
             reply = intel.get_copilot_analysis(arg if arg else "RELIANCE")
-        elif cmd == "/portfolio":
-            reply = intel.get_portfolio_summary()
         elif cmd == "/paper":
             reply = intel.get_paper_trading_summary()
-        elif cmd == "/open":
+        elif cmd in ("/open", "/positions"):
             reply = intel.get_open_positions_report()
         elif cmd == "/closed":
             reply = intel.get_closed_positions_report()
-        elif cmd == "/performance":
+        elif cmd == "/trade" and arg:
+            reply = intel.execute_paper_trade_cmd(arg, "BUY")
+        elif cmd == "/close" and arg:
+            reply = intel.close_paper_trade_cmd(arg)
+        elif cmd in ("/history", "/performance", "/statistics"):
             reply = intel.get_performance_report()
         elif cmd == "/journal":
             reply = intel.get_journal_report()
+        elif cmd == "/features":
+            reply = intel.get_features_report()
+        elif cmd == "/portfolio":
+            reply = intel.get_portfolio_summary()
+        elif cmd == "/cash":
+            reply = intel.get_cash_report()
+        elif cmd == "/equity":
+            reply = intel.get_equity_report()
+        elif cmd == "/exposure":
+            reply = intel.get_exposure_report()
         elif cmd == "/risk":
             reply = intel.get_risk_report()
-        elif cmd in ("/watchlist", "/favorites"):
+        elif cmd == "/sector":
+            reply = intel.get_sector_report()
+        elif cmd == "/add" and arg:
+            reply = intel.add_to_watchlist(arg)
+        elif cmd == "/remove" and arg:
+            reply = intel.remove_from_watchlist(arg)
+        elif cmd in ("/watchlist", "/favorites", "/alerts"):
             reply = intel.get_watchlist_report()
+        elif cmd == "/morning_report":
+            reply = intel.generate_morning_report()
+        elif cmd == "/midday_report":
+            reply = intel.generate_midday_report()
+        elif cmd == "/eod_report":
+            reply = intel.generate_eod_report()
         elif cmd == "/export":
             fmt = arg.lower() if arg else "csv"
             export_path = intel.generate_export_file(fmt, "portfolio")
@@ -286,8 +324,10 @@ def handle_text_command(text, token, chat_id):
                 reply = f"✅ Export generated successfully: `{os.path.basename(export_path)}`"
             else:
                 reply = "❌ Failed to generate export file."
-        elif cmd == "/morning_report":
-            reply = intel.generate_morning_report()
+        elif cmd == "/admin":
+            reply = intel.get_admin_report()
+        elif cmd == "/notifications":
+            reply = intel.get_notification_settings_report()
         else:
             txt, kb = get_home_menu()
             send_message(token, chat_id, txt, reply_markup=kb)
@@ -300,10 +340,39 @@ def handle_text_command(text, token, chat_id):
         service.audit_command(str(chat_id), cmd, (time.time() - start_t) * 1000, False, str(e), 0)
         send_message(token, chat_id, f"❌ Command execution error: `{e}`")
 
+def run_scheduler(token):
+    if schedule is None:
+        return
+
+    config = service.get_config()
+    chat_id = config.get("telegram_authorized_chat_id")
+    if not chat_id:
+        return
+
+    def _send_morning():
+        service.send_message(token, chat_id, intel.generate_morning_report())
+
+    def _send_midday():
+        service.send_message(token, chat_id, intel.generate_midday_report())
+
+    def _send_eod():
+        service.send_message(token, chat_id, intel.generate_eod_report())
+
+    schedule.every().day.at("08:30").do(_send_morning)
+    schedule.every().day.at("12:30").do(_send_midday)
+    schedule.every().day.at("15:45").do(_send_eod)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 def telegram_polling(token):
     last_update_id = 0
     backoff = 1
     service.start_background_tasks(token)
+
+    t_sched = threading.Thread(target=run_scheduler, args=(token,), daemon=True)
+    t_sched.start()
 
     while True:
         try:
@@ -331,7 +400,7 @@ def telegram_polling(token):
             backoff = min(backoff * 2, 30)
 
 def main():
-    print("Starting RAHUUL RADAR Enterprise Telegram Platform (v6.9.0 - 24x7 Certified)...")
+    print("Starting RAHUUL RADAR Enterprise Telegram Command Center (v7.0.0 - Certified)...")
     config = service.get_config()
     token = config.get("telegram_bot_token") or config.get("telegram_token") or os.environ.get("TELEGRAM_BOT_TOKEN") or "8805672111:AAEBsy0L4Za7hb-2BthOd9WIvc37QdKXPPQ"
 

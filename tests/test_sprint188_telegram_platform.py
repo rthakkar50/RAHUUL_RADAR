@@ -54,7 +54,7 @@ class TestSprint188TelegramPlatform(unittest.TestCase):
         self.assertIn("PONG", ping)
 
         help_man = self.intel.get_help_manual()
-        self.assertIn("COMMANDS", help_man)
+        self.assertIn("COMMAND", help_man)
 
         settings = self.intel.get_settings_summary()
         self.assertIn("SETTINGS SUMMARY", settings)
@@ -63,10 +63,10 @@ class TestSprint188TelegramPlatform(unittest.TestCase):
         self.assertIn("PAYTM TOKEN STATUS", token_st)
 
         scanner_sum = self.intel.get_scanner_summary("swing")
-        self.assertIn("SWING SCANNER SUMMARY", scanner_sum)
+        self.assertIn("SWING SCANNER", scanner_sum)
 
         copilot = self.intel.get_copilot_analysis("RELIANCE")
-        self.assertIn("AI COPILOT ANALYSIS", copilot)
+        self.assertIn("AI COPILOT", copilot)
 
         morning = self.intel.generate_morning_report()
         self.assertIn("MORNING MARKET REPORT", morning)

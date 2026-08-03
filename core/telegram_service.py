@@ -40,11 +40,20 @@ class TelegramService:
         self._retry_thread = None
 
         self.last_heartbeat_status = {"api": False, "db": False, "scanner": False, "paper": False, "ts": ""}
+        self._last_subsystem_states = {"api": True, "db": True, "scanner": True, "paper": True}
+
+        self.notification_settings = {
+            "scanner_alerts": True,
+            "paper_alerts": True,
+            "portfolio_alerts": True,
+            "risk_alerts": True,
+            "news_alerts": True,
+            "token_alerts": True,
+        }
 
     def _init_loggers(self):
         formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s')
 
-        # Main Log
         self.logger = logging.getLogger("telegram_main")
         self.logger.setLevel(logging.INFO)
         if not self.logger.handlers:
@@ -52,7 +61,6 @@ class TelegramService:
             fh.setFormatter(formatter)
             self.logger.addHandler(fh)
 
-        # Error Log
         self.error_logger = logging.getLogger("telegram_error")
         self.error_logger.setLevel(logging.ERROR)
         if not self.error_logger.handlers:
@@ -60,7 +68,6 @@ class TelegramService:
             fh.setFormatter(formatter)
             self.error_logger.addHandler(fh)
 
-        # Commands Log
         self.cmd_logger = logging.getLogger("telegram_commands")
         self.cmd_logger.setLevel(logging.INFO)
         if not self.cmd_logger.handlers:
@@ -68,7 +75,6 @@ class TelegramService:
             fh.setFormatter(formatter)
             self.cmd_logger.addHandler(fh)
 
-        # Notifications Log
         self.notif_logger = logging.getLogger("telegram_notifications")
         self.notif_logger.setLevel(logging.INFO)
         if not self.notif_logger.handlers:
@@ -102,10 +108,17 @@ class TelegramService:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS telegram_watchlist (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    symbol TEXT UNIQUE NOT NULL,
+                    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             conn.commit()
             conn.close()
         except Exception as e:
-            self.error_logger.error(f"Failed to initialize Telegram database tables: {e}", exc_info=True)
+            self.error_logger.error(f"Failed to initialize Telegram DB tables: {e}", exc_info=True)
 
     @staticmethod
     def sanitize_text(text: str) -> str:
@@ -257,20 +270,18 @@ class TelegramService:
         except Exception as e:
             self.error_logger.error(f"Error processing retry queue: {e}")
 
-    def run_heartbeat_check(self) -> dict:
+    def run_heartbeat_check(self, token: str = None) -> dict:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         status = {"api": False, "db": False, "scanner": False, "paper": False, "ts": ts}
 
-        # 1. API Health Check
         try:
             req = urllib.request.Request("http://127.0.0.1:8000/api/v1/health")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
                     status["api"] = True
-        except Exception as e:
-            self.error_logger.error(f"Heartbeat API check failed: {e}")
+        except Exception:
+            status["api"] = False
 
-        # 2. Database Check
         try:
             if os.path.exists(DB_PATH):
                 conn = sqlite3.connect(DB_PATH)
@@ -278,26 +289,28 @@ class TelegramService:
                 c.execute("SELECT 1")
                 conn.close()
                 status["db"] = True
-        except Exception as e:
-            self.error_logger.error(f"Heartbeat DB check failed: {e}")
+        except Exception:
+            status["db"] = False
 
-        # 3. Scanner Cache Check
-        try:
-            scanner_cache = BASE_DIR / "data" / "scanner_cache.json"
-            if scanner_cache.exists():
-                status["scanner"] = True
-            else:
-                status["scanner"] = status["api"]
-        except Exception as e:
-            self.error_logger.error(f"Heartbeat Scanner check failed: {e}")
-
-        # 4. Paper Trading Check
-        try:
-            status["paper"] = status["api"]
-        except Exception as e:
-            self.error_logger.error(f"Heartbeat Paper Trading check failed: {e}")
+        status["scanner"] = status["api"]
+        status["paper"] = status["api"]
 
         self.last_heartbeat_status = status
+
+        # PART 15: Notify ONLY when status changes!
+        if token:
+            for sys_name, cur_state in status.items():
+                if sys_name == "ts":
+                    continue
+                prev_state = self._last_subsystem_states.get(sys_name, True)
+                if cur_state != prev_state:
+                    self._last_subsystem_states[sys_name] = cur_state
+                    alert_msg = f"⚠️ *SYSTEM STATE CHANGE DETECTED*\n-------------------------------------\nSubsystem `{sys_name.upper()}` changed state: `{'🟢 ONLINE' if cur_state else '🔴 OFFLINE'}`"
+                    config = self.get_config()
+                    chat_id = config.get("telegram_authorized_chat_id")
+                    if chat_id:
+                        self.send_message(token, chat_id, alert_msg)
+
         self.logger.info(f"Heartbeat Check [{ts}] -> API: {status['api']} | DB: {status['db']} | Scanner: {status['scanner']} | Paper: {status['paper']}")
         return status
 
@@ -308,7 +321,7 @@ class TelegramService:
 
         def _heartbeat_loop():
             while self._is_running:
-                self.run_heartbeat_check()
+                self.run_heartbeat_check(token)
                 self.process_retry_queue(token)
                 time.sleep(60)
 
