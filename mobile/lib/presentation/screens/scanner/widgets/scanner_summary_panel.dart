@@ -39,85 +39,22 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
     final qualPct = (qualCount / maxVal(totRanked, 1) * 100).toStringAsFixed(1);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF131722), Color(0xFF1A2236)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2A3654), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header Row ──────────────────────────────────────────
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.radar_rounded, color: Colors.blueAccent, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${widget.universeName} TELEMETRY SUMMARY',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                    letterSpacing: 0.8,
-                    color: Color(0xFF7EB3FF),
-                  ),
-                ),
-                const Spacer(),
-                _qualityBadge(resp.marketQuality),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // ── TASK-1: 9-Metric Enterprise Cards Row ────────────────────────
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _statCard('Universe', '$totUniverse', Icons.hub_outlined, const Color(0xFF8899BB)),
-                  _divider(),
-                  _statCard('Attempted', '$totAttempted', Icons.playlist_add_check_rounded, Colors.lightBlueAccent),
-                  _divider(),
-                  _statCard('Processed', '$totProcessed', Icons.memory_rounded, Colors.cyanAccent),
-                  _divider(),
-                  _statCard('No Data', '$noData', Icons.cloud_off_rounded, const Color(0xFFFFB347)),
-                  _divider(),
-                  _statCard('Ranked', '$totRanked', Icons.filter_alt_outlined, const Color(0xFFBB86FC)),
-                  _divider(),
-                  _statCard('Qualified', '$qualCount', Icons.check_circle_outline_rounded, const Color(0xFF4ADE80)),
-                  _divider(),
-                  _statCard('BUY', '$buyCount', Icons.arrow_upward_rounded, const Color(0xFF4ADE80)),
-                  _divider(),
-                  _statCard('SELL', '$sellCount', Icons.arrow_downward_rounded, const Color(0xFFFF6B6B)),
-                  _divider(),
-                  _statCard('WATCH', '$watchCount', Icons.visibility_outlined, const Color(0xFFFFB347)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // ── TASK-2 & TASK-8: Visual Pipeline Funnel ─────────────────────
+            // TASK-2: PIPELINE CANDIDATE FUNNEL CARD ONLY
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -128,9 +65,20 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'PIPELINE CANDIDATE FUNNEL',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF8899BB), letterSpacing: 0.6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${widget.universeName} PIPELINE CANDIDATE FUNNEL',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7EB3FF),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      _qualityBadge(resp.marketQuality),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   SingleChildScrollView(
@@ -155,29 +103,9 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
 
-            // ── TASK-4, TASK-5, TASK-6, TASK-9: System & Telemetry Bar ───────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0A0E1A),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _telemetryItem(Icons.satellite_alt_outlined, 'Provider: Yahoo (Live)'),
-                  _telemetryItem(Icons.speed_outlined, 'Latency: 0.8s (24ms/sym)'),
-                  _telemetryItem(Icons.memory_rounded, 'RAM: 64MB | Workers: 5'),
-                  _telemetryItem(Icons.verified_user_outlined, 'Status: ONLINE'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ── TASK-7, TASK-10, TASK-11, TASK-12: Collapsible Diagnostics ───
+            // TASK-3: Collapsible Advanced Diagnostics Section (Default: COLLAPSED)
             InkWell(
               onTap: () => setState(() => _isExpanded = !_isExpanded),
               borderRadius: BorderRadius.circular(8),
@@ -194,7 +122,7 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
                     Icon(_isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: Colors.blueAccent, size: 16),
                     const SizedBox(width: 6),
                     Text(
-                      _isExpanded ? 'HIDE ADVANCED DIAGNOSTICS & EXPLAINABILITY' : 'SHOW ADVANCED DIAGNOSTICS & EXPLAINABILITY',
+                      _isExpanded ? 'Hide Advanced Diagnostics' : 'Show Advanced Diagnostics',
                       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.blueAccent, letterSpacing: 0.5),
                     ),
                   ],
@@ -202,10 +130,28 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
               ),
             ),
 
+            // TASK-4: Advanced Diagnostics Content (Moved Inside Expanded Area)
             if (_isExpanded) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0E1A),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _telemetryItem(Icons.satellite_alt_outlined, 'Provider: Yahoo (Live)'),
+                    _telemetryItem(Icons.speed_outlined, 'Latency: 0.8s (24ms/sym)'),
+                    _telemetryItem(Icons.memory_rounded, 'RAM: 64MB | Workers: 5'),
+                    _telemetryItem(Icons.verified_user_outlined, 'Status: ONLINE'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
               _buildExplainabilitySection(resp),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTodaysBestSection(resp.qualifiedResults),
             ],
           ],
@@ -216,7 +162,6 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
 
   int maxVal(int a, int b) => a > b ? a : b;
 
-  // ── Explainability Section ───────────────────────────────────────────────
   Widget _buildExplainabilitySection(ScanResponseModel resp) {
     final rejections = resp.rejectionAnalytics;
     return Container(
@@ -260,7 +205,6 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
     );
   }
 
-  // ── Today's Best Top 10 Section ────────────────────────────────────────────
   Widget _buildTodaysBestSection(List<ScanResultModel> qualified) {
     final top10 = qualified.take(10).toList();
     return Container(
@@ -300,13 +244,11 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: item.signal.toUpperCase() == 'BUY' ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2),
+                          color: item.displaySignal.contains('BUY') ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(item.signal, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: item.signal.toUpperCase() == 'BUY' ? const Color(0xFF4ADE80) : const Color(0xFFFFB347))),
+                        child: Text(item.displaySignal, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: item.displaySignal.contains('BUY') ? Colors.greenAccent : Colors.amberAccent)),
                       ),
-                      const SizedBox(width: 8),
-                      Text('Score: ${item.score}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.cyanAccent)),
                     ],
                   ),
                 );
@@ -317,71 +259,49 @@ class _ScannerSummaryPanelState extends State<ScannerSummaryPanel> {
     );
   }
 
-  // ── Helper Widgets ─────────────────────────────────────────────────────────
-  Widget _statCard(String label, String value, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 13),
-          const SizedBox(height: 3),
-          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color, height: 1.1)),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 9, color: Color(0xFF8899BB), fontWeight: FontWeight.w600)),
-        ],
+  Widget _qualityBadge(String quality) {
+    Color col = Colors.greenAccent;
+    if (quality == 'MEDIUM') col = Colors.amberAccent;
+    if (quality == 'LOW' || quality == 'NO TRADE') col = Colors.redAccent;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: col.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: col, width: 1),
+      ),
+      child: Text(
+        'QUALITY: $quality',
+        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: col),
       ),
     );
   }
 
-  Widget _divider() => Container(width: 1, height: 32, margin: const EdgeInsets.symmetric(horizontal: 3), color: const Color(0xFF2A3654));
-
-  Widget _funnelStep(String label, String value, String pct, Color color) {
+  Widget _funnelStep(String label, String count, String pct, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: const TextStyle(fontSize: 8, color: Color(0xFF8899BB), fontWeight: FontWeight.w500)),
-        Container(
-          margin: const EdgeInsets.only(top: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-          child: Text(pct, style: TextStyle(fontSize: 7, fontWeight: FontWeight.w700, color: color)),
-        ),
+        Text(count, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
+        Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+        Text(pct, style: TextStyle(fontSize: 8, color: color.withValues(alpha: 0.7))),
       ],
     );
   }
 
-  Widget _funnelArrow() => const Padding(
-    padding: EdgeInsets.symmetric(horizontal: 4),
-    child: Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF445577)),
-  );
+  Widget _funnelArrow() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 6),
+      child: Icon(Icons.chevron_right, size: 14, color: Colors.grey),
+    );
+  }
 
-  Widget _telemetryItem(IconData icon, String text) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, color: const Color(0xFF667799), size: 10),
-      const SizedBox(width: 3),
-      Text(text, style: const TextStyle(fontSize: 8, color: Color(0xFF8899BB), fontWeight: FontWeight.w500)),
-    ],
-  );
-
-  Widget _qualityBadge(String quality) {
-    final isHigh = quality.toUpperCase().contains('HIGH');
-    final color = isHigh ? const Color(0xFF4ADE80) : const Color(0xFFFFB347);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.fiber_manual_record, color: color, size: 7),
-          const SizedBox(width: 4),
-          Text(quality, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 10)),
-        ],
-      ),
+  Widget _telemetryItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 10, color: Colors.blueAccent),
+        const SizedBox(width: 3),
+        Text(text, style: const TextStyle(fontSize: 8, color: Colors.white70)),
+      ],
     );
   }
 }
