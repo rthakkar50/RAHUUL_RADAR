@@ -7,37 +7,20 @@ import '../../core/network/api_config.dart';
 
 class ScannerRepository {
   Future<void> _checkHealth() async {
-    final healthUrl = '${ApiConfig.baseUrl}/health';
     debugPrint(
-      '[RUN-AUDIT] [ScannerRepository] Checking health URL: $healthUrl',
+      '[RUN-AUDIT] [ScannerRepository] Initiating staged health check for: ${ApiConfig.baseUrl}',
     );
-    debugPrint(
-      '[RUN-AUDIT] [ScannerRepository] Timeout: ${ApiConfig.healthTimeoutSeconds}s',
-    );
-    try {
-      final response = await http
-          .get(Uri.parse(healthUrl), headers: ApiConfig.defaultHeaders())
-          .timeout(const Duration(seconds: ApiConfig.healthTimeoutSeconds));
 
-      debugPrint(
-        '[RUN-AUDIT] [ScannerRepository] Health check HTTP Status: ${response.statusCode}',
-      );
-      debugPrint(
-        '[RUN-AUDIT] [ScannerRepository] Health check Response Body: ${response.body}',
-      );
+    final isHealthy = await ApiConfig.performStagedHealthCheck();
 
-      if (response.statusCode != 200) {
+    if (!isHealthy) {
+      if (ApiConfig.serverType == 'Render') {
         throw Exception(
-          'Server health check failed with status: ${response.statusCode}',
+          'Starting Cloud Server... Render is waking up. Estimated wait 20–60 seconds. Retrying automatically...',
         );
       }
-    } catch (e, st) {
-      debugPrint('[RUN-AUDIT] [ScannerRepository] Health Check EXCEPTION: $e');
-      debugPrint(
-        '[RUN-AUDIT] [ScannerRepository] Health Check STACKTRACE:\n$st',
-      );
       throw Exception(
-        'Server is unreachable. Please check your API Settings or Network connection. (${ApiConfig.baseUrl})',
+        'Local server not running. Please ensure backend is running or connect to the same Wi-Fi. (${ApiConfig.baseUrl})',
       );
     }
   }
@@ -107,9 +90,6 @@ class ScannerRepository {
     final scanUrl = '${ApiConfig.baseUrl}/scanner/intraday';
     debugPrint(
       '[RUN-AUDIT] [ScannerRepository] Calling URL: $scanUrl | Method: GET',
-    );
-    debugPrint(
-      '[RUN-AUDIT] [ScannerRepository] Timeout: ${ApiConfig.timeoutSeconds}s',
     );
 
     try {

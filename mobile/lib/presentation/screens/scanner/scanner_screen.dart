@@ -389,8 +389,64 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     }
 
     if (error != null && response == null) {
+      final isWaking = error.contains('Render is waking up') || error.contains('Starting Cloud Server');
       return Center(
-        child: Text(error, style: const TextStyle(color: Colors.redAccent)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161B22),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isWaking ? Colors.amberAccent.withValues(alpha: 0.5) : Colors.redAccent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isWaking ? Icons.cloud_sync : Icons.wifi_off_rounded,
+                  color: isWaking ? Colors.amberAccent : Colors.redAccent,
+                  size: 44,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isWaking ? 'Starting Cloud Server...' : 'Connection Notice',
+                  style: TextStyle(
+                    color: isWaking ? Colors.amberAccent : Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                if (isWaking)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.amberAccent),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _fetchSwingScans();
+                      _fetchIntradayScans();
+                    },
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Retry Connection'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
