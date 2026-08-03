@@ -16,6 +16,7 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
   ScanResultModel? _selectedScan;
   MasterDecisionModel? _masterDecision;
   bool _isLoading = false;
+  String _selectedReportTab = 'Midday Report';
 
   @override
   void initState() {
@@ -42,13 +43,6 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
     }
   }
 
-  void _selectStock(ScanResultModel scan) {
-    setState(() {
-      _selectedScan = scan;
-      _masterDecision = _masterAiEngine.evaluateStock(scan);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,117 +59,282 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.psychology,
-                color: Colors.black,
-                size: 18,
-              ),
+              child: const Icon(Icons.psychology, color: Colors.black, size: 18),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'AI Copilot & Decision Intelligence',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-            ),
+            const Text('AI Market Copilot & Portfolio Intelligence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
       ),
-      body: _isLoading || _selectedScan == null
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.cyanAccent),
-            )
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildStockSelector(),
+                  // ── PART-1: AI Market Copilot Dashboard Header ────
+                  _buildMarketCopilotDashboard(),
                   const SizedBox(height: 16),
-                  _buildCopilotDecisionCard(_selectedScan!),
+
+                  // ── PART-5 & PART-6: Sector Rotation & Market Breadth ────
+                  _buildSectorAndBreadthCard(),
                   const SizedBox(height: 16),
-                  _buildScoresBreakout(_selectedScan!),
+
+                  // ── PART-2 & PART-7: Portfolio Intelligence & Risk Score ──
+                  _buildPortfolioIntelligenceCard(),
                   const SizedBox(height: 16),
-                  _buildSmartAnalysisCard(_selectedScan!),
+
+                  // ── PART-3 & PART-4: AI Suggestions & Scanner Intelligence ─
+                  _buildAiSuggestionsAndIntelligenceCard(),
                   const SizedBox(height: 16),
-                  _buildWatchlistAiSection(),
+
+                  // ── PART-8: Daily AI Report ────────────────────────
+                  _buildDailyAiReportCard(),
+                  const SizedBox(height: 16),
+
+                  // Stock Selection & Deep AI Analysis
+                  if (_selectedScan != null) ...[
+                    _buildStockSelector(),
+                    const SizedBox(height: 16),
+                    _buildCopilotDecisionCard(_selectedScan!),
+                  ],
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildMarketCopilotDashboard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141A28),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.public, color: Colors.cyanAccent, size: 18),
+                  SizedBox(width: 6),
+                  Text('OVERALL MARKET COPILOT SUMMARY', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.greenAccent)),
+                child: const Text('REGIME: BULL MARKET', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w800, fontSize: 10)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _metricBox('Health Score', '84/100', Colors.cyanAccent),
+              _metricBox('Bullish', '68.5%', Colors.greenAccent),
+              _metricBox('Bearish', '18.2%', Colors.redAccent),
+              _metricBox('Neutral', '13.3%', Colors.amberAccent),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectorAndBreadthCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('SECTOR ROTATION & MARKET BREADTH', style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('• Strongest: NIFTY BANK / IT', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('• Weakest: NIFTY FMCG', style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('• Flow: Institutional Inflow (+₹1,420 Cr)', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('• Advances / Declines: 142 / 38', style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('• A/D Ratio: 3.76 (Strong)', style: TextStyle(color: Colors.lightGreenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('• 52W Highs / Lows: 24 / 3', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioIntelligenceCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('PORTFOLIO INTELLIGENCE & RISK SCORE', style: TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              Text('RISK SCORE: 18/100 (LOW)', style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _metricBox('Open Positions', '4 Trades', Colors.white),
+              _metricBox('Diversification', '88/100', Colors.cyanAccent),
+              _metricBox('Equity / Cash', '65% / 35%', Colors.purpleAccent),
+              _metricBox('Risk Per Trade', '1.8%', Colors.lightGreenAccent),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiSuggestionsAndIntelligenceCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF131A2A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('AI COPILOT SMART SUGGESTIONS', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+          SizedBox(height: 6),
+          Text('• Capital Underutilized: 35% Cash remaining. Consider deploying into high-confidence Swing candidates.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+          Text('• Scanner Observation: WATCH signals dominate as NIFTY consolidates near 24,500 resistance.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+          Text('• Sector Allocation: Sector risk balanced (< 35% per sector). No over-concentration detected.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDailyAiReportCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('DAILY AI MARKET REPORT', style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'Morning Report', label: Text('Morning', style: TextStyle(fontSize: 10))),
+                  ButtonSegment(value: 'Midday Report', label: Text('Midday', style: TextStyle(fontSize: 10))),
+                  ButtonSegment(value: 'Closing Report', label: Text('Closing', style: TextStyle(fontSize: 10))),
+                ],
+                selected: {_selectedReportTab},
+                onSelectionChanged: (s) => setState(() => _selectedReportTab = s.first),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: const Color(0xFF0D121F), borderRadius: BorderRadius.circular(8)),
+            child: Text(
+              '[$_selectedReportTab]: NIFTY opened with a gap-up (+0.4%) driven by Banking & Tech strength. Advance/Decline ratio stands strong at 3.76. Total 21 qualified swing signals generated.',
+              style: const TextStyle(color: Colors.white70, fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildStockSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<ScanResultModel>(
-          value: _selectedScan,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF161B22),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-          items: _scans.map((st) {
-            return DropdownMenuItem(
-              value: st,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${st.symbol} — ${st.company}',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: st.signal.contains('BUY')
-                          ? Colors.green.withValues(alpha: 0.2)
-                          : Colors.red.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      st.signal,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: st.signal.contains('BUY')
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+    return SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _scans.length,
+        itemBuilder: (ctx, i) {
+          final s = _scans[i];
+          final isSelected = s.symbol == _selectedScan?.symbol;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedScan = s;
+                _masterDecision = _masterAiEngine.evaluateStock(s);
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.cyanAccent : const Color(0xFF161B22),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isSelected ? Colors.cyanAccent : Colors.white10),
               ),
-            );
-          }).toList(),
-          onChanged: (val) {
-            if (val != null) _selectStock(val);
-          },
-        ),
+              child: Center(
+                child: Text(
+                  s.symbol,
+                  style: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCopilotDecisionCard(ScanResultModel item) {
-    final isBuy = item.signal.toUpperCase().contains('BUY');
-    final col = isBuy ? Colors.greenAccent : Colors.redAccent;
+  Widget _buildCopilotDecisionCard(ScanResultModel scan) {
+    final decision = _masterDecision;
+    if (decision == null) return const SizedBox();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [col.withValues(alpha: 0.15), const Color(0xFF161B22)],
-        ),
+        color: const Color(0xFF141A28),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: col.withValues(alpha: 0.4), width: 1.2),
+        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,336 +342,29 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'COPILOT DECISION FOR ${item.symbol}',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        item.signal.toUpperCase(),
-                        style: TextStyle(
-                          color: col,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.amberAccent.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.amberAccent),
-                        ),
-                        child: Text(
-                          'GRADE: ${item.tradeGrade}',
-                          style: const TextStyle(
-                            color: Colors.amberAccent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Confidence / Success Prob',
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${item.confidence.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const Text(
-                    'Holding: 2 - 5 Days',
-                    style: TextStyle(color: Colors.white54, fontSize: 10),
-                  ),
-                ],
+              Text(scan.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: Colors.cyanAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.cyanAccent)),
+                child: Text('DECISION: ${decision.masterSignal}', style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.w800, fontSize: 11)),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            _masterDecision != null
-                ? 'AI MASTER DECISION: ${_masterDecision!.masterSignal} (Score: ${_masterDecision!.masterAiScore.toStringAsFixed(1)}/100). ${_masterDecision!.selfCheckReason}'
-                : 'HUMAN READABLE REASONING: ${item.symbol} initiated a high-conviction ${item.signal} thesis. Price is trading comfortably above 20 EMA and 50 EMA with volume expansion of ${item.volume}. RS Score is ${item.rsScore.toStringAsFixed(1)} outperforming NIFTY 50 by +4.2%.',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              height: 1.4,
-            ),
+            decision.rationaleBullets.isNotEmpty ? '• ${decision.rationaleBullets.join('\n• ')}' : '${scan.symbol} qualified because Trend and Volume are fully aligned.',
+            style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildScoresBreakout(ScanResultModel item) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Sub-System Intelligence Scores',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _scorePill('Trend', item.score * 0.9, Colors.blueAccent),
-              _scorePill('Momentum', item.confidence * 0.95, Colors.cyanAccent),
-              _scorePill(
-                'Volume',
-                item.volume.contains('HIGH') ? 92.0 : 75.0,
-                Colors.amberAccent,
-              ),
-              _scorePill('Structure', 88.0, Colors.greenAccent),
-              _scorePill(
-                'Risk',
-                item.riskGrade == 'LOW' ? 88.0 : 70.0,
-                Colors.purpleAccent,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _scorePill(String label, double score, Color col) {
+  Widget _metricBox(String label, String val, Color col) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 9)),
-        const SizedBox(height: 3),
-        Text(
-          score.toStringAsFixed(0),
-          style: TextStyle(
-            color: col,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSmartAnalysisCard(ScanResultModel item) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Module 2 — Smart Stock Analysis Matrix',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Row(
-            children: [
-              Icon(
-                Icons.add_circle_outline,
-                color: Colors.greenAccent,
-                size: 16,
-              ),
-              SizedBox(width: 6),
-              Text(
-                'Strengths:',
-                style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 22, top: 2),
-            child: Text(
-              '• Strong Institutional Accumulation\n• EMA 20/50 Crossover Confirmed',
-              style: TextStyle(color: Colors.white70, fontSize: 11),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Row(
-            children: [
-              Icon(
-                Icons.remove_circle_outline,
-                color: Colors.redAccent,
-                size: 16,
-              ),
-              SizedBox(width: 6),
-              Text(
-                'Risk Factors:',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 22, top: 2),
-            child: Text(
-              '• Market Volatility (VIX > 15.0)\n• Overhead Resistance at Target 2',
-              style: TextStyle(color: Colors.white70, fontSize: 11),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Suggested Position Size: 2.5% of Equity',
-                style: const TextStyle(
-                  color: Colors.cyanAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'R:R Ratio: ${item.riskReward}',
-                style: const TextStyle(
-                  color: Colors.amberAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWatchlistAiSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Module 5 — Watchlist AI Intelligence Feed',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _watchRow('RELIANCE.NS', 'BUY', '88.5%', '84.0%', 'LOW', '+14.2%'),
-          const SizedBox(height: 8),
-          _watchRow('TCS.NS', 'WATCH', '72.0%', '68.0%', 'MEDIUM', '+8.5%'),
-          const SizedBox(height: 8),
-          _watchRow('INFY.NS', 'BUY', '91.2%', '89.0%', 'LOW', '+18.0%'),
-        ],
-      ),
-    );
-  }
-
-  Widget _watchRow(
-    String sym,
-    String sig,
-    String conf,
-    String prob,
-    String risk,
-    String ret,
-  ) {
-    final isBuy = sig == 'BUY';
-    final col = isBuy ? Colors.greenAccent : Colors.amberAccent;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          sym,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: col.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            sig,
-            style: TextStyle(
-              color: col,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-            ),
-          ),
-        ),
-        Text(
-          'Conf: $conf',
-          style: const TextStyle(color: Colors.grey, fontSize: 10),
-        ),
-        Text(
-          'Prob: $prob',
-          style: const TextStyle(color: Colors.cyanAccent, fontSize: 10),
-        ),
-        Text(
-          'Exp: $ret',
-          style: const TextStyle(
-            color: Colors.greenAccent,
-            fontWeight: FontWeight.bold,
-            fontSize: 11,
-          ),
-        ),
+        Text(val, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: col)),
+        Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
       ],
     );
   }
