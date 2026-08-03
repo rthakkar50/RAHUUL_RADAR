@@ -632,6 +632,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
       itemBuilder: (ctx, i) {
         final item = list[i];
         final isHeld = _heldSymbols.contains(item.symbol);
+        final isPending = _pendingOrderSymbols.contains(item.symbol);
         final sigColor = _getSignalColor(item.signal);
         return Card(
           color: const Color(0xFF161B22),
@@ -640,6 +641,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: () => _openDetail(item),
+            onLongPress: () => ScannerInspectorDialog.show(context, item),
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -654,13 +656,29 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                           const SizedBox(width: 8),
                           _smartBadge(item.signal, sigColor),
                           const SizedBox(width: 6),
-                          if (isHeld) _smartBadge('Holding', Colors.purpleAccent),
+                          if (isHeld)
+                            _smartBadge('Holding', Colors.purpleAccent)
+                          else if (isPending)
+                            _smartBadge('Pending Order', Colors.amberAccent)
+                          else
+                            _smartBadge(item.sector, Colors.cyanAccent),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(color: sigColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                        child: Text('Rank #${i + 1}', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: sigColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
+                            child: Text('Rank #${i + 1}', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.info_outline, size: 16, color: Colors.cyanAccent),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ScannerInspectorDialog.show(context, item),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -674,8 +692,38 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Scalp Probability: ${item.confidence.toStringAsFixed(0)}% • CPR Status: Range Breakout', style: const TextStyle(color: Colors.white, fontSize: 11)),
-                  Text('Intraday Vol Burst: ${item.volume} • Risk/Reward: ${item.riskReward}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                  Text('Ideal Entry Zone: ₹${item.entry} - ₹${(item.entry * 1.005).toStringAsFixed(1)} • SL: ₹${item.stopLoss}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text('T1: ₹${item.target1} • T2: ₹${item.target2} • Scalp Prob: ${item.confidence.toStringAsFixed(0)}% • R:R: ${item.riskReward}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(item.signal == 'SELL' ? 'Intraday Risk: HIGH (Short Scalp)' : 'Intraday Status: OPTIMAL (CPR Breakout)', style: TextStyle(color: sigColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => ScannerInspectorDialog.show(context, item),
+                            child: const Text('🔍 Inspect', style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () {
+                              if (_compareItemA == null) {
+                                _compareItemA = item;
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${item.symbol} for comparison. Tap another setup to compare.')));
+                              } else {
+                                _compareItemB = item;
+                                _showCompareModal(_compareItemA!, _compareItemB!);
+                                _compareItemA = null;
+                                _compareItemB = null;
+                              }
+                            },
+                            child: const Text('⚡ Compare Setup', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
