@@ -7,10 +7,8 @@ import os
 import sys
 import json
 import math
-from application.swing_scanner_service import SwingScannerService
-from application.intraday_scanner_service import IntradayScannerService
+from datetime import datetime
 from market.universe import get_fno_symbols, get_nifty200_symbols
-
 logger = get_logger(__name__)
 
 # Initialize FastAPI App
@@ -51,9 +49,6 @@ async def v1_root():
 @app.get("/", tags=["General"])
 async def root():
     return {"message": "Welcome to RAHUUL_RADAR Mobile API", "version": "1.0.0"}
-
-from datetime import datetime
-from core.signal_orchestrator import SignalOrchestrator
 
 def _get_provider_metadata(mode: str = "LIVE") -> dict:
     """Returns standardized provider and market status metadata for SPRINT-161 compliance."""
@@ -191,6 +186,11 @@ def _run_enterprise_orchestration():
             
         logger.info("Executing Enterprise Signal Orchestration Pipeline...")
         start_time = time.time()
+
+        from application.swing_scanner_service import SwingScannerService
+        from application.intraday_scanner_service import IntradayScannerService
+        from core.signal_orchestrator import SignalOrchestrator
+        import gc
         
         # 1. Run Swing Scan & Populate Cache Immediately
         swing_service = SwingScannerService()
@@ -276,6 +276,11 @@ def _run_enterprise_orchestration():
             _SCANNER_CACHE["is_scanning"] = False
         with _INTRADAY_LOCK:
             _INTRADAY_CACHE["is_scanning"] = False
+        try:
+            import gc
+            gc.collect()
+        except Exception:
+            pass
 
 def _run_background_scan():
     _run_enterprise_orchestration()
