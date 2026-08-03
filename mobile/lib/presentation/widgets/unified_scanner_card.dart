@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/scan_result_model.dart';
-import '../../core/paper_trading/paper_trading_engine.dart';
 import '../screens/scanner/widgets/scanner_inspector_dialog.dart';
+import 'order_preview_modal.dart';
 
 class UnifiedScannerCard extends StatelessWidget {
   final ScanResultModel item;
@@ -156,83 +156,7 @@ class UnifiedScannerCard extends StatelessWidget {
   }
 
   void _showPaperTradeModal(BuildContext context) {
-    int qty = (10000.0 / item.entry).floor();
-    if (qty < 1) qty = 1;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF161B22),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Execute Paper Trade (${item.symbol})', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(ctx)),
-                ],
-              ),
-              const Divider(color: Colors.white10),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Signal / Side:', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text(item.signal, style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Virtual Entry Price:', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('₹${item.entry}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Stop Loss:', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('₹${item.stopLoss}', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Target 1 / Target 2:', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('₹${item.target1} / ₹${item.target2}', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 13)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  await PaperTradingEngine.instance.executePaperTradeFromScanner(item, requestedQty: qty);
-                  if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Paper Trade Opened! ${item.symbol} ($qty Qty @ ₹${item.entry})'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.play_arrow, size: 18),
-                label: Text('Confirm Virtual Order ($qty Qty • ₹${(item.entry * qty).toStringAsFixed(0)})'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  minimumSize: const Size.fromHeight(44),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    OrderPreviewModal.show(context, item);
   }
 
   Widget _badge(String text, Color color) {
