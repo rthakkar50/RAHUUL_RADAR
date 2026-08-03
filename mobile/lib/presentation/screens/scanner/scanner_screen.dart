@@ -7,7 +7,9 @@ import '../../../data/repositories/scanner_repository.dart';
 import '../../widgets/scanner_loading_shimmer.dart';
 import '../stock_detail/stock_detail_screen.dart';
 import 'widgets/scanner_summary_panel.dart';
-import 'widgets/scanner_inspector_dialog.dart';
+import '../../widgets/decision_center_widget.dart';
+import '../../widgets/unified_scanner_card.dart';
+import '../../widgets/footer_status_widget.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -285,6 +287,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           _buildScannerDecisionHeader(),
           _buildFilterBar(),
           Expanded(child: _buildBody()),
+          const FooterStatusWidget(),
         ],
       ),
     );
@@ -307,35 +310,16 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     final watchCount = results.where((r) => r.signal.toUpperCase() == 'WATCH').length;
     final qualCount = results.length;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFF161B22),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _hdrStat('Universe', _selectedUniverse, Colors.cyanAccent),
-              _hdrStat('Scanned', '$totalScanned', Colors.white),
-              _hdrStat('Qualified', '$qualCount', Colors.cyanAccent),
-              _hdrStat('BUY', '$buyCount', Colors.greenAccent),
-              _hdrStat('SELL', '$sellCount', Colors.redAccent),
-              _hdrStat('WATCH', '$watchCount', Colors.amberAccent),
-              _hdrStat('Regime', 'BULLISH', Colors.greenAccent),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hdrStat(String label, String val, Color col) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        const SizedBox(height: 2),
-        Text(val, style: TextStyle(color: col, fontWeight: FontWeight.bold, fontSize: 11)),
-      ],
+    return DecisionCenterWidget(
+      buyCount: buyCount,
+      sellCount: sellCount,
+      watchCount: watchCount,
+      qualifiedCount: qualCount,
+      totalScanned: totalScanned,
+      onRefresh: () {
+        _fetchSwingScans();
+        _fetchIntradayScans();
+      },
     );
   }
 
@@ -510,12 +494,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
-  Color _getSignalColor(String signal) {
-    if (signal.toUpperCase() == 'BUY') return Colors.greenAccent;
-    if (signal.toUpperCase() == 'SELL') return Colors.redAccent;
-    return Colors.amberAccent;
-  }
-
   Widget _buildSwingScannerTab(List<ScanResultModel> list) {
     if (list.isEmpty) return _emptyState('No qualified opportunities available.');
 
@@ -526,98 +504,25 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
         final item = list[i];
         final isHeld = _heldSymbols.contains(item.symbol);
         final isPending = _pendingOrderSymbols.contains(item.symbol);
-        final sigColor = _getSignalColor(item.signal);
 
-        return Card(
-          color: const Color(0xFF161B22),
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: sigColor.withValues(alpha: 0.6), width: 1.5)),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => _openDetail(item),
-            onLongPress: () => ScannerInspectorDialog.show(context, item),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text(item.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                          const SizedBox(width: 8),
-                          _smartBadge(item.signal, sigColor),
-                          const SizedBox(width: 6),
-                          if (isHeld)
-                            _smartBadge('Holding', Colors.purpleAccent)
-                          else if (isPending)
-                            _smartBadge('Pending Order', Colors.amberAccent)
-                          else
-                            _smartBadge(item.sector, Colors.cyanAccent),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text('${item.confidence.toStringAsFixed(1)}% Swing Score', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.info_outline, size: 16, color: Colors.cyanAccent),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => ScannerInspectorDialog.show(context, item),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _chip(item.signal == 'SELL' ? 'Daily: Bearish' : 'Daily: Bullish', item.signal == 'SELL' ? Colors.redAccent : Colors.greenAccent),
-                      _chip(item.signal == 'SELL' ? 'Weekly: Weak' : 'Weekly: Strong Bull', item.signal == 'SELL' ? Colors.orangeAccent : Colors.lightGreenAccent),
-                      _chip(isHeld ? 'Increase Position' : 'Pattern: Setup Cleared', isHeld ? Colors.amberAccent : Colors.cyanAccent),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Ideal Entry Zone: ₹${item.entry} - ₹${(item.entry * 1.005).toStringAsFixed(1)} • SL: ₹${item.stopLoss}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  Text('T1: ₹${item.target1} • T2: ₹${item.target2} • R:R: ${item.riskReward} • Hold: 3-5 Days', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(item.signal == 'SELL' ? 'Setup Risk: MEDIUM (Short Setup)' : 'Chasing Warning: NO (Ideal Entry)', style: TextStyle(color: sigColor, fontSize: 10, fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => ScannerInspectorDialog.show(context, item),
-                            child: const Text('🔍 Inspect', style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {
-                              if (_compareItemA == null) {
-                                _compareItemA = item;
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${item.symbol} for comparison. Tap another setup to compare.')));
-                              } else {
-                                _compareItemB = item;
-                                _showCompareModal(_compareItemA!, _compareItemB!);
-                                _compareItemA = null;
-                                _compareItemB = null;
-                              }
-                            },
-                            child: const Text('⚡ Compare Setup', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+        return UnifiedScannerCard(
+          item: item,
+          rank: i + 1,
+          scannerType: 'Swing',
+          isHeld: isHeld,
+          isPending: isPending,
+          onTap: () => _openDetail(item),
+          onCompareSelect: (selectedItem) {
+            if (_compareItemA == null) {
+              _compareItemA = selectedItem;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${selectedItem.symbol} for comparison. Tap another setup to compare.')));
+            } else {
+              _compareItemB = selectedItem;
+              _showCompareModal(_compareItemA!, _compareItemB!);
+              _compareItemA = null;
+              _compareItemB = null;
+            }
+          },
         );
       },
     );
@@ -633,101 +538,25 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
         final item = list[i];
         final isHeld = _heldSymbols.contains(item.symbol);
         final isPending = _pendingOrderSymbols.contains(item.symbol);
-        final sigColor = _getSignalColor(item.signal);
-        return Card(
-          color: const Color(0xFF161B22),
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: sigColor.withValues(alpha: 0.5), width: 1.5)),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => _openDetail(item),
-            onLongPress: () => ScannerInspectorDialog.show(context, item),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text('${item.symbol} (F&O Intraday)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                          const SizedBox(width: 8),
-                          _smartBadge(item.signal, sigColor),
-                          const SizedBox(width: 6),
-                          if (isHeld)
-                            _smartBadge('Holding', Colors.purpleAccent)
-                          else if (isPending)
-                            _smartBadge('Pending Order', Colors.amberAccent)
-                          else
-                            _smartBadge(item.sector, Colors.cyanAccent),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: sigColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                            child: Text('Rank #${i + 1}', style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 11)),
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.info_outline, size: 16, color: Colors.cyanAccent),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => ScannerInspectorDialog.show(context, item),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _badge(item.signal == 'SELL' ? 'ORB: Low Breakdown' : 'ORB: High Break', item.signal == 'SELL' ? Colors.redAccent : Colors.greenAccent),
-                      _badge(item.signal == 'SELL' ? 'VWAP: Below (-1.5%)' : 'VWAP: Above (+1.2%)', item.signal == 'SELL' ? Colors.orangeAccent : Colors.cyanAccent),
-                      _badge(item.signal == 'SELL' ? 'OI: Short Buildup' : 'OI: Long Buildup', item.signal == 'SELL' ? Colors.redAccent : Colors.purpleAccent),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Ideal Entry Zone: ₹${item.entry} - ₹${(item.entry * 1.005).toStringAsFixed(1)} • SL: ₹${item.stopLoss}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  Text('T1: ₹${item.target1} • T2: ₹${item.target2} • Scalp Prob: ${item.confidence.toStringAsFixed(0)}% • R:R: ${item.riskReward}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(item.signal == 'SELL' ? 'Intraday Risk: HIGH (Short Scalp)' : 'Intraday Status: OPTIMAL (CPR Breakout)', style: TextStyle(color: sigColor, fontSize: 10, fontWeight: FontWeight.bold)),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => ScannerInspectorDialog.show(context, item),
-                            child: const Text('🔍 Inspect', style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {
-                              if (_compareItemA == null) {
-                                _compareItemA = item;
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${item.symbol} for comparison. Tap another setup to compare.')));
-                              } else {
-                                _compareItemB = item;
-                                _showCompareModal(_compareItemA!, _compareItemB!);
-                                _compareItemA = null;
-                                _compareItemB = null;
-                              }
-                            },
-                            child: const Text('⚡ Compare Setup', style: TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+
+        return UnifiedScannerCard(
+          item: item,
+          rank: i + 1,
+          scannerType: 'Intraday',
+          isHeld: isHeld,
+          isPending: isPending,
+          onTap: () => _openDetail(item),
+          onCompareSelect: (selectedItem) {
+            if (_compareItemA == null) {
+              _compareItemA = selectedItem;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${selectedItem.symbol} for comparison. Tap another setup to compare.')));
+            } else {
+              _compareItemB = selectedItem;
+              _showCompareModal(_compareItemA!, _compareItemB!);
+              _compareItemA = null;
+              _compareItemB = null;
+            }
+          },
         );
       },
     );
@@ -885,30 +714,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           ),
         );
       },
-    );
-  }
-
-  static Widget _smartBadge(String text, Color col) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: col.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-      child: Text(text, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  static Widget _chip(String text, Color col) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: col.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-      child: Text(text, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  static Widget _badge(String text, Color col) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: col.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-      child: Text(text, style: TextStyle(color: col, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
