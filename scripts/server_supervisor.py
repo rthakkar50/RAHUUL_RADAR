@@ -6,15 +6,17 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+tg_process = None
+
 def ensure_background_services():
+    global tg_process
     try:
-        # Check Telegram Controller Bot
-        res_tg = subprocess.run(["pgrep", "-f", "telegram_controller.py"], capture_output=True)
-        if res_tg.returncode != 0:
+        # Check Telegram Controller Bot without relying on pgrep
+        if tg_process is None or tg_process.poll() is not None:
             logging.info("Starting Telegram 24x7 Controller Bot...")
             env = os.environ.copy()
             env["PYTHONPATH"] = "."
-            subprocess.Popen([sys.executable, "telegram_controller.py"], env=env)
+            tg_process = subprocess.Popen([sys.executable, "telegram_controller.py"], env=env)
     except Exception as e:
         logging.error(f"Supervisor background services error: {e}")
 

@@ -255,15 +255,14 @@ def _run_enterprise_orchestration():
 def _run_background_scan():
     _run_enterprise_orchestration()
 
-def _run_background_intraday_scan():
+def _delayed_startup_scan():
+    time.sleep(15)  # Allow uvicorn to bind port and pass Render health check before scanning
     _run_enterprise_orchestration()
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Starting initial background swing scan on boot...")
-    threading.Thread(target=_run_background_scan, daemon=True).start()
-    logger.info("Starting initial background intraday scan on boot...")
-    threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+    logger.info("Server booted successfully. Mobile API ready.")
+    threading.Thread(target=_delayed_startup_scan, daemon=True).start()
 
 def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_universe: int = 200) -> dict:
     """Normalizes raw cache data into a canonical response dictionary guaranteed to never throw AttributeError."""
