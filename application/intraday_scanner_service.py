@@ -467,7 +467,7 @@ class IntradayScannerService:
 
                     if not is_valid:
                         logger.info(f"F&O FILTER REJECTED {symbol}: {filter_reason}")
-                        continue
+                        decision_str = "WATCH"
                         
                     processed_results.append({
                         "Symbol": symbol,
@@ -505,10 +505,6 @@ class IntradayScannerService:
                 if progress_callback:
                     progress_callback(80 + int((completed / total) * 15))
                     
-            if not processed_results:
-                logger.warning("Universe scanned but 0 valid setups found. Returning empty list.")
-                return []
-                
             self.last_full_results = processed_results
             
             # --- STAGE 2: ELITE SELECTION ENGINE & PRECISION ENTRY ENGINE ---

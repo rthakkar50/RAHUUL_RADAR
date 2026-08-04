@@ -34,7 +34,7 @@ class TestSprintM6TelegramAndTokenRefresh(unittest.TestCase):
             import urllib.parse
             unquoted_data = urllib.parse.unquote(data_bytes)
             self.assertNotIn(raw_jwt, unquoted_data)
-            self.assertIn("[TOKEN_REDACTED]", unquoted_data)
+            self.assertIn("*************", unquoted_data)
 
     def test_token_command_deprecated_and_sanitized(self):
         """Rule 5 & 6: Deprecate manual /token and ensure no tokens sent."""

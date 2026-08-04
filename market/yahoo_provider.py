@@ -128,9 +128,7 @@ class YahooFinanceProvider(MarketDataProvider):
         """
         Ensures the symbol is properly formatted for Yahoo Finance NSE mapping.
         """
-        clean_symbol = symbol.upper().strip()
-        if clean_symbol.startswith("$"):
-            clean_symbol = clean_symbol[1:]
+        clean_symbol = symbol.upper().strip().lstrip("$@#")
         if not clean_symbol.startswith("^") and not clean_symbol.endswith(".NS") and not clean_symbol.endswith(".BO"):
             clean_symbol = f"{clean_symbol}.NS"
         return clean_symbol
@@ -246,6 +244,7 @@ class YahooFinanceProvider(MarketDataProvider):
                             }
             except Exception as e:
                 logger.warning(f"Chunk download error for {interval} {period}: {e}")
+            time.sleep(0.3)
                 
         self._save_disk_cache()
 

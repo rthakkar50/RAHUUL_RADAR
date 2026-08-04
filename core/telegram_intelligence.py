@@ -26,9 +26,10 @@ class TelegramIntelligence:
             cls._instance = cls()
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, rate_limit_file=None):
         os.makedirs(TOKEN_LOG_PATH.parent, exist_ok=True)
         os.makedirs(EXPORTS_DIR, exist_ok=True)
+        self.rate_limit_file = rate_limit_file
         self.service = TelegramService.get_instance()
 
     def sanitize_text(self, text: str) -> str:

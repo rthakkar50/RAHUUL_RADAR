@@ -59,7 +59,7 @@ def _get_provider_metadata(mode: str = "LIVE") -> dict:
     global _PROVIDER_META_CACHE
     now_t = time.time()
     with _META_LOCK:
-        if _PROVIDER_META_CACHE["data"] is not None and (now_t - _PROVIDER_META_CACHE["timestamp"] < 10.0):
+        if mode.upper() == "LIVE" and _PROVIDER_META_CACHE["data"] is not None and (now_t - _PROVIDER_META_CACHE["timestamp"] < 10.0):
             return _PROVIDER_META_CACHE["data"]
             
     now = datetime.now()

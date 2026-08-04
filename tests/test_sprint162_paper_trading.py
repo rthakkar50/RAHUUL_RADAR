@@ -10,6 +10,13 @@ class TestSprint162PaperTrading(unittest.TestCase):
         cls.service.engine.max_open_positions = 100
         cls.service.engine.max_exposure_pct = 500.0
 
+    def setUp(self):
+        self.service.engine.open_positions.clear()
+        self.service.engine.closed_positions.clear()
+        self.service.engine.virtual_capital = 1000000.0
+        self.service.engine.available_cash = 1000000.0
+        self.service.engine.used_margin = 0.0
+
     def test_task1_paper_account_metrics(self):
         """Verify paper account starting capital and metrics."""
         engine = self.service.engine
