@@ -274,35 +274,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 size: 20,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: TextField(
-                controller: _ipController,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                decoration: const InputDecoration(
-                  labelText: 'Custom Server / Tunnel URL',
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(),
+            if (!NetworkManager.instance.isProduction()) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton.icon(
-                  onPressed: _saveApiSettings,
-                  icon: const Icon(Icons.save, size: 16),
-                  label: const Text('Save & Discover'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                child: TextField(
+                  controller: _ipController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: const InputDecoration(
+                    labelText: 'Custom Server / Tunnel URL',
+                    labelStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(),
                   ),
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: _saveApiSettings,
+                    icon: const Icon(Icons.save, size: 16),
+                    label: const Text('Save & Discover'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ]),
           const SizedBox(height: 16),
 

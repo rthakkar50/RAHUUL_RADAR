@@ -28,7 +28,8 @@ class NetworkManager {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static const String defaultRenderUrl = 'https://rahuul-radar.onrender.com';
+  static const String defaultProductionUrl = 'https://api.rahuulradar.com';
+  static const String defaultRenderUrl = defaultProductionUrl;
   static const List<String> localWifiCandidates = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
@@ -36,6 +37,8 @@ class NetworkManager {
     'http://192.168.29.45:8000',
     'http://10.0.2.2:8000',
   ];
+
+  bool isProduction() => _env == 'Production' || kReleaseMode;
 
   NetworkState _state = NetworkState.connecting;
   String _activeUrl = defaultRenderUrl;
@@ -83,6 +86,9 @@ class NetworkManager {
   }
 
   String get baseUrl {
+    if (isProduction()) {
+      return '$defaultProductionUrl/api/v1';
+    }
     var target = _activeUrl.trim();
     if (target.startsWith('http://') || target.startsWith('https://')) {
       if (target.endsWith('/')) target = target.substring(0, target.length - 1);
@@ -110,12 +116,12 @@ class NetworkManager {
   Future<void> init() async {
     _state = NetworkState.connecting;
     final prefs = await SharedPreferences.getInstance();
-    _userSavedUrl = prefs.getString(keyUserSavedUrl) ?? defaultRenderUrl;
+    _userSavedUrl = prefs.getString(keyUserSavedUrl) ?? defaultProductionUrl;
     _lastWorkingUrl = prefs.getString(keyLastWorkingServer) ?? _userSavedUrl;
     _userTunnelUrl = prefs.getString(keyUserTunnelUrl) ?? '';
     _port = prefs.getString(keyPort) ?? '8000';
     _env = prefs.getString(keyEnv) ?? 'Production';
-    _activeUrl = _lastWorkingUrl;
+    _activeUrl = isProduction() ? defaultProductionUrl : _lastWorkingUrl;
 
     unawaited(startPlatformAwareDiscovery());
   }
@@ -124,6 +130,20 @@ class NetworkManager {
   Future<String> startPlatformAwareDiscovery() async {
     _state = NetworkState.discovering;
     _failureReason = 'None';
+
+    if (isProduction()) {
+      _activeUrl = defaultProductionUrl;
+      _discoverySource = 'Production Cloud';
+      final isSuccess = await checkServerHealth(targetUrl: defaultProductionUrl, sourceName: 'Production Cloud');
+      if (isSuccess) {
+        _state = NetworkState.online;
+        await _persistLastWorkingServer(defaultProductionUrl);
+      } else {
+        _state = NetworkState.error;
+        _failureReason = 'Production server unavailable.';
+      }
+      return defaultProductionUrl;
+    }
 
     final candidates = <Map<String, String>>[];
 
