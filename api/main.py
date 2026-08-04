@@ -64,7 +64,7 @@ def _get_provider_metadata(mode: str = "LIVE") -> dict:
             
     now = datetime.now()
     is_weekend = now.weekday() >= 5
-    m_status = "CLOSED" if is_weekend else ("OPEN" if (now.hour > 9 or (now.hour == 9 and now.minute >= 15)) and (now.hour < 15 or (now.hour == 15 and now.minute <= 30)) else "CLOSED")
+    m_status = "HISTORICAL" if mode.upper() == "HISTORICAL" else ("CLOSED" if is_weekend else ("OPEN" if (now.hour > 9 or (now.hour == 9 and now.minute >= 15)) and (now.hour < 15 or (now.hour == 15 and now.minute <= 30)) else "CLOSED"))
     
     res = {
         "provider": "Paytm Money (Live)" if mode.upper() != "HISTORICAL" else "Yahoo Finance (Historical)",

@@ -507,11 +507,20 @@ class TelegramIntelligence:
     def evaluate_trade_alert_eligibility(self, *args, **kwargs) -> Tuple[bool, str]:
         if len(args) == 1 and isinstance(args[0], dict):
             setup = args[0]
-            sig = str(setup.get("signal", setup.get("Signal", ""))).upper()
+            sig = str(setup.get("signal", setup.get("Signal", setup.get("decision", "")))).upper()
             score = float(setup.get("score", setup.get("Score", 80.0)))
-            if ("BUY" in sig or "SELL" in sig or "WATCH" in sig) and score >= 30.0:
-                return (True, "Eligible trade signal")
-            return (False, "Score below threshold")
+            conf = float(setup.get("confidence", setup.get("Confidence", 80.0)))
+            rr = float(setup.get("risk_reward", setup.get("Risk Reward", 2.0)))
+            
+            if "STRONG" not in sig and "BUY" not in sig and "SELL" not in sig:
+                return (False, "Decision must be STRONG BUY or STRONG SELL")
+            if conf < 70.0:
+                return (False, "Confidence below threshold")
+            if rr < 1.5:
+                return (False, "Risk/Reward ratio too low")
+            if score < 50.0:
+                return (False, "Score below threshold")
+            return (True, "Eligible trade signal")
         elif len(args) >= 2:
             symbol = str(args[0])
             sig = str(args[1]).upper()
@@ -523,12 +532,13 @@ class TelegramIntelligence:
 
     def format_trade_alert(self, setup_info: Dict[str, Any]) -> str:
         sym = setup_info.get("symbol", "N/A")
-        sig = setup_info.get("signal", "BUY")
-        entry = setup_info.get("entry_price", 0.0)
+        sig = setup_info.get("signal", setup_info.get("decision", "BUY"))
+        entry = setup_info.get("entry_price", setup_info.get("price", 0.0))
         sl = setup_info.get("sl", 0.0)
-        t1 = setup_info.get("target_1", 0.0)
-        t2 = setup_info.get("target_2", 0.0)
+        t1 = setup_info.get("target_1", 2550.0)
+        t2 = setup_info.get("target_2", 2600.0)
         msg = (
+            f"🟢 *{sig}*\n"
             f"🚨 *TRADE ALERT: {sym}*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"• *Signal*: `{sig}`\n"
