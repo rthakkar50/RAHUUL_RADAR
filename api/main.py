@@ -325,6 +325,9 @@ def _run_enterprise_orchestration():
 def _run_background_scan():
     _run_enterprise_orchestration()
 
+def _run_background_intraday_scan():
+    _run_enterprise_orchestration()
+
 def _delayed_startup_scan():
     time.sleep(5)  # Short delay for uvicorn port binding
     try:
