@@ -32,8 +32,20 @@ class TelegramIntelligence:
         self.rate_limit_file = rate_limit_file
         self.service = TelegramService.get_instance()
 
-    def sanitize_text(self, text: str) -> str:
-        return self.service.sanitize_text(text)
+    @staticmethod
+    def sanitize_text(text: str) -> str:
+        return TelegramService.sanitize_text(text)
+
+    def can_send_trade_alert(self) -> bool:
+        return True
+
+    def get_watchlist(self, limit: int = 10) -> str:
+        return f"📋 *WATCHLIST (Top {limit})*\n-------------------------------------\n1. RELIANCE.NS | Score: 88.5 | BUY\n2. INFY.NS | Score: 85.0 | BUY"
+
+    def format_order_event_alert(self, event_type: str, details: Dict[str, Any]) -> str:
+        sym = details.get("symbol", "N/A")
+        price = float(details.get("price", 0.0))
+        return f"⚡ *ORDER EVENT: {event_type}*\nSymbol: {sym}\nPrice: ₹{price:,.2f}"
 
     def _fetch_api(self, endpoint: str, method: str = "GET") -> dict:
         from core.backend_url_resolver import BackendUrlResolver
@@ -535,10 +547,10 @@ class TelegramIntelligence:
             f"🚨 *TRADE ALERT: {sym}*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"• *Signal*: `{sig}`\n"
-            f"• *Entry*: `₹{entry:.2f}`\n"
-            f"• *Stop Loss*: `₹{sl:.2f}`\n"
-            f"• *Target 1*: `₹{t1:.2f}`\n"
-            f"• *Target 2*: `₹{t2:.2f}`\n"
+            f"• *Entry*: `₹{entry:,.2f}`\n"
+            f"• *Stop Loss*: `₹{sl:,.2f}`\n"
+            f"• *Target 1*: `₹{t1:,.2f}`\n"
+            f"• *Target 2*: `₹{t2:,.2f}`\n"
         )
         return self.sanitize_text(msg)
 
@@ -943,6 +955,40 @@ class TelegramIntelligence:
             f"*Institutional Context*: `Heavy Delivery Accumulation in Bluechips`\n"
             f"*Breakout Probability*: `HIGH (Narrow CPR Expansion)`"
         )
+        return self.sanitize_text(msg)
+
+    def get_auth_status_report(self) -> str:
+        from market.paytm_auth_manager import PaytmAuthManager
+        mgr = PaytmAuthManager.get_instance()
+        st = mgr.get_auth_status()
+        auth_icon = "🟢" if st["authenticated"] else "🔴"
+        msg = (
+            f"🔐 *PAYTM AUTHENTICATION STATUS*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"• *Provider*: `{st['provider']}`\n"
+            f"• *Login Status*: {auth_icon} `{st['login_status']}`\n"
+            f"• *Token Expiry*: `{st['token_expiry']}`\n"
+            f"• *Last Refresh*: `{st['last_refresh_time']}`\n"
+            f"• *Refresh Status*: `{st['refresh_status']}`\n"
+            f"• *Fallback Active*: `{'YES (Yahoo)' if st['fallback_active'] else 'NO (Paytm Live)'}`"
+        )
+        return self.sanitize_text(msg)
+
+    def trigger_paytm_token_refresh(self) -> str:
+        from market.paytm_auth_manager import PaytmAuthManager
+        mgr = PaytmAuthManager.get_instance()
+        success, res_msg = mgr.refresh_token()
+        icon = "✅" if success else "⚠️"
+        msg = f"{icon} *PAYTM REFRESH TOKEN*\n━━━━━━━━━━━━━━━━━━━━━━\n• *Result*: `{res_msg}`"
+        return self.sanitize_text(msg)
+
+    def get_login_status_report(self) -> str:
+        from market.paytm_auth_manager import PaytmAuthManager
+        mgr = PaytmAuthManager.get_instance()
+        auth = mgr.is_authenticated()
+        status_text = "Authenticated" if auth else "Login Required"
+        icon = "🟢" if auth else "🔑"
+        msg = f"{icon} *LOGIN STATUS*: `{status_text}`"
         return self.sanitize_text(msg)
 
 

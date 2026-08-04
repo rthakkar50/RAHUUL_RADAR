@@ -134,7 +134,7 @@ class FNOFilterEngine:
         # NOTE: Skip this check if Paytm is unavailable (oi_change will be 0)
         # A value of 0 means no data, not actually zero OI change
         oi_change = safe_float(result.get("OI Change %", None), None)
-        if oi_change is not None and abs(oi_change) < 3:
+        if oi_change is not None and oi_change != 0 and abs(oi_change) < 3:
             return False, f"OI Change {oi_change:.1f}% < 3% (no fresh buildup)"
 
         # NEW Check 7: PCR Contrarian Filter

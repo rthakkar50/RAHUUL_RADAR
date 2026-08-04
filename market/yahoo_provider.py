@@ -37,6 +37,12 @@ class YahooFinanceProvider(MarketDataProvider):
             "success": 0,
             "failure": 0,
             "timeout": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "http_429": 0,
+            "reconnect_count": 0,
+            "successful_downloads": 0,
+            "failed_symbols": 0,
             "total_latency_ms": 0.0,
             "average_latency_ms": 0.0
         }
@@ -145,8 +151,10 @@ class YahooFinanceProvider(MarketDataProvider):
         """
         logger.debug(f"Fetching last price for {symbol} from Yahoo Finance.")
         if not self._is_connected:
-            logger.warning("Provider disconnected. Returning 0.0")
-            return 0.0
+            logger.info("Yahoo Provider disconnected. Auto-reconnecting...")
+            self.connect()
+            with self._cache_lock:
+                self.stats["reconnect_count"] += 1
             
         formatted_symbol = self._format_symbol(symbol)
         
@@ -184,7 +192,12 @@ class YahooFinanceProvider(MarketDataProvider):
         """
         Pre-fetches data for multiple symbols in bulk using a single API call.
         """
-        if not self._is_connected or not symbols:
+        if not self._is_connected:
+            self.connect()
+            with self._cache_lock:
+                self.stats["reconnect_count"] += 1
+                
+        if not symbols:
             return
             
         # Filter symbols that are already in cache
@@ -266,10 +279,10 @@ class YahooFinanceProvider(MarketDataProvider):
             self.stats["total_requests"] += 1
 
         if not self._is_connected:
-            logger.warning("Provider disconnected. Returning empty list.")
+            logger.info("Yahoo Provider disconnected. Auto-reconnecting...")
+            self.connect()
             with self._cache_lock:
-                self.stats["failure"] += 1
-            return []
+                self.stats["reconnect_count"] += 1
             
         formatted_symbol = self._format_symbol(symbol)
         cache_key = f"{formatted_symbol}_{interval}_{period}"
@@ -278,11 +291,13 @@ class YahooFinanceProvider(MarketDataProvider):
             if cache_key in self._cache and bool(self._cache[cache_key].get('data')):
                 if time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl:
                     logger.debug(f"Returning CACHED OHLCV data for {cache_key}")
+                    self.stats["cache_hits"] += 1
                     self.stats["success"] += 1
                     lat = (time.time() - t0) * 1000
                     self.stats["total_latency_ms"] += lat
                     self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     return self._cache[cache_key]['data']
+            self.stats["cache_misses"] += 1
         
         for attempt in range(3):
             try:
@@ -292,7 +307,7 @@ class YahooFinanceProvider(MarketDataProvider):
                 rows_downloaded = len(df) if not df.empty else 0
                 if df.empty:
                     logger.warning(f"Symbol: {formatted_symbol}, Attempt {attempt + 1}: yfinance returned empty dataframe.")
-                    time.sleep(0.3 * (attempt + 1))
+                    time.sleep(0.5 * (2 ** attempt))
                     continue
                 else:
                     logger.debug(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
@@ -320,19 +335,26 @@ class YahooFinanceProvider(MarketDataProvider):
                         'data': ohlcv_list
                     }
                     self.stats["success"] += 1
+                    self.stats["successful_downloads"] += 1
                     lat = (time.time() - t0) * 1000
                     self.stats["total_latency_ms"] += lat
                     self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     
                 return ohlcv_list
             except Exception as e:
-                logger.warning(f"Fetch failed for {formatted_symbol}: {e}")
+                err_str = str(e).lower()
+                logger.warning(f"Fetch failed for {formatted_symbol} (Attempt {attempt + 1}): {e}")
                 with self._cache_lock:
-                    if "timeout" in str(e).lower():
+                    if "429" in err_str or "too many requests" in err_str:
+                        self.stats["http_429"] += 1
+                    if "timeout" in err_str:
                         self.stats["timeout"] += 1
                     else:
                         self.stats["failure"] += 1
-                break
+                time.sleep(1.0 * (2 ** attempt))
+
+        with self._cache_lock:
+            self.stats["failed_symbols"] += 1
                 
         # On network or rate-limit failure, check cache regardless of TTL
         with self._cache_lock:

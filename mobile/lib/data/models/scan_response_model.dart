@@ -48,7 +48,7 @@ class ScanResponseModel {
   });
 
   factory ScanResponseModel.fromJson(Map<String, dynamic> json) {
-    var list = json['qualified_results'] as List? ?? [];
+    var list = (json['qualified_results'] ?? json['results'] ?? json['data']) as List? ?? [];
     List<ScanResultModel> results = list
         .map((i) => ScanResultModel.fromJson(i))
         .toList();

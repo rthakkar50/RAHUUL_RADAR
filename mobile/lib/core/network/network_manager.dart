@@ -30,6 +30,8 @@ class NetworkManager {
 
   static const String defaultRenderUrl = 'https://rahuul-radar.onrender.com';
   static const List<String> localWifiCandidates = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
     'http://192.168.29.57:8000',
     'http://192.168.29.45:8000',
     'http://10.0.2.2:8000',
@@ -133,13 +135,15 @@ class NetworkManager {
       }
       candidates.add({'url': defaultRenderUrl, 'source': 'Render Cloud'});
     } else {
-      // Android / iOS Mobile (NEVER probe 127.0.0.1!)
-      candidates.add({'url': _userSavedUrl, 'source': 'User Saved URL'});
-      if (_lastWorkingUrl.isNotEmpty && _lastWorkingUrl != _userSavedUrl) {
-        candidates.add({'url': _lastWorkingUrl, 'source': 'Last Working Server'});
-      }
+      // Prioritize local candidates so local backend is selected when healthy
       for (final ip in localWifiCandidates) {
-        candidates.add({'url': ip, 'source': 'Local Wi-Fi'});
+        candidates.add({'url': ip, 'source': 'Local Backend'});
+      }
+      if (_userSavedUrl.isNotEmpty && !localWifiCandidates.contains(_userSavedUrl)) {
+        candidates.add({'url': _userSavedUrl, 'source': 'User Saved URL'});
+      }
+      if (_lastWorkingUrl.isNotEmpty && _lastWorkingUrl != _userSavedUrl && !localWifiCandidates.contains(_lastWorkingUrl)) {
+        candidates.add({'url': _lastWorkingUrl, 'source': 'Last Working Server'});
       }
       if (_userTunnelUrl.isNotEmpty) {
         candidates.add({'url': _userTunnelUrl, 'source': 'User Tunnel'});

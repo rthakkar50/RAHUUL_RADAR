@@ -264,10 +264,12 @@ def handle_text_command(text, token, chat_id):
             reply = intel.get_ping_report()
         elif cmd == "/settings":
             reply = intel.get_settings_summary()
-        elif cmd == "/token":
-            reply = intel.get_paytm_status_detailed()
-        elif cmd == "/token_refresh":
-            reply = intel.trigger_token_refresh()
+        elif cmd in ("/token", "/authstatus"):
+            reply = intel.get_auth_status_report()
+        elif cmd in ("/token_refresh", "/refreshtoken"):
+            reply = intel.trigger_paytm_token_refresh()
+        elif cmd == "/loginstatus":
+            reply = intel.get_login_status_report()
         elif cmd == "/token_history":
             reply = intel.get_token_refresh_history()
         elif cmd == "/token_auto":

@@ -83,82 +83,41 @@ class PaytmMoneyProvider(MarketDataProvider):
 
     def connect(self) -> bool:
         self.logger.info("Attempting to connect to Paytm Money API...")
+        from market.paytm_auth_manager import PaytmAuthManager
+        auth_mgr = PaytmAuthManager.get_instance()
         
-        # If we already loaded valid tokens from config.json, we don't need to re-authenticate with requestToken
-        # Only reuse previously saved REAL tokens.
-        # Ignore placeholder/mock values.
-        real_tokens = (
-            self.access_token
-            and self.public_access_token
-            and self.read_access_token
-            and not str(self.access_token).startswith("MOCK")
-            and not str(self.public_access_token).startswith("MOCK")
-            and not str(self.read_access_token).startswith("MOCK")
-        )
-
-        if real_tokens:
-            self.logger.info("Using stored Paytm tokens.")
+        if auth_mgr.is_authenticated():
+            self.access_token = auth_mgr.access_token
+            self.read_access_token = auth_mgr.read_access_token
+            self.public_access_token = auth_mgr.public_access_token
+            self.logger.info("Paytm Login Success: Using stored authenticated Paytm tokens.")
             self._connected = True
-            
             try:
                 self.fallback.connect()
             except Exception as e:
                 self.logger.warning(f"Fallback connect failed: {e}")
-                
-            return True
-            
-        if not self.api_key or not self.api_secret or not self.request_token:
-            self.logger.warning("Paytm API Key, Secret, or Request Token missing. Connected in Preview / Read-Only mode.")
-            self._connected = True
-            return True
-            
-        url = f"{self.BASE_URL_ACCOUNTS}/v2/gettoken"
-        payload = {
-            "apiKey": self.api_key,
-            "api_key": self.api_key,
-            "apiSecretKey": self.api_secret,
-            "api_secret_key": self.api_secret,
-            "requestToken": self.request_token,
-            "request_token": self.request_token
-        }
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        
-        try:
-            response = requests.post(url, headers=headers, json=payload, timeout=self.timeout)
-            response.raise_for_status()
-            data = response.json()
-            
-            token_data = data.get('data', data) if isinstance(data, dict) else data
-            
-            self.access_token = token_data.get('access_token')
-            self.public_access_token = token_data.get('public_access_token')
-            self.read_access_token = token_data.get('read_access_token')
-            
-            if not self.access_token:
-                self.logger.error(f"Failed to retrieve access token: {data}")
-                return False
-                
-            self.logger.info("Paytm Money API connection established successfully.")
-            self._connected = True
-            
-            try:
-                self.fallback.connect()
-            except Exception as e:
-                self.logger.warning(f"Fallback connect failed: {e}")
-                
             if self.public_access_token:
                 self.ws_cache.set_token(self.public_access_token)
                 self.ws_cache.connect()
-                
             return True
             
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Failed to authenticate with Paytm Money: {str(e)}")
-            if hasattr(e, 'response') and e.response is not None:
-                self.logger.error(f"Response: {e.response.text}")
-            raise ConnectionError(f"Paytm API Connection Error: {str(e)}")
+        success, msg = auth_mgr.refresh_token()
+        if success:
+            self.access_token = auth_mgr.access_token
+            self.read_access_token = auth_mgr.read_access_token
+            self.public_access_token = auth_mgr.public_access_token
+            self.logger.info("Paytm Login Success: Token Refreshed via PaytmAuthManager.")
+            self._connected = True
+            try:
+                self.fallback.connect()
+            except Exception as e:
+                self.logger.warning(f"Fallback connect failed: {e}")
+            if self.public_access_token:
+                self.ws_cache.set_token(self.public_access_token)
+                self.ws_cache.connect()
+            return True
+            
+        return False
 
     def _refresh_token(self):
         """Helper to handle expired token - marks session disconnected and requires clean re-authentication"""
@@ -188,9 +147,9 @@ class PaytmMoneyProvider(MarketDataProvider):
 
     def get_last_price(self, symbol: str) -> float:
         self.logger.debug(f"Requesting LTP for {symbol} via Paytm Money...")
-        if not self.is_connected():
-            self.logger.error(f"Cannot fetch LTP for {symbol}: Provider is not connected.")
-            raise ConnectionError("Not connected to Paytm Money API.")
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token:
+            return self.fallback.get_last_price(symbol) if self.fallback else 0.0
             
         security_id = self._get_security_id(symbol)
         
@@ -214,8 +173,11 @@ class PaytmMoneyProvider(MarketDataProvider):
         }
         
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token or not str(jwt_token).strip():
+            return self.fallback.get_last_price(symbol) if self.fallback else 0.0
+
         headers = {
-            "x-jwt-token": jwt_token if jwt_token else ""
+            "x-jwt-token": str(jwt_token).strip()
         }
         
         try:
@@ -275,7 +237,8 @@ class PaytmMoneyProvider(MarketDataProvider):
         if hasattr(self.fallback, 'pre_cache'):
             self.fallback.pre_cache(symbols, interval, period)
             
-        if not self.is_connected():
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token:
             return
             
         security_ids = [self._get_security_id(s) for s in symbols]
@@ -323,8 +286,9 @@ class PaytmMoneyProvider(MarketDataProvider):
 
     def get_volume(self, symbol: str) -> int:
         self.logger.debug(f"Requesting Volume for {symbol} via Paytm Money...")
-        if not self.is_connected():
-            return 0
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token:
+            return self.fallback.get_volume(symbol) if self.fallback else 0
             
         security_id = self._get_security_id(symbol)
         
@@ -342,9 +306,11 @@ class PaytmMoneyProvider(MarketDataProvider):
             pref_string = f"NSE:{security_id}:EQUITY"
         url = f"{self.BASE_URL_DATA}/v1/price/live"
         
-        params = {"mode": "QUOTE", "pref": pref_string}
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
-        headers = {"x-jwt-token": jwt_token if jwt_token else ""}
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token or not str(jwt_token).strip():
+            return self.fallback.get_volume(symbol) if self.fallback else 0
+
+        headers = {"x-jwt-token": str(jwt_token).strip()}
         
         try:
             response = requests.get(url, params=params, headers=headers, timeout=self.timeout)
@@ -371,8 +337,9 @@ class PaytmMoneyProvider(MarketDataProvider):
     def get_option_chain(self, symbol: str, expiry: str = None) -> Dict[str, Any]:
         """Fetch Option Chain from Paytm Money Open API"""
         self.logger.debug(f"Requesting Option Chain for {symbol} (Expiry: {expiry})")
-        if not self.is_connected():
-            raise ConnectionError("Not connected to Paytm Money API.")
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token:
+            return {}
             
         cache_key = f"{symbol}_{expiry}"
         if cache_key in self._option_chain_cache:

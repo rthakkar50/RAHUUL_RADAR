@@ -68,10 +68,15 @@ class AppConfig:
         self.min_directional_score: float = 75.0
         self.min_directional_confidence: float = 70.0
 
-    def load(self, config_path: str = None) -> None:
+        self._loaded = False
+
+    def load(self, config_path: str = None, force_reload: bool = False) -> None:
         """
         Load configuration from environment, files, or secret managers.
         """
+        if getattr(self, '_loaded', False) and not force_reload:
+            return
+            
         if config_path is None:
             config_path = os.path.join(str(BASE_DIR), "config.json")
             
@@ -123,6 +128,7 @@ class AppConfig:
                 if "min_directional_score" in data: self.min_directional_score = float(data["min_directional_score"])
                 if "min_directional_confidence" in data: self.min_directional_confidence = float(data["min_directional_confidence"])
                 
+                self._loaded = True
                 logger.info(f"Loaded configuration from {config_path}")
             except json.JSONDecodeError as e:
                 logger.error(f"Config file '{config_path}' contains invalid JSON: {e}. Using default values.")

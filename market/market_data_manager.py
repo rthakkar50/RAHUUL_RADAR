@@ -41,7 +41,7 @@ class MarketDataManager(MarketDataProvider):
     def is_connected(self) -> bool:
         return (self.yahoo is not None and self.yahoo.is_connected()) or (self.paytm is not None and self.paytm.is_connected())
 
-    def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+    def get_historical(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """
         Historical OHLCV routing -> Yahoo ONLY (TASK-4).
         """
@@ -50,7 +50,7 @@ class MarketDataManager(MarketDataProvider):
             return self.yahoo.get_ohlcv(symbol, interval=interval, period=period)
         raise NotImplementedError("Yahoo Provider is not initialized for historical data.")
 
-    def get_history(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+    def get_history(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """Alias for get_historical to ensure 100% backward compatibility."""
         return self.get_historical(symbol, interval=interval, period=period)
 
@@ -64,7 +64,7 @@ class MarketDataManager(MarketDataProvider):
         self.logger.warning(f"Paytm Provider unavailable for {symbol}. Returning 'LIVE DATA UNAVAILABLE'")
         return []
 
-    def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
+    def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """
         Unified get_ohlcv routing based on interval/period:
         - Daily / Weekly / Monthly -> Yahoo ONLY
@@ -75,7 +75,7 @@ class MarketDataManager(MarketDataProvider):
         else:
             return self.get_intraday(symbol, interval=interval, period=period)
 
-    def pre_cache(self, symbols: List[str], interval: str = "1d", period: str = "1mo") -> bool:
+    def pre_cache(self, symbols: List[str], interval: str = "1d", period: str = "3mo") -> bool:
         """
         Pre-cache routing:
         - Daily/Weekly -> Pre-cache Yahoo
