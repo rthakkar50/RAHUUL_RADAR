@@ -6,7 +6,7 @@ Official REST API reference documentation for RAHUUL_RADAR Enterprise v2.0.
 
 ## Base URL
 
-- **Production Cloud:** `https://rahuul-radar.onrender.com`
+- **Production Cloud:** `https://api.rahuulradar.com`
 - **Local Dev:** `http://localhost:8000`
 
 ---

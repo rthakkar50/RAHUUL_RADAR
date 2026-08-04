@@ -21,8 +21,8 @@ class DeploymentManager:
         cfg_report = self.config_manager.validate_configuration()
 
         return {
-            "deployment_platform": "Render Cloud VPS (24x7 Continuous Execution)",
-            "service_url": "https://rahuul-radar.onrender.com",
+            "deployment_platform": "Dedicated Linux VPS (Ubuntu 24.04 LTS)",
+            "service_url": "https://api.rahuulradar.com",
             "health_endpoint": "/api/v1/health",
             "health_status": "200 OK",
             "version_metadata": cfg_report.version_metadata,

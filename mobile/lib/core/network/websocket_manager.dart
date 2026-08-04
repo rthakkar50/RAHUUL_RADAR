@@ -54,7 +54,7 @@ class WebSocketManager {
   Stream<WebSocketConnectionState> get stateStream => _stateController.stream;
   Stream<LiveEventModel> get eventStream => _eventStreamController.stream;
 
-  void connect({String url = 'wss://rahuul-radar.onrender.com/ws/v1'}) {
+  void connect({String url = 'wss://api.rahuulradar.com/ws/v1'}) {
     if (_connectionState == WebSocketConnectionState.connected ||
         _connectionState == WebSocketConnectionState.connecting) {
       return;

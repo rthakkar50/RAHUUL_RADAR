@@ -50,5 +50,5 @@
 * **Root Cause:** Incorrect IP/Port configured in Settings.
 * **Solution:**
   1. Open Flutter app -> **Settings** tab.
-  2. Ensure IP Address is set to server IP (`137.23.34.223`) and Port is set to `8000`.
+  2. Ensure domain is set to server API endpoint (`api.rahuulradar.com`).
   3. Tap **Save Settings** and pull to refresh.

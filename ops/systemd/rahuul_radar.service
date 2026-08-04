@@ -1,0 +1,22 @@
+[Unit]
+Description=RAHUUL_RADAR Enterprise Backend Service (Uvicorn / FastAPI)
+After=network.target
+
+[Service]
+User=radar
+Group=www-data
+WorkingDirectory=/var/www/rahuul_radar
+Environment="PATH=/var/www/rahuul_radar/venv/bin"
+EnvironmentFile=/var/www/rahuul_radar/.env.production
+ExecStart=/var/www/rahuul_radar/venv/bin/python3 -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips='*'
+
+Restart=always
+RestartSec=5s
+
+# Process & Resource Limits
+LimitNOFILE=65536
+StandardOutput=append:/var/log/rahuul_radar/backend.log
+StandardError=append:/var/log/rahuul_radar/backend_error.log
+
+[Install]
+WantedBy=multi-user.target

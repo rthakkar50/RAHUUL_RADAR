@@ -63,7 +63,7 @@ Edit `config.json` with Paytm Money API credentials:
 ### Step 1: Configure Production Endpoint
 Edit `mobile/lib/core/network/api_config.dart` or set via Mobile Settings UI:
 ```dart
-static String localIp = '137.23.34.223';
+static String localIp = 'api.rahuulradar.com';
 static String port = '8000';
 static String env = 'Production';
 ```

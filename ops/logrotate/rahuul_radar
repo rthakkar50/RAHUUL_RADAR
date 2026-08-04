@@ -1,0 +1,14 @@
+/var/log/rahuul_radar/*.log /var/log/nginx/rahuul_radar_*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 radar www-data
+    sharedscripts
+    postrotate
+        systemctl reload nginx > /dev/null 2>&1 || true
+        systemctl reload rahuul_radar > /dev/null 2>&1 || true
+    endscript
+}

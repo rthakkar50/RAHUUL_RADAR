@@ -1,6 +1,6 @@
 # RAHUUL RADAR — REST API Specification (v1.1)
 
-Base URL: `http://137.23.34.223:8000/api/v1`
+Base URL: `https://api.rahuulradar.com/api/v1`
 
 ---
 
