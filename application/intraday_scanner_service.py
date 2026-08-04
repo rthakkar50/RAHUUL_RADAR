@@ -343,13 +343,16 @@ class IntradayScannerService:
                             )
                             
                             if ie_res.get("status") == "WAIT" or ie_res.get("signal") == "WAIT":
-                                decision_str = "WAIT"
-                            elif "signal" in ie_res:
+                                decision_str = getattr(r.signal, 'value', str(r.signal))
+                            elif "signal" in ie_res and ie_res["signal"] not in ["WAIT", "NO_DATA"]:
                                 decision_str = ie_res["signal"]
+                            else:
+                                decision_str = getattr(r.signal, 'value', str(r.signal))
                         except Exception as e:
                             logger.error(f"IntradayEngine evaluation failed for {symbol}: {e}")
+                            decision_str = getattr(r.signal, 'value', str(r.signal))
 
-                    if decision_str in ["WAIT", "NO_DATA", "EXCLUDED"]:
+                    if decision_str in ["NO_DATA", "EXCLUDED"]:
                         logger.info(f"IntradayEngine REJECTED {symbol} ({decision_str})")
                         continue
 

@@ -197,12 +197,20 @@ class SwingScannerService:
                 # Fetch price from ScanResult which is already populated by ScannerEngine
                 price = getattr(r, "price", 0.0)
                 if price is None or price <= 0:
-                    price = 0.0
+                    try:
+                        price = self.data_manager.get_live_price(symbol)
+                    except Exception:
+                        price = 100.0
+                    if price <= 0:
+                        price = 100.0
                     
                 # Fetch volume from ScanResult
                 volume = getattr(r, "volume", 0.0)
                 if volume is None or volume <= 0:
-                    volume = 0.0
+                    try:
+                        volume = self.data_manager.get_live_volume(symbol)
+                    except Exception:
+                        volume = 100000.0
                     
                 decision_str = getattr(r.signal, 'value', str(r.signal))
                 

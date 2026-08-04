@@ -13,6 +13,9 @@ import requests
 from market.data_provider import MarketDataProvider, OHLCV, MarketStatus
 from utils.logger import get_logger
 
+from urllib3.util import Retry
+from requests.adapters import HTTPAdapter
+
 logger = get_logger(__name__)
 
 class YahooFinanceProvider(MarketDataProvider):
@@ -38,6 +41,15 @@ class YahooFinanceProvider(MarketDataProvider):
             "average_latency_ms": 0.0
         }
         self._session = requests.Session()
+        retries = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[429, 500, 502, 503, 504],
+            raise_on_status=False
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        self._session.mount('https://', adapter)
+        self._session.mount('http://', adapter)
         self._session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
@@ -273,15 +285,16 @@ class YahooFinanceProvider(MarketDataProvider):
                     self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
                     return self._cache[cache_key]['data']
         
-        for attempt in range(1):
+        for attempt in range(3):
             try:
                 ticker = yf.Ticker(formatted_symbol, session=self._session)
                 df = ticker.history(period=period, interval=interval)
                 
                 rows_downloaded = len(df) if not df.empty else 0
                 if df.empty:
-                    logger.warning(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: yfinance returned empty dataframe.")
-                    break
+                    logger.warning(f"Symbol: {formatted_symbol}, Attempt {attempt + 1}: yfinance returned empty dataframe.")
+                    time.sleep(0.3 * (attempt + 1))
+                    continue
                 else:
                     logger.debug(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
                 

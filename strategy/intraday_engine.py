@@ -95,15 +95,16 @@ class IntradayEngine:
     def evaluate(self, symbol: str, ohlcv_intra: List[OHLCV], ohlcv_15m: List[OHLCV], ohlcv_1h: List[OHLCV], ohlcv_1d: List[OHLCV], market_trend: str = "NEUTRAL") -> Dict:
         self.stats["Total Scanned"] += 1
         
-        if len(ohlcv_intra) < 50:
+        target_intra = ohlcv_intra if len(ohlcv_intra) >= 20 else (ohlcv_15m if len(ohlcv_15m) >= 10 else ohlcv_1d)
+        if not target_intra:
             return self._empty_result(symbol, "Insufficient Intraday Data")
             
-        df = self.df_from_ohlcv(ohlcv_intra)
-        df_15m = self.df_from_ohlcv(ohlcv_15m)
-        df_1h = self.df_from_ohlcv(ohlcv_1h)
-        df_1d = self.df_from_ohlcv(ohlcv_1d)
+        df = self.df_from_ohlcv(target_intra)
+        df_15m = self.df_from_ohlcv(ohlcv_15m) if ohlcv_15m else df
+        df_1h = self.df_from_ohlcv(ohlcv_1h) if ohlcv_1h else df
+        df_1d = self.df_from_ohlcv(ohlcv_1d) if ohlcv_1d else df
         
-        if df_15m.empty or df_1h.empty or df_1d.empty:
+        if df.empty:
             return self._empty_result(symbol, "Missing HTF/Daily Data")
             
         # 1. Higher Timeframe Trend Confirmation
