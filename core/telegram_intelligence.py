@@ -492,18 +492,9 @@ class TelegramIntelligence:
         )
         return self.sanitize_text(msg)
 
-    def generate_eod_report(self) -> str:
-        msg = (
-            f"🌙 *END OF DAY MARKET REPORT (03:45 PM)*\n"
-            f"-------------------------------------\n"
-            f"*Total Trades Today*: `2` | *Wins*: `2` | *Losses*: `0`\n"
-            f"*Daily Net P&L*: `+₹1,985.00`\n"
-            f"*Best Trade*: `RELIANCE.NS (+₹1,000.00)`\n"
-            f"*Tomorrow Watchlist*: `INFY.NS`, `TVSMOTOR.NS`\n"
-        )
-        return self.sanitize_text(msg)
+    def get_ranked_watchlist(self, limit: int = 10) -> str:
+        return self.get_watchlist(limit=limit)
 
-    # PART 13: PAYTM MONEY BROKER ADAPTER (PREVIEW ONLY)
     def evaluate_trade_alert_eligibility(self, *args, **kwargs) -> Tuple[bool, str]:
         if len(args) == 1 and isinstance(args[0], dict):
             setup = args[0]
@@ -512,11 +503,11 @@ class TelegramIntelligence:
             conf = float(setup.get("confidence", setup.get("Confidence", 80.0)))
             rr = float(setup.get("risk_reward", setup.get("Risk Reward", 2.0)))
             
-            if "STRONG" not in sig and "BUY" not in sig and "SELL" not in sig:
+            if sig not in ["STRONG BUY", "STRONG SELL"]:
                 return (False, "Decision must be STRONG BUY or STRONG SELL")
-            if conf < 70.0:
+            if conf < 80.0:
                 return (False, "Confidence below threshold")
-            if rr < 1.5:
+            if rr < 2.0:
                 return (False, "Risk/Reward ratio too low")
             if score < 50.0:
                 return (False, "Score below threshold")
@@ -532,7 +523,9 @@ class TelegramIntelligence:
 
     def format_trade_alert(self, setup_info: Dict[str, Any]) -> str:
         sym = setup_info.get("symbol", "N/A")
-        sig = setup_info.get("signal", setup_info.get("decision", "BUY"))
+        if not sym.endswith(".NS") and not sym.startswith("^"):
+            sym = f"{sym}.NS"
+        sig = setup_info.get("signal", setup_info.get("decision", "STRONG BUY"))
         entry = setup_info.get("entry_price", setup_info.get("price", 0.0))
         sl = setup_info.get("sl", 0.0)
         t1 = setup_info.get("target_1", 2550.0)

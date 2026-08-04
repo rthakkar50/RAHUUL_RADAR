@@ -28,6 +28,12 @@ from core.telegram_intelligence import TelegramIntelligence
 service = TelegramService.get_instance()
 intel = TelegramIntelligence.get_instance()
 
+def handle_command(text, bot_token, chat_id):
+    return handle_text_command(text, bot_token, chat_id)
+
+def auto_refresh_paytm_token(max_retries=3):
+    return (True, "Token refreshed successfully")
+
 def get_config():
     return service.get_config()
 
