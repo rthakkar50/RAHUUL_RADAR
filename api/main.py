@@ -664,7 +664,9 @@ async def get_scanner_audit():
         }
 
 @v1_router.get("/market", tags=["Market"])
+@v1_router.get("/dashboard", tags=["Market"])
 async def get_market_overview():
+
     logger.info("Market overview endpoint called")
     try:
         with _CACHE_LOCK:
