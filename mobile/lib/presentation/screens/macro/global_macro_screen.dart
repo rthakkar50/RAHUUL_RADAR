@@ -13,10 +13,39 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen>
   final GlobalMacroRepository _repo = GlobalMacroRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  GlobalMacroResponseModel? _data;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getMacroData();
+      if (mounted) {
+        setState(() {
+          _data = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -27,10 +56,10 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final indices = _repo.getGlobalIndices();
-    final commodities = _repo.getCommodities();
-    final calendar = _repo.getEconomicCalendar();
-    final briefing = _repo.getDailyBriefing();
+    final indices = _data?.globalIndices ?? _repo.getGlobalIndices();
+    final commodities = _data?.commodities ?? _repo.getCommodities();
+    final calendar = _data?.economicCalendar ?? _repo.getEconomicCalendar();
+    final briefing = _data?.dailyBriefing ?? _repo.getDailyBriefing();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -55,6 +84,12 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -65,15 +100,39 @@ class _GlobalMacroScreenState extends State<GlobalMacroScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildBriefingTab(briefing),
-          _buildIndicesTab(indices),
-          _buildCommoditiesTab(commodities),
-          _buildCalendarTab(calendar),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Global Macro data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildBriefingTab(briefing),
+                      _buildIndicesTab(indices),
+                      _buildCommoditiesTab(commodities),
+                      _buildCalendarTab(calendar),
+                    ],
+                  ),
+                ),
     );
   }
 

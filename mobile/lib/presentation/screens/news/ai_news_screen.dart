@@ -13,10 +13,39 @@ class _AiNewsScreenState extends State<AiNewsScreen>
   final NewsRepository _repo = NewsRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  List<NewsItemModel> _newsList = [];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getLatestNews();
+      if (mounted) {
+        setState(() {
+          _newsList = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -27,7 +56,8 @@ class _AiNewsScreenState extends State<AiNewsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final newsList = _repo.getLatestNews();
+    final newsList = _newsList.isNotEmpty ? _newsList : _repo.getFallbackNews();
+    final topNews = newsList.isNotEmpty ? newsList.first : _repo.getFallbackNews().first;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -56,6 +86,12 @@ class _AiNewsScreenState extends State<AiNewsScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -65,14 +101,38 @@ class _AiNewsScreenState extends State<AiNewsScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildLiveFeedTab(newsList),
-          _buildPortfolioImpactTab(newsList.first),
-          _buildSentimentHeatmapTab(),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading News data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildLiveFeedTab(newsList),
+                      _buildPortfolioImpactTab(topNews),
+                      _buildSentimentHeatmapTab(),
+                    ],
+                  ),
+                ),
     );
   }
 

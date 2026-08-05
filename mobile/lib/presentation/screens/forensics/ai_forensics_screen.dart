@@ -13,10 +13,39 @@ class _AiForensicsScreenState extends State<AiForensicsScreen>
   final TradeForensicsRepository _repo = TradeForensicsRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  TradeForensicsResponseModel? _data;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getForensicsData();
+      if (mounted) {
+        setState(() {
+          _data = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -27,8 +56,9 @@ class _AiForensicsScreenState extends State<AiForensicsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final records = _repo.getForensicHistory();
-    final timeline = _repo.getEvolutionTimeline();
+    final records = _data?.trades ?? [];
+    final timeline = _data?.evolutionTimeline ?? _repo.getEvolutionTimeline();
+    final topRecord = records.isNotEmpty ? records.first : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -57,6 +87,12 @@ class _AiForensicsScreenState extends State<AiForensicsScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -67,13 +103,62 @@ class _AiForensicsScreenState extends State<AiForensicsScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildLearningDashboardTab(),
-          _buildForensicsListTab(records),
-          _buildTradeReplayTab(records.first),
-          _buildEvolutionTimelineTab(timeline),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Forensics data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildLearningDashboardTab(),
+                      records.isEmpty
+                          ? _buildEmptyStateWidget()
+                          : _buildForensicsListTab(records),
+                      topRecord == null
+                          ? _buildEmptyStateWidget()
+                          : _buildTradeReplayTab(topRecord),
+                      _buildEvolutionTimelineTab(timeline),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildEmptyStateWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.query_stats, color: Colors.white38, size: 64),
+          SizedBox(height: 16),
+          Text(
+            'No Completed Journal Trades Available',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Execute paper or broker trades to populate AI forensics analytics.',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
         ],
       ),
     );

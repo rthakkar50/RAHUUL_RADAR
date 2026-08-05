@@ -13,10 +13,39 @@ class _AiSentinelScreenState extends State<AiSentinelScreen>
   final AiSentinelRepository _repo = AiSentinelRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  AiSentinelResponseModel? _data;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getSentinelData();
+      if (mounted) {
+        setState(() {
+          _data = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -27,9 +56,10 @@ class _AiSentinelScreenState extends State<AiSentinelScreen>
 
   @override
   Widget build(BuildContext context) {
-    final mood = _repo.getMarketMood();
-    final opps = _repo.getRankedOpportunities();
-    final mission = _repo.getDailyMission();
+    final mood = _data?.mood ?? _repo.getMarketMood();
+    final opps = _data?.opportunities ?? _repo.getRankedOpportunities();
+    final mission = _data?.dailyMission ?? _repo.getDailyMission();
+    final topOpp = opps.isNotEmpty ? opps.first : _repo.getRankedOpportunities().first;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -54,6 +84,12 @@ class _AiSentinelScreenState extends State<AiSentinelScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -64,15 +100,39 @@ class _AiSentinelScreenState extends State<AiSentinelScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildSentinelTab(mood),
-          _buildOpportunitiesTab(opps),
-          _buildTradePlanTab(opps.first),
-          _buildMissionTab(mission),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Sentinel data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildSentinelTab(mood),
+                      _buildOpportunitiesTab(opps),
+                      _buildTradePlanTab(topOpp),
+                      _buildMissionTab(mission),
+                    ],
+                  ),
+                ),
     );
   }
 
@@ -116,12 +176,12 @@ class _AiSentinelScreenState extends State<AiSentinelScreen>
               _moodRow('DII Net Flow', mood.diiFlow, Colors.greenAccent),
               _moodRow(
                 'India VIX',
-                '${mood.indiaVix} (Low Volatility)',
+                mood.indiaVix != null ? '${mood.indiaVix}' : 'Unavailable',
                 Colors.cyanAccent,
               ),
               _moodRow(
                 'PCR Index',
-                '${mood.pcr} (Bullish)',
+                mood.pcr != null ? '${mood.pcr}' : 'Unavailable',
                 Colors.amberAccent,
               ),
               _moodRow(

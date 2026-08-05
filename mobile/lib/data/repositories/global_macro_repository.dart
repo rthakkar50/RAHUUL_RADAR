@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../../core/network/api_config.dart';
+
 class EconomicEventModel {
   final String date;
   final String event;
@@ -16,6 +21,18 @@ class EconomicEventModel {
     required this.previous,
     required this.aiVerdict,
   });
+
+  factory EconomicEventModel.fromJson(Map<String, dynamic> json) {
+    return EconomicEventModel(
+      date: json['date'] ?? 'Today',
+      event: json['event'] ?? 'Economic Release',
+      country: json['country'] ?? 'GLOBAL',
+      impact: json['impact'] ?? 'HIGH',
+      forecast: json['forecast'] ?? '--',
+      previous: json['previous'] ?? '--',
+      aiVerdict: json['aiVerdict'] ?? 'MONITOR VOLATILITY',
+    );
+  }
 }
 
 class GlobalMarketTickerModel {
@@ -30,6 +47,29 @@ class GlobalMarketTickerModel {
     required this.change,
     required this.isPositive,
   });
+
+  factory GlobalMarketTickerModel.fromJson(Map<String, dynamic> json) {
+    return GlobalMarketTickerModel(
+      name: json['name'] ?? 'TICKER',
+      value: json['value'] ?? '0.0',
+      change: json['change'] ?? '0.00%',
+      isPositive: json['isPositive'] ?? true,
+    );
+  }
+}
+
+class GlobalMacroResponseModel {
+  final List<GlobalMarketTickerModel> globalIndices;
+  final List<GlobalMarketTickerModel> commodities;
+  final List<EconomicEventModel> economicCalendar;
+  final List<String> dailyBriefing;
+
+  const GlobalMacroResponseModel({
+    required this.globalIndices,
+    required this.commodities,
+    required this.economicCalendar,
+    required this.dailyBriefing,
+  });
 }
 
 class GlobalMacroRepository {
@@ -37,6 +77,57 @@ class GlobalMacroRepository {
       GlobalMacroRepository._internal();
   factory GlobalMacroRepository() => _instance;
   GlobalMacroRepository._internal();
+
+  Future<GlobalMacroResponseModel> getMacroData() async {
+    final url = '${ApiConfig.baseUrl}/macro';
+    debugPrint('[RUN-AUDIT] [GlobalMacroRepository] Fetching live Global Macro from: $url');
+
+    try {
+      final response = await http
+          .get(Uri.parse(url), headers: ApiConfig.defaultHeaders())
+          .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+
+      debugPrint('[RUN-AUDIT] [GlobalMacroRepository] Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        final rawIndices = data['global_indices'] as List<dynamic>? ?? [];
+        final indices = rawIndices
+            .map((item) => GlobalMarketTickerModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        final rawCommodities = data['commodities'] as List<dynamic>? ?? [];
+        final commodities = rawCommodities
+            .map((item) => GlobalMarketTickerModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        final rawCalendar = data['economic_calendar'] as List<dynamic>? ?? [];
+        final calendar = rawCalendar
+            .map((item) => EconomicEventModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        final rawBriefing = data['daily_briefing'] as List<dynamic>? ?? [];
+        final briefing = rawBriefing.map((e) => e.toString()).toList();
+
+        return GlobalMacroResponseModel(
+          globalIndices: indices,
+          commodities: commodities,
+          economicCalendar: calendar,
+          dailyBriefing: briefing,
+        );
+      }
+    } catch (e, st) {
+      debugPrint('[RUN-AUDIT] [GlobalMacroRepository] EXCEPTION: $e\n$st');
+    }
+
+    return GlobalMacroResponseModel(
+      globalIndices: getGlobalIndices(),
+      commodities: getCommodities(),
+      economicCalendar: getEconomicCalendar(),
+      dailyBriefing: getDailyBriefing(),
+    );
+  }
 
   List<GlobalMarketTickerModel> getGlobalIndices() {
     return const [

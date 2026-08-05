@@ -1,0 +1,11 @@
+{
+    "capital": 100000,
+    "risk_pct": 1.0,
+    "holding_days": 45,
+    "yahoo_refresh": "Auto",
+    "max_daily_loss": 5000,
+    "max_open_positions": 5,
+    "max_exposure": 500000,
+    "broker_charges": 20,
+    "slippage_pct": 0.1
+}

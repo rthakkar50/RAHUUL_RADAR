@@ -14,10 +14,39 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen>
   final RiskCommandCenterRepository _repo = RiskCommandCenterRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  RiskCommandCenterResponseModel? _data;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getRiskCommandData();
+      if (mounted) {
+        setState(() {
+          _data = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -28,10 +57,10 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen>
 
   @override
   Widget build(BuildContext context) {
-    final overview = _repo.getRiskOverview();
-    final heatmap = _repo.getPositionHeatmap();
-    final stressScenarios = _repo.getStressScenarios();
-    final hedging = _repo.getHedgingSuggestions();
+    final overview = _data?.overview ?? _repo.getRiskOverview();
+    final heatmap = _data?.heatmap ?? [];
+    final stressScenarios = _data?.stressScenarios ?? _repo.getStressScenarios();
+    final hedging = _data?.hedgingSuggestions ?? _repo.getHedgingSuggestions();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -60,6 +89,12 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -70,13 +105,60 @@ class _AiRiskCommandCenterScreenState extends State<AiRiskCommandCenterScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildDashboardTab(overview),
-          _buildHeatmapTab(heatmap),
-          _buildStressTestTab(stressScenarios),
-          _buildHedgingTab(hedging),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Risk Command data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildDashboardTab(overview),
+                      heatmap.isEmpty
+                          ? _buildEmptyStateWidget()
+                          : _buildHeatmapTab(heatmap),
+                      _buildStressTestTab(stressScenarios),
+                      _buildHedgingTab(hedging),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildEmptyStateWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.shield_outlined, color: Colors.white38, size: 64),
+          SizedBox(height: 16),
+          Text(
+            'No Active Positions Available',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Execute trades to activate live risk monitoring and position heatmap.',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
         ],
       ),
     );

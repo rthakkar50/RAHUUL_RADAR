@@ -14,10 +14,39 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
   final PortfolioOptimizerRepository _repo = PortfolioOptimizerRepository();
   late TabController _tabController;
 
+  bool _isLoading = true;
+  String? _error;
+  PortfolioOptimizerResponseModel? _data;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await _repo.getOptimizerData();
+      if (mounted) {
+        setState(() {
+          _data = res;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -28,10 +57,10 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final health = _repo.getPortfolioHealth();
-    final alloc = _repo.getCapitalAllocation();
-    final stressTests = _repo.getStressTestSimulations();
-    final rebalancing = _repo.getRebalancingSuggestions();
+    final health = _data?.health ?? _repo.getPortfolioHealth();
+    final alloc = _data?.allocation ?? _repo.getCapitalAllocation();
+    final stressTests = _data?.stressTest ?? _repo.getStressTestSimulations();
+    final rebalancing = _data?.suggestions ?? _repo.getRebalancingSuggestions();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
@@ -60,6 +89,12 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _fetchData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -70,15 +105,39 @@ class _AiPortfolioOptimizerScreenState extends State<AiPortfolioOptimizerScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildHealthTab(health),
-          _buildAllocationTab(alloc),
-          _buildStressTestTab(stressTests),
-          _buildRebalanceTab(rebalancing),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Optimizer data: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildHealthTab(health),
+                      _buildAllocationTab(alloc),
+                      _buildStressTestTab(stressTests),
+                      _buildRebalanceTab(rebalancing),
+                    ],
+                  ),
+                ),
     );
   }
 

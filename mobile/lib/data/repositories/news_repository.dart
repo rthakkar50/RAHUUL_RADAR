@@ -1,11 +1,15 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../../core/network/api_config.dart';
+
 class NewsItemModel {
   final String id;
   final String title;
   final String source;
   final String timeAgo;
   final String category; // BREAKING, HIGH IMPACT, MEDIUM, LOW
-  final String
-  sentiment; // VERY BULLISH, BULLISH, NEUTRAL, BEARISH, VERY BEARISH
+  final String sentiment; // VERY BULLISH, BULLISH, NEUTRAL, BEARISH, VERY BEARISH
   final double confidencePct;
   final String affectedSymbol;
   final String sector;
@@ -29,6 +33,27 @@ class NewsItemModel {
     required this.tradingImpact,
     required this.suggestedAction,
   });
+
+  factory NewsItemModel.fromJson(Map<String, dynamic> json) {
+    final rawKeyPoints = json['keyPoints'] as List<dynamic>? ?? [];
+    final keyPointsList = rawKeyPoints.map((e) => e.toString()).toList();
+
+    return NewsItemModel(
+      id: json['id'] ?? 'NEWS-101',
+      title: json['title'] ?? 'Market Event Signal',
+      source: json['source'] ?? 'RAHUUL_RADAR Intelligence',
+      timeAgo: json['timeAgo'] ?? 'Just now',
+      category: json['category'] ?? 'BREAKING',
+      sentiment: json['sentiment'] ?? 'BULLISH',
+      confidencePct: (json['confidencePct'] as num?)?.toDouble() ?? 88.0,
+      affectedSymbol: json['affectedSymbol'] ?? 'NIFTY50',
+      sector: json['sector'] ?? 'EQUITY',
+      summary: json['summary'] ?? 'Market analysis event update.',
+      keyPoints: keyPointsList.isNotEmpty ? keyPointsList : ['Live risk boundary monitoring active.'],
+      tradingImpact: json['tradingImpact'] ?? 'POSITIVE',
+      suggestedAction: json['suggestedAction'] ?? 'MAINTAIN LONG BIAS',
+    );
+  }
 }
 
 class NewsRepository {
@@ -36,7 +61,34 @@ class NewsRepository {
   factory NewsRepository() => _instance;
   NewsRepository._internal();
 
-  List<NewsItemModel> getLatestNews() {
+  Future<List<NewsItemModel>> getLatestNews() async {
+    final url = '${ApiConfig.baseUrl}/news';
+    debugPrint('[RUN-AUDIT] [NewsRepository] Fetching live AI News from: $url');
+
+    try {
+      final response = await http
+          .get(Uri.parse(url), headers: ApiConfig.defaultHeaders())
+          .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+
+      debugPrint('[RUN-AUDIT] [NewsRepository] Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final rawNews = data['news'] as List<dynamic>? ?? [];
+
+        return rawNews
+            .map((item) => NewsItemModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e, st) {
+      debugPrint('[RUN-AUDIT] [NewsRepository] EXCEPTION: $e\n$st');
+    }
+
+    // Fallback seed data if offline or socket timeout
+    return getFallbackNews();
+  }
+
+  List<NewsItemModel> getFallbackNews() {
     return const [
       NewsItemModel(
         id: 'NEWS-101',
@@ -77,26 +129,6 @@ class NewsRepository {
         ],
         tradingImpact: 'POSITIVE (Long-term valuation rerating)',
         suggestedAction: 'ACCUMULATE SWING',
-      ),
-      NewsItemModel(
-        id: 'NEWS-103',
-        title:
-            'US Fed Signals Rate Cut Expectations as Inflation Cools to 2.8%',
-        source: 'Bloomberg',
-        timeAgo: '2 hours ago',
-        category: 'HIGH IMPACT',
-        sentiment: 'BULLISH',
-        confidencePct: 88.0,
-        affectedSymbol: 'NIFTY50',
-        sector: 'MACRO',
-        summary:
-            'Federal Reserve Chairman Powell hints at policy easing in upcoming September meeting.',
-        keyPoints: [
-          'Cooling labor market and lower PCE deflator support 25bps cut.',
-          'Emerging market capital inflows expected to surge.',
-        ],
-        tradingImpact: 'VERY BULLISH (Broad market gap-up support)',
-        suggestedAction: 'MAINTAIN LONG BIAS',
       ),
     ];
   }

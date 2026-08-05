@@ -17,6 +17,9 @@ import '../screens/risk/live_risk_center_screen.dart';
 import '../screens/risk/ai_risk_command_center_screen.dart';
 import '../screens/profile/user_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/terminal/advanced_trading_terminal_screen.dart';
+
+import '../../core/version/app_version_manager.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -47,7 +50,9 @@ class _MainNavigationState extends State<MainNavigation>
     const AiPortfolioOptimizerScreen(), // Index 14: Portfolio Optimizer
     const AiRiskCommandCenterScreen(), // Index 15: Risk Command Center
     const UserProfileScreen(), // Index 16: User Profile
+    const AdvancedTradingTerminalScreen(), // Index 17: Advanced Terminal
   ];
+
 
   @override
   void initState() {
@@ -57,7 +62,16 @@ class _MainNavigationState extends State<MainNavigation>
       'INFO',
       'App initialized and listening to lifecycle events.',
     );
+    _checkForUpdates();
   }
+
+  Future<void> _checkForUpdates() async {
+    final versionModel = await AppVersionManager.instance.checkAppVersion();
+    if (versionModel != null && mounted) {
+      AppVersionManager.instance.promptUpdateIfAvailable(context, versionModel);
+    }
+  }
+
 
   @override
   void dispose() {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/repositories/journal_repository.dart';
+import '../../../data/repositories/quant_repository.dart';
 
 class QuantLabScreen extends StatefulWidget {
   const QuantLabScreen({super.key});
@@ -9,43 +9,38 @@ class QuantLabScreen extends StatefulWidget {
 }
 
 class _QuantLabScreenState extends State<QuantLabScreen> {
-  final JournalRepository _repository = JournalRepository();
-  bool _isLoading = false;
-  double _winRate = 78.4;
-  double _profitFactor = 2.45;
-  double _sharpe = 2.18;
-  double _sortino = 3.42;
+  final QuantRepository _repository = QuantRepository();
+  bool _isLoading = true;
+  String? _error;
+  QuantResponseModel? _data;
 
   @override
   void initState() {
     super.initState();
-    _loadQuantStats();
+    _fetchQuantData();
   }
 
-  Future<void> _loadQuantStats() async {
-    setState(() => _isLoading = true);
-    try {
-      final journalRes = await _repository.getJournal();
-      final trades = journalRes.trades;
-      if (trades.isNotEmpty && mounted) {
-        final winCount = trades.where((t) => t.result.toUpperCase() == 'WIN').length;
-        final calcWinRate = (winCount / trades.length) * 100;
-        final totalWins = trades.where((t) => t.pnl > 0).fold(0.0, (sum, t) => sum + t.pnl);
-        final totalLosses = trades.where((t) => t.pnl < 0).fold(0.0, (sum, t) => sum + t.pnl.abs());
-        final calcPF = totalLosses > 0 ? (totalWins / totalLosses) : 2.85;
+  Future<void> _fetchQuantData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
+    try {
+      final data = await _repository.getQuantBacktestData();
+      if (mounted) {
         setState(() {
-          _winRate = calcWinRate;
-          _profitFactor = calcPF;
-          _sharpe = 1.8 + (calcPF * 0.25);
-          _sortino = _sharpe * 1.45;
+          _data = data;
           _isLoading = false;
         });
-      } else {
-        if (mounted) setState(() => _isLoading = false);
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -68,6 +63,12 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final metrics = _data?.metrics ?? _repository.getFallbackData().metrics;
+    final buckets = _data?.confidenceBuckets ?? [];
+    final rankings = _data?.scannerRankings ?? [];
+    final recs = _data?.aiRecommendations ?? _repository.getFallbackData().aiRecommendations;
+    final replays = _data?.replays ?? [];
+
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
@@ -90,43 +91,70 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadQuantStats,
+            icon: const Icon(Icons.refresh, color: Colors.cyanAccent),
+            onPressed: _isLoading ? null : _fetchQuantData,
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.indigoAccent))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Quant Overview Grid
-                  _buildMetricsGrid(),
-                  const SizedBox(height: 16),
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 12),
+                      Text('Error loading Quant Lab: $_error', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchQuantData,
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+                        child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchQuantData,
+                  color: Colors.indigoAccent,
+                  backgroundColor: const Color(0xFF161B22),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Quant Overview Grid
+                        _buildMetricsGrid(metrics),
+                        const SizedBox(height: 16),
 
-                  // PART-5: Confidence Calibration Buckets
-                  _buildConfidenceCalibrationCard(),
-                  const SizedBox(height: 16),
+                        // Confidence Calibration Buckets
+                        if (buckets.isNotEmpty) ...[
+                          _buildConfidenceCalibrationCard(buckets),
+                          const SizedBox(height: 16),
+                        ],
 
-                  // PART-3 & PART-4: Scanner & Strategy Rankings
-                  _buildRankingsCard(),
-                  const SizedBox(height: 16),
+                        // Scanner Rankings
+                        if (rankings.isNotEmpty) ...[
+                          _buildRankingsCard(rankings),
+                          const SizedBox(height: 16),
+                        ],
 
-                  // PART-6: AI Self-Improvement Recommendations
-                  _buildAiRecommendationsCard(),
-                  const SizedBox(height: 16),
+                        // AI Self-Improvement Recommendations
+                        _buildAiRecommendationsCard(recs),
+                        const SizedBox(height: 16),
 
-                  // PART-7: Replay Learning
-                  _buildReplayLearningCard(),
-                ],
-              ),
-            ),
+                        // Replay Learning
+                        _buildReplayLearningCard(replays),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(QuantMetricsModel metrics) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -139,10 +167,10 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _metricTile('WIN RATE', '${_winRate.toStringAsFixed(1)}%', Colors.greenAccent),
-              _metricTile('PROFIT FACTOR', _profitFactor.toStringAsFixed(2), Colors.cyanAccent),
-              _metricTile('SHARPE RATIO', _sharpe.toStringAsFixed(2), Colors.lightGreenAccent),
-              _metricTile('SORTINO RATIO', _sortino.toStringAsFixed(2), Colors.purpleAccent),
+              _metricTile('WIN RATE', '${metrics.winRate.toStringAsFixed(1)}%', Colors.greenAccent),
+              _metricTile('PROFIT FACTOR', metrics.profitFactor.toStringAsFixed(2), Colors.cyanAccent),
+              _metricTile('SHARPE RATIO', metrics.sharpeRatio.toStringAsFixed(2), Colors.lightGreenAccent),
+              _metricTile('SORTINO RATIO', metrics.sortinoRatio.toStringAsFixed(2), Colors.purpleAccent),
             ],
           ),
         ],
@@ -150,7 +178,7 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
     );
   }
 
-  Widget _buildConfidenceCalibrationCard() {
+  Widget _buildConfidenceCalibrationCard(List<ConfidenceBucketModel> buckets) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -163,17 +191,13 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
         children: [
           const Text('CONFIDENCE BUCKET CALIBRATION', style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 12)),
           const SizedBox(height: 8),
-          _bucketRow('91 - 100% Confidence', '89.2% Win Rate', 0.89, Colors.greenAccent),
-          _bucketRow('86 - 90% Confidence', '81.5% Win Rate', 0.81, Colors.cyanAccent),
-          _bucketRow('81 - 85% Confidence', '74.0% Win Rate', 0.74, Colors.lightGreenAccent),
-          _bucketRow('76 - 80% Confidence', '68.2% Win Rate', 0.68, Colors.amberAccent),
-          _bucketRow('70 - 75% Confidence', '58.0% Win Rate', 0.58, Colors.orangeAccent),
+          ...buckets.map((b) => _bucketRow(b.bucket, '${b.winRatePct.toStringAsFixed(1)}% Win Rate', b.ratio, Colors.cyanAccent)),
         ],
       ),
     );
   }
 
-  Widget _buildRankingsCard() {
+  Widget _buildRankingsCard(List<ScannerRankingModel> rankings) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -181,21 +205,21 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SCANNER PERFORMANCE RANKING', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
-          SizedBox(height: 8),
-          Text('1. Breakout Scanner — Win Rate: 81.2% | Avg RR: 1:2.8', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-          Text('2. Swing Scanner — Win Rate: 78.4% | Avg RR: 1:2.5', style: TextStyle(color: Colors.white70, fontSize: 11)),
-          Text('3. High Volume Scanner — Win Rate: 74.5% | Avg RR: 1:2.2', style: TextStyle(color: Colors.white70, fontSize: 11)),
-          Text('4. Intraday Scanner — Win Rate: 71.0% | Avg RR: 1:1.8', style: TextStyle(color: Colors.white70, fontSize: 11)),
+          const Text('SCANNER PERFORMANCE RANKING', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+          const SizedBox(height: 8),
+          ...rankings.map((r) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text('${r.rank}. ${r.scanner} — Win Rate: ${r.winRatePct.toStringAsFixed(1)}% | Avg RR: ${r.avgRr}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              )),
         ],
       ),
     );
   }
 
-  Widget _buildAiRecommendationsCard() {
+  Widget _buildAiRecommendationsCard(List<String> recs) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -203,19 +227,24 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.indigoAccent.withValues(alpha: 0.3)),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('AI SELF-IMPROVEMENT RECOMMENDATIONS', style: TextStyle(color: Colors.indigoAccent, fontWeight: FontWeight.bold, fontSize: 12)),
-          SizedBox(height: 6),
-          Text('• Increase Confidence Threshold: Set minimum confidence to 80% to filter 58% win-rate setups.', style: TextStyle(color: Colors.white70, fontSize: 11)),
-          Text('• Focus Sector Allocation: NIFTY IT & BANKING produce 1.4x higher Profit Factor than FMCG.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+          const Text('AI SELF-IMPROVEMENT RECOMMENDATIONS', style: TextStyle(color: Colors.indigoAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+          const SizedBox(height: 6),
+          ...recs.map((r) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text('• $r', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              )),
         ],
       ),
     );
   }
 
-  Widget _buildReplayLearningCard() {
+  Widget _buildReplayLearningCard(List<TradeReplayItemModel> replays) {
+    final winReplay = replays.firstWhere((r) => r.type == 'WIN', orElse: () => const TradeReplayItemModel(type: 'WIN', title: 'Replay Win', analysis: 'No win trade replay recorded.'));
+    final lossReplay = replays.firstWhere((r) => r.type == 'LOSS', orElse: () => const TradeReplayItemModel(type: 'LOSS', title: 'Replay Loss', analysis: 'No loss trade replay recorded.'));
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -232,7 +261,7 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _showReplayModal('Replay Win: RELIANCE.NS', '• Entry: ₹2,450 | Target 2 Hit: ₹2,580 (+5.3%)\n• Catalyst: Narrow CPR breakout with 2.1x volume surge.\n• Lesson: Multi-timeframe trend alignment verified success.'),
+                  onPressed: () => _showReplayModal(winReplay.title, winReplay.analysis),
                   icon: const Icon(Icons.play_circle_fill, size: 14, color: Colors.greenAccent),
                   label: const Text('Replay Win', style: TextStyle(fontSize: 11)),
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF232D48)),
@@ -241,7 +270,7 @@ class _QuantLabScreenState extends State<QuantLabScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _showReplayModal('Replay Loss: TATASTEEL.NS', '• Entry: ₹145 | Stop Loss Hit: ₹141 (-2.7%)\n• Catalyst: Market-wide intraday reversal triggered stop.\n• Lesson: Strict stop loss prevented deeper 6% drawdown.'),
+                  onPressed: () => _showReplayModal(lossReplay.title, lossReplay.analysis),
                   icon: const Icon(Icons.replay, size: 14, color: Colors.redAccent),
                   label: const Text('Replay Loss', style: TextStyle(fontSize: 11)),
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF232D48)),
