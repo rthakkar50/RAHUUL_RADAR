@@ -739,11 +739,36 @@ async def get_portfolio():
         logger.error(f"Error in portfolio endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-# Trade Journal Endpoint — Assembles complete trade history and analytics without dummy values
+# Trade Journal API Routes (SPRINT-233)
+@v1_router.get("/journal/open", tags=["Journal"])
+async def get_open_journal_trades():
+    from core.live_trade_journal import journal_engine
+    trades = journal_engine.get_open_trades()
+    return {"status": "ok", "count": len(trades), "trades": trades}
+
+@v1_router.get("/journal/closed", tags=["Journal"])
+async def get_closed_journal_trades():
+    from core.live_trade_journal import journal_engine
+    trades = journal_engine.get_closed_trades()
+    return {"status": "ok", "count": len(trades), "trades": trades}
+
+@v1_router.get("/journal/{trade_id}", tags=["Journal"])
+async def get_journal_trade_by_id(trade_id: str):
+    from core.live_trade_journal import journal_engine
+    trade = journal_engine.get_trade_by_id(trade_id)
+    if not trade:
+        raise HTTPException(status_code=404, detail=f"Trade ID {trade_id} not found in journal")
+    return {"status": "ok", "trade": trade}
+
 @v1_router.get("/journal", tags=["Journal"])
 async def get_trade_journal():
     logger.info("Trade journal endpoint called")
     try:
+        from core.live_trade_journal import journal_engine
+        live_trades = journal_engine.get_all_trades()
+        if live_trades:
+            return {"status": "ok", "count": len(live_trades), "trades": live_trades, "journal": live_trades}
+        
         import hashlib as _hashlib
         import datetime as _dt
 
