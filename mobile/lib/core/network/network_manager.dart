@@ -28,7 +28,8 @@ class NetworkManager {
   static const String keyPort = 'api_port';
   static const String keyEnv = 'api_env';
 
-  static const String defaultProductionUrl = 'https://api.rahuulradar.com';
+  static const String defaultProductionUrl = 'http://80.225.242.87:8000';
+
   static const String defaultRenderUrl = defaultProductionUrl;
   static const List<String> localWifiCandidates = [
     'http://127.0.0.1:8000',
