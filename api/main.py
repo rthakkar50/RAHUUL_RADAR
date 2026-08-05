@@ -1075,8 +1075,8 @@ async def get_order_audit_logs(limit: int = 50):
         logs = engine.get_audit_logs(limit=limit)
         return {"audit_logs": logs, "count": len(logs), "timestamp": time.time()}
     except Exception as e:
-        logger.error(f"Failed to fetch order audit logs: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.warning(f"Order audit logs fallback: {e}")
+        return {"audit_logs": [], "count": 0, "timestamp": time.time(), "warning": str(e)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
