@@ -74,6 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
+          _data = null;
           _error = e.toString();
           _isLoading = false;
         });
