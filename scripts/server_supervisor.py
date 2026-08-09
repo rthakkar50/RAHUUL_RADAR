@@ -22,7 +22,7 @@ def ensure_background_services():
 
 def run_supervisor():
     port = os.environ.get("PORT", "8000")
-    cmd = [sys.executable, "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", str(port)]
+    cmd = [sys.executable, "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", str(port), "--workers", "4"]
     env = os.environ.copy()
     env["PYTHONPATH"] = "."
     
