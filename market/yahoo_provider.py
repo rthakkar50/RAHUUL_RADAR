@@ -158,34 +158,26 @@ class YahooFinanceProvider(MarketDataProvider):
             
         formatted_symbol = self._format_symbol(symbol)
         
-        # Check if we have recent OHLCV data in cache first
-        cache_key = f"{formatted_symbol}_1d_3mo"
+        # Check if we have recent OHLCV data in cache first across ANY timeframe for this symbol
         with self._cache_lock:
-            if cache_key in self._cache and (time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl):
-                cached_data = self._cache[cache_key]['data']
-                if cached_data:
-                    return cached_data[-1].close
-                else:
-                    return 0.0
-        
-        for attempt in range(3):
+            for k, v in self._cache.items():
+                if k.startswith(f"{formatted_symbol}_") and (time.time() - v['timestamp'] < self._cache_ttl):
+                    cached_data = v['data']
+                    if cached_data:
+                        return float(cached_data[-1].close)
+
+        try:
+            ticker = yf.Ticker(formatted_symbol, session=self._session)
             try:
-                ticker = yf.Ticker(formatted_symbol, session=self._session)
-                # Fast retrieval using fast_info if available, else history
-                try:
-                    price = ticker.fast_info['lastPrice']
-                    return float(price)
-                except Exception as e:
-                    logger.debug(f"fast_info failed for {formatted_symbol}, falling back to history: {e}")
-                    df = ticker.history(period="1d", interval="1d")
-                    if df.empty:
-                        raise ValueError(f"No data returned for {formatted_symbol}")
+                price = ticker.fast_info['lastPrice']
+                return float(price)
+            except Exception:
+                df = ticker.history(period="1d", interval="1d")
+                if not df.empty:
                     return float(df['Close'].iloc[-1])
-            except Exception as e:
-                logger.warning(f"Attempt {attempt + 1} failed to fetch price for {formatted_symbol}: {e}")
-                time.sleep(1)
-                
-        logger.error(f"Failed to fetch last price for {symbol} after 3 attempts.")
+        except Exception as e:
+            logger.debug(f"Failed to fetch last price for {formatted_symbol}: {e}")
+
         return 0.0
 
     def pre_cache(self, symbols: List[str], interval: str = "1d", period: str = "3mo") -> None:

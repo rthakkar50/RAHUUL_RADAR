@@ -469,49 +469,25 @@ class SwingScannerService:
                         rs_score_display = round(getattr(crs, 'market_alpha', rs_score_display), 1)
 
                 # Save decision to data/radar.db master_ai_decisions for Telegram /watchlist
+                # Save decision to data/radar.db master_ai_decisions for Telegram /watchlist
                 try:
-                    conn_radar = sqlite3.connect("data/radar.db")
-                    c_radar = conn_radar.cursor()
-                    c_radar.execute("""
-                        CREATE TABLE IF NOT EXISTS master_ai_decisions (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            timestamp TEXT,
-                            symbol TEXT,
-                            signal TEXT,
-                            reasons TEXT,
-                            score REAL,
-                            price REAL DEFAULT 0.0,
-                            entry REAL DEFAULT 0.0,
-                            sl REAL DEFAULT 0.0,
-                            target_1 REAL DEFAULT 0.0,
-                            target_2 REAL DEFAULT 0.0,
-                            status TEXT,
-                            result TEXT DEFAULT 'PENDING'
-                        )
-                    """)
-                    for col in ["price", "entry", "sl", "target_1", "target_2"]:
-                        try:
-                            c_radar.execute(f"ALTER TABLE master_ai_decisions ADD COLUMN {col} REAL DEFAULT 0.0")
-                        except Exception:
-                            pass
-                    c_radar.execute("""
-                        INSERT INTO master_ai_decisions (timestamp, symbol, signal, reasons, score, price, entry, sl, target_1, target_2, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        time.strftime('%Y-%m-%d %H:%M:%S'),
-                        symbol,
-                        decision_str,
-                        json.dumps(pipeline_res.get("reasons", [])),
-                        score,
-                        price,
-                        entry,
-                        sl,
-                        t1,
-                        t2,
-                        "ACTIVE"
-                    ))
-                    conn_radar.commit()
-                    conn_radar.close()
+                    with sqlite3.connect("data/radar.db", timeout=10.0) as conn_radar:
+                        conn_radar.execute("""
+                            INSERT INTO master_ai_decisions (timestamp, symbol, signal, reasons, score, price, entry, sl, target_1, target_2, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            time.strftime('%Y-%m-%d %H:%M:%S'),
+                            symbol,
+                            decision_str,
+                            json.dumps(pipeline_res.get("reasons", [])),
+                            score,
+                            price,
+                            entry,
+                            sl,
+                            t1,
+                            t2,
+                            "ACTIVE"
+                        ))
                 except Exception as db_err:
                     logger.warning(f"Error logging decision to radar.db: {db_err}")
 
@@ -585,20 +561,45 @@ class SwingScannerService:
                     "_reasons": list(getattr(r, 'reasons', [])) + list(pipeline_res.get("reasons", []))
                 }
                 
+            try:
+                with sqlite3.connect("data/radar.db", timeout=10.0) as conn_init:
+                    conn_init.execute("""
+                        CREATE TABLE IF NOT EXISTS master_ai_decisions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            timestamp TEXT,
+                            symbol TEXT,
+                            signal TEXT,
+                            reasons TEXT,
+                            score REAL,
+                            price REAL DEFAULT 0.0,
+                            entry REAL DEFAULT 0.0,
+                            sl REAL DEFAULT 0.0,
+                            target_1 REAL DEFAULT 0.0,
+                            target_2 REAL DEFAULT 0.0,
+                            status TEXT,
+                            result TEXT DEFAULT 'PENDING'
+                        )
+                    """)
+            except Exception:
+                pass
+
             import concurrent.futures
             import os
-            adaptive_workers = min(32, (os.cpu_count() or 1) + 4)
+            adaptive_workers = min(16, (os.cpu_count() or 1) + 4)
             with concurrent.futures.ThreadPoolExecutor(max_workers=adaptive_workers) as executor:
                 futures = [executor.submit(process_post_scan, r) for r in raw_results]
+                tot_futures = len(futures)
+                done_futures = 0
                 for future in concurrent.futures.as_completed(futures):
+                    done_futures += 1
+                    if progress_callback and tot_futures > 0:
+                        progress_callback(70 + int((done_futures / tot_futures) * 30))
                     try:
                         res = future.result()
                         if res:
                             processed_results.append(res)
                     except Exception as e:
-                        import traceback
                         logger.exception("process_post_scan failed")
-                        traceback.print_exc()
                 
             # --- QUALITY GATE, TRANSPARENCY & DECISION TRACE ENGINE (SPRINT-159) ---
             qualified_results = []
