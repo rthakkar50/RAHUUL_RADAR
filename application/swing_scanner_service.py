@@ -228,11 +228,9 @@ class SwingScannerService:
                 def _cache_job(args):
                     interval, period = args
                     data_provider.pre_cache(syms, interval, period)
-                with ThreadPoolExecutor(max_workers=4) as executor:
+                with ThreadPoolExecutor(max_workers=2) as executor:
                     executor.map(_cache_job, [
                         ("1d", "3mo"),
-                        ("15m", "5d"),
-                        ("1h", "1mo"),
                         ("1wk", "1y")
                     ])
                 

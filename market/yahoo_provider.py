@@ -226,7 +226,7 @@ class YahooFinanceProvider(MarketDataProvider):
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=False, progress=False)
+                    df = yf.download(sym_str, period=period, interval=interval, group_by="ticker", threads=True, progress=False)
                 
                 with self._cache_lock:
                     for orig_sym, f_sym in zip(chunk_missing, chunk_formatted):
