@@ -18,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 from PySide6.QtCore import QThread, Signal
 
-class SwingScannerWorker(QThread):
-    finished = Signal(dict)
+class ScannerWorker(QThread):
     progress = Signal(int)
+    result = Signal(object)
+    finished = Signal()
     
     def __init__(self, service):
         super().__init__()
@@ -28,13 +29,20 @@ class SwingScannerWorker(QThread):
         
     def run(self):
         try:
-            results = self.service.execute_swing_scan(progress_callback=self.progress.emit)
-            self.finished.emit(results)
+            if hasattr(self.service, "scan_all"):
+                data = self.service.scan_all(progress_callback=self.progress.emit)
+            else:
+                data = self.service.execute_swing_scan(progress_callback=self.progress.emit)
+            self.result.emit(data)
         except Exception as e:
             import traceback
-            logger.error(f"Error in SwingScannerWorker: {e}")
+            logger.error(f"Error in ScannerWorker: {e}")
             logger.error(traceback.format_exc())
-            self.finished.emit({})
+            self.result.emit({})
+        finally:
+            self.finished.emit()
+
+SwingScannerWorker = ScannerWorker
 
 class SwingScannerPage(QWidget):
     navigate_to_chart = Signal(str)
@@ -260,18 +268,22 @@ class SwingScannerPage(QWidget):
         self.repaint()
         
         try:
-            logger.info("Calling Scanner Service...")
-            self.scanner_thread = SwingScannerWorker(self.service)
-            self.scanner_thread.finished.connect(self._on_scan_finished)
+            logger.info("Calling Scanner Service via ScannerWorker QThread...")
+            self.scanner_thread = ScannerWorker(self.service)
             self.scanner_thread.progress.connect(self._on_progress_update)
+            self.scanner_thread.result.connect(self._on_scan_finished)
+            self.scanner_thread.finished.connect(self._on_worker_finished)
             self.scanner_thread.start()
             
             logger.info(f"Execution Time (run_scan init): {time.time() - self._scan_start_t:.2f}s")
         except Exception as e:
             import traceback
-            logger.error(f"Execution stopped at ui/pages/swing_scanner_page.py, run_scan, line 223")
+            logger.error("Execution stopped at ui/pages/swing_scanner_page.py, run_scan")
             logger.error(traceback.format_exc())
             raise
+
+    def _on_worker_finished(self):
+        logger.info("ScannerWorker QThread finished scan execution.")
 
     def _on_scan_finished(self, payload):
         logger.info("Entered Function: _on_scan_finished() [Result Table Population]")

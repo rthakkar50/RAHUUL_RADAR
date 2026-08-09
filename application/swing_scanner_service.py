@@ -151,6 +151,9 @@ class SwingScannerService:
                 
         return min(score, 100)
         
+    def scan_all(self, progress_callback=None) -> List[Dict[str, Any]]:
+        return self.execute_swing_scan(progress_callback=progress_callback)
+
     def execute_swing_scan(self, progress_callback=None) -> List[Dict[str, Any]]:
         start_time = time.time()
         logger.info(f"Entered Function: execute_swing_scan in core/swing_scanner_service.py")
