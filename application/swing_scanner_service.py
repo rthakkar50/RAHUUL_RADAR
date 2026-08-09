@@ -584,7 +584,8 @@ class SwingScannerService:
 
                 if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
                     downgrade_reasons = []
-                    if conf < min_conf: downgrade_reasons.append("Confidence below directional threshold")
+                    directional_min_conf = 55.0 if signal in ["SELL", "STRONG_SELL"] else min_conf
+                    if conf < directional_min_conf: downgrade_reasons.append("Confidence below directional threshold")
                     if score < min_score: downgrade_reasons.append(f"Score below directional threshold")
                     if rr < min_rr: downgrade_reasons.append("RR below minimum threshold")
                     if downgrade_reasons:
