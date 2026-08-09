@@ -279,10 +279,21 @@ class _AdvancedDiagnosticsWidgetState extends State<AdvancedDiagnosticsWidget> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: item.displaySignal.contains('BUY') ? Colors.green.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2),
+                          color: item.displaySignal.contains('BUY')
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : (item.displaySignal.contains('SELL') ? Colors.red.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2)),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(item.displaySignal, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: item.displaySignal.contains('BUY') ? Colors.greenAccent : Colors.amberAccent)),
+                        child: Text(
+                          item.displaySignal,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: item.displaySignal.contains('BUY')
+                                ? Colors.greenAccent
+                                : (item.displaySignal.contains('SELL') ? Colors.redAccent : Colors.amberAccent),
+                          ),
+                        ),
                       ),
                     ],
                   ),

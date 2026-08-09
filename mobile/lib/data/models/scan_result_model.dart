@@ -74,7 +74,7 @@ class ScanResultModel {
       rawSignal = parts[1].trim();
     }
     final sig = rawSignal.toUpperCase();
-    final isBuy = sig.toUpperCase() != 'SELL';
+    final isBuy = !sig.contains('SELL');
     final entryVal = (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p;
     
     double slVal = (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? (isBuy ? entryVal * 0.96 : entryVal * 1.04);
