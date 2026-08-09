@@ -96,11 +96,11 @@ class SwingScannerService:
         
     def calculate_bearish(self, data: dict) -> int:
         """
-        Calculates independent bearish score (0-100) based on technical criteria (SPRINT-234).
-        - Downtrend confirmation -> +30
-        - RSI < 40 -> +20
+        Calculates independent bearish score (0-100) based on technical criteria (SPRINT-235).
+        - Downtrend confirmation -> +25
+        - RSI < 45 -> +20
         - Price below EMA50 -> +20
-        - Lower High structure -> +15
+        - Lower High structure -> +20
         - Bearish volume spike -> +15
         """
         score = 0
@@ -110,20 +110,20 @@ class SwingScannerService:
         breakdown = data.get("breakdown", {})
         indicators = pipeline_res.get("data", {})
         
-        # 1. Downtrend confirmation -> +30
+        # 1. Downtrend confirmation -> +25
         trend_direction = str(getattr(r, "trend_direction", "")).upper()
         trend_score = safe_float(getattr(r, "trend_score", 50.0), 50.0)
         trend_ind = str(indicators.get("Trend", "")).upper()
         if "BEAR" in trend_direction or trend_score < 40.0 or "BEAR" in trend_ind:
-            score += 30
+            score += 25
             
-        # 2. RSI < 40 -> +20
+        # 2. RSI < 45 -> +20
         rsi_val = breakdown.get("rsi", None)
         momentum_score = safe_float(getattr(r, "momentum_score", 50.0), 50.0)
         rsi_ind = str(indicators.get("RSI", ""))
-        if rsi_val is not None and safe_float(rsi_val, 50.0) < 40.0:
+        if rsi_val is not None and safe_float(rsi_val, 50.0) < 45.0:
             score += 20
-        elif momentum_score < 40.0 or "Bearish" in rsi_ind:
+        elif momentum_score < 45.0 or "Bearish" in rsi_ind:
             score += 20
             
         # 3. Price below EMA50 -> +20
@@ -134,13 +134,13 @@ class SwingScannerService:
         elif "BELOW" in ema50_ind or getattr(r, "price_below_ema50", False) or "BEAR" in trend_direction:
             score += 20
             
-        # 4. Lower High structure -> +15
+        # 4. Lower High structure -> +20
         structure_details = breakdown.get("structure", {})
         structure_score = safe_float(getattr(r, "structure_score", 50.0), 50.0)
         struct_type = str(structure_details.get("type", "")).upper()
         struct_ind = str(indicators.get("Structure Quality", "")).upper()
         if "LH" in struct_type or "LOWER HIGH" in struct_type or structure_score < 45.0 or "WEAK" in struct_ind:
-            score += 15
+            score += 20
             
         # 5. Bearish volume spike -> +15
         volume_score = safe_float(getattr(r, "volume_score", 50.0), 50.0)
@@ -304,10 +304,11 @@ class SwingScannerService:
                     "breakdown": breakdown
                 })
                 
-                # TASK-2: Final Signal Decision
-                if bullish_score >= 70:
+                # SPRINT-235: Pure Score Delta Decision System (TASK-1, TASK-4, TASK-5)
+                score_delta = bullish_score - bearish_score
+                if score_delta > 15:
                     final_signal = "BUY"
-                elif bearish_score >= 70:
+                elif score_delta < -15:
                     final_signal = "SELL"
                 else:
                     final_signal = "WATCH"
@@ -315,8 +316,8 @@ class SwingScannerService:
                 decision_str = final_signal
                 score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal == "SELL" else max(bullish_score, bearish_score))
                 
-                # TASK-6: Debug print
-                print(f"{symbol} | Bull: {bullish_score} | Bear: {bearish_score} | Signal: {final_signal}")
+                # TASK-5: Debug print per stock: symbol | bull_score | bear_score | delta | signal
+                print(f"{symbol} | Bull: {bullish_score} | Bear: {bearish_score} | Delta: {score_delta} | Signal: {final_signal}")
                 
                 # BUG-04 FIX: Use real confidence from the engine, never fabricate 80.0
                 # Priority: pipeline calibrated_confidence > ScanResult.confidence > computed from scores
@@ -649,14 +650,14 @@ class SwingScannerService:
                 if v_score < 50.0: rejection_analytics["Low Volume"] += 1
                 if s_score < 50.0: rejection_analytics["Structure Unaligned"] += 1
 
-                # SPRINT-234 TASK-5: Relaxed thresholds (min_score = 60, min_confidence = 60)
+                # SPRINT-235 TASK-5: Relaxed thresholds (min_score = 60, min_confidence = 60)
                 min_score = 60.0
                 min_conf = 60.0
                 min_rr = 1.5
 
                 if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
                     downgrade_reasons = []
-                    directional_min_conf = 60.0
+                    directional_min_conf = 50.0 if signal in ["SELL", "STRONG_SELL"] else min_conf
                     if conf < directional_min_conf: downgrade_reasons.append("Confidence below directional threshold")
                     if score < min_score: downgrade_reasons.append(f"Score below directional threshold")
                     if rr < min_rr: downgrade_reasons.append("RR below minimum threshold")
@@ -1021,7 +1022,8 @@ class SwingScannerService:
             
             filter_rejected_cnt = max(0, total_scanned_val - qualified_cnt_val)
             no_data_cnt_val = max(0, total_universe_val - total_scanned_val)
-            rejected_cnt_val = filter_rejected_cnt + no_data_cnt_val
+            print(f"\n[SPRINT-235] Total BUY: {buy_count} | Total SELL: {sell_count} | Total WATCH: {watch_count}")
+            logger.info(f"[SPRINT-235] Total BUY: {buy_count} | Total SELL: {sell_count} | Total WATCH: {watch_count}")
 
             return {
                 "total_universe": total_universe_val,
