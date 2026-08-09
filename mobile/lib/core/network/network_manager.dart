@@ -213,7 +213,7 @@ class NetworkManager {
     _state = NetworkState.checking;
 
     final isRender = checkUrl.contains('onrender.com');
-    final stages = isRender ? [3000, 8000, 15000, 30000] : [2000, 5000, 10000, 20000];
+    final stages = isRender ? [5000, 10000, 15000, 30000] : [5000, 10000, 15000, 30000];
 
     for (int i = 0; i < stages.length; i++) {
       final timeoutMs = stages[i];
