@@ -15,22 +15,32 @@ import time
 
 logger = logging.getLogger(__name__)
 
-class IntradayScanWorker(QThread):
-    progress = Signal(int)
-    results_ready = Signal(list, str) # list of results, error message if any
+from PySide6.QtCore import QObject, QThread, Signal, Slot
+
+class IntradayScanWorkerObject(QObject):
+    progress_updated = Signal(int)
+    scan_completed = Signal(object)
+    scan_error = Signal(str)
     
-    def __init__(self, service, timeframe):
+    def __init__(self, service, timeframe="5m"):
         super().__init__()
         self.service = service
         self.timeframe = timeframe
         
+    @Slot()
     def run(self):
         try:
-            results = self.service.execute_intraday_scan(self.timeframe, self.progress.emit)
-            self.results_ready.emit(results, "")
+            results = self.service.execute_intraday_scan(self.timeframe, self.progress_updated.emit)
+            self.scan_completed.emit(results)
         except Exception as e:
-            logger.error(f"Worker failed: {e}")
-            self.results_ready.emit([], str(e))
+            import traceback
+            err_msg = str(e)
+            logger.error(f"Error in IntradayScanWorkerObject: {err_msg}")
+            logger.error(traceback.format_exc())
+            self.scan_error.emit(err_msg)
+            self.scan_completed.emit([])
+
+IntradayScanWorker = IntradayScanWorkerObject
 
 class IntradayScannerPage(QWidget):
     navigate_to_chart = Signal(str)
@@ -239,7 +249,7 @@ class IntradayScannerPage(QWidget):
                 self.lbl_placeholder.setGeometry(self.rect())
             
     def run_scan(self):
-        if self.worker and self.worker.isRunning():
+        if hasattr(self, 'scan_thread') and self.scan_thread and self.scan_thread.isRunning():
             return
             
         self.btn_scan.setEnabled(False)
@@ -252,10 +262,42 @@ class IntradayScannerPage(QWidget):
         self.table.setRowCount(0)
         self.start_time = time.time()
         
-        self.worker = IntradayScanWorker(self.service, "5m") # Default timeframe 5m
-        self.worker.progress.connect(self.progress_bar.setValue)
-        self.worker.results_ready.connect(self.on_scan_completed)
-        self.worker.start()
+        try:
+            self.scan_thread = QThread()
+            self.scan_worker = IntradayScanWorkerObject(self.service, "5m")
+            self.scan_worker.moveToThread(self.scan_thread)
+            
+            # Connect signals:
+            # thread.started -> worker.run
+            # worker.progress_updated -> UI progress bar
+            # worker.scan_completed -> UI results display
+            # worker.scan_error -> error handler
+            self.scan_thread.started.connect(self.scan_worker.run)
+            self.scan_worker.progress_updated.connect(self.progress_bar.setValue)
+            self.scan_worker.scan_completed.connect(self._on_intraday_completed)
+            self.scan_worker.scan_error.connect(self._on_intraday_error)
+            
+            # Clean thread teardown to prevent memory leaks:
+            self.scan_worker.scan_completed.connect(self.scan_thread.quit)
+            self.scan_worker.scan_completed.connect(self.scan_worker.deleteLater)
+            self.scan_thread.finished.connect(self.scan_thread.deleteLater)
+            self.scan_thread.finished.connect(self._on_intraday_worker_finished)
+            
+            self.scan_thread.start()
+        except Exception as e:
+            self.btn_scan.setEnabled(True)
+            self.btn_scan.setText("Scan")
+            raise
+
+    def _on_intraday_completed(self, results):
+        self.on_scan_completed(results, "")
+
+    def _on_intraday_error(self, error_msg):
+        self.on_scan_completed([], error_msg)
+
+    def _on_intraday_worker_finished(self):
+        self.btn_scan.setEnabled(True)
+        self.btn_scan.setText("Scan")
         
     def on_scan_completed(self, results, error_msg):
         self.scan_results = results

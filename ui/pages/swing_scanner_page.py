@@ -16,33 +16,36 @@ import time
 
 logger = logging.getLogger(__name__)
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 
-class ScannerWorker(QThread):
-    progress = Signal(int)
-    result = Signal(object)
-    finished = Signal()
+class SwingScannerWorkerObject(QObject):
+    progress_updated = Signal(int)
+    scan_completed = Signal(object)
+    scan_error = Signal(str)
     
     def __init__(self, service):
         super().__init__()
         self.service = service
         
+    @Slot()
     def run(self):
         try:
             if hasattr(self.service, "scan_all"):
-                data = self.service.scan_all(progress_callback=self.progress.emit)
+                results = self.service.scan_all(progress_callback=self.progress_updated.emit)
             else:
-                data = self.service.execute_swing_scan(progress_callback=self.progress.emit)
-            self.result.emit(data)
+                results = self.service.execute_swing_scan(progress_callback=self.progress_updated.emit)
+            self.scan_completed.emit(results)
         except Exception as e:
             import traceback
-            logger.error(f"Error in ScannerWorker: {e}")
+            err_msg = str(e)
+            logger.error(f"Error in SwingScannerWorkerObject: {err_msg}")
             logger.error(traceback.format_exc())
-            self.result.emit({})
-        finally:
-            self.finished.emit()
+            self.scan_error.emit(err_msg)
+            self.scan_completed.emit({})
 
-SwingScannerWorker = ScannerWorker
+# Backward compatibility aliases
+ScannerWorker = SwingScannerWorkerObject
+SwingScannerWorker = SwingScannerWorkerObject
 
 class SwingScannerPage(QWidget):
     navigate_to_chart = Signal(str)
@@ -267,23 +270,56 @@ class SwingScannerPage(QWidget):
                 
         self.repaint()
         
+        # Disable Scan buttons during run
+        self._set_scan_buttons_enabled(False)
+        
         try:
-            logger.info("Calling Scanner Service via ScannerWorker QThread...")
-            self.scanner_thread = ScannerWorker(self.service)
-            self.scanner_thread.progress.connect(self._on_progress_update)
-            self.scanner_thread.result.connect(self._on_scan_finished)
-            self.scanner_thread.finished.connect(self._on_worker_finished)
-            self.scanner_thread.start()
+            logger.info("Setting up QThread and SwingScannerWorkerObject...")
+            self.scan_thread = QThread()
+            self.scan_worker = SwingScannerWorkerObject(self.service)
+            self.scan_worker.moveToThread(self.scan_thread)
             
+            # Connect signals:
+            # thread.started -> worker.run
+            # worker.progress_updated -> UI progress bar
+            # worker.scan_completed -> UI results display
+            # worker.scan_error -> error handler
+            self.scan_thread.started.connect(self.scan_worker.run)
+            self.scan_worker.progress_updated.connect(self._on_progress_update)
+            self.scan_worker.scan_completed.connect(self._on_scan_finished)
+            self.scan_worker.scan_error.connect(self._on_scan_error)
+            
+            # Clean thread teardown to prevent memory leaks:
+            self.scan_worker.scan_completed.connect(self.scan_thread.quit)
+            self.scan_worker.scan_completed.connect(self.scan_worker.deleteLater)
+            self.scan_thread.finished.connect(self.scan_thread.deleteLater)
+            self.scan_thread.finished.connect(self._on_worker_finished)
+            
+            self.scan_thread.start()
             logger.info(f"Execution Time (run_scan init): {time.time() - self._scan_start_t:.2f}s")
         except Exception as e:
+            self._set_scan_buttons_enabled(True)
             import traceback
             logger.error("Execution stopped at ui/pages/swing_scanner_page.py, run_scan")
             logger.error(traceback.format_exc())
             raise
 
+    def _on_scan_error(self, error_msg):
+        logger.error(f"Scan error signal received: {error_msg}")
+        self.lbl_placeholder.setText(f"Scan Failed:\n{error_msg}")
+        self.lbl_placeholder.show()
+        self.progress_bar.hide()
+        self._set_scan_buttons_enabled(True)
+
     def _on_worker_finished(self):
-        logger.info("ScannerWorker QThread finished scan execution.")
+        logger.info("QThread worker finished cleanup.")
+        self._set_scan_buttons_enabled(True)
+
+    def _set_scan_buttons_enabled(self, enabled: bool):
+        if hasattr(self, 'toolbar') and hasattr(self.toolbar, 'btn_scan'):
+            self.toolbar.btn_scan.setEnabled(enabled)
+        if hasattr(self, 'btn_scan'):
+            self.btn_scan.setEnabled(enabled)
 
     def _on_scan_finished(self, payload):
         logger.info("Entered Function: _on_scan_finished() [Result Table Population]")
