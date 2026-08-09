@@ -94,6 +94,63 @@ class SwingScannerService:
         self.pipeline = MasterSignalPipeline(self.engines)
         self.last_results = []
         
+    def calculate_bearish(self, data: dict) -> int:
+        """
+        Calculates independent bearish score (0-100) based on technical criteria (SPRINT-234).
+        - Downtrend confirmation -> +30
+        - RSI < 40 -> +20
+        - Price below EMA50 -> +20
+        - Lower High structure -> +15
+        - Bearish volume spike -> +15
+        """
+        score = 0
+        r = data.get("r")
+        pipeline_res = data.get("pipeline_res", {})
+        price = data.get("price", 0.0)
+        breakdown = data.get("breakdown", {})
+        indicators = pipeline_res.get("data", {})
+        
+        # 1. Downtrend confirmation -> +30
+        trend_direction = str(getattr(r, "trend_direction", "")).upper()
+        trend_score = safe_float(getattr(r, "trend_score", 50.0), 50.0)
+        trend_ind = str(indicators.get("Trend", "")).upper()
+        if "BEAR" in trend_direction or trend_score < 40.0 or "BEAR" in trend_ind:
+            score += 30
+            
+        # 2. RSI < 40 -> +20
+        rsi_val = breakdown.get("rsi", None)
+        momentum_score = safe_float(getattr(r, "momentum_score", 50.0), 50.0)
+        rsi_ind = str(indicators.get("RSI", ""))
+        if rsi_val is not None and safe_float(rsi_val, 50.0) < 40.0:
+            score += 20
+        elif momentum_score < 40.0 or "Bearish" in rsi_ind:
+            score += 20
+            
+        # 3. Price below EMA50 -> +20
+        ema50 = breakdown.get("ema50", None)
+        ema50_ind = str(indicators.get("EMA50", "")).upper()
+        if ema50 is not None and price > 0 and price < safe_float(ema50, price + 1):
+            score += 20
+        elif "BELOW" in ema50_ind or getattr(r, "price_below_ema50", False) or "BEAR" in trend_direction:
+            score += 20
+            
+        # 4. Lower High structure -> +15
+        structure_details = breakdown.get("structure", {})
+        structure_score = safe_float(getattr(r, "structure_score", 50.0), 50.0)
+        struct_type = str(structure_details.get("type", "")).upper()
+        struct_ind = str(indicators.get("Structure Quality", "")).upper()
+        if "LH" in struct_type or "LOWER HIGH" in struct_type or structure_score < 45.0 or "WEAK" in struct_ind:
+            score += 15
+            
+        # 5. Bearish volume spike -> +15
+        volume_score = safe_float(getattr(r, "volume_score", 50.0), 50.0)
+        vol_ind = str(indicators.get("Volume", ""))
+        if volume_score >= 50.0 or "x" in vol_ind or "+" in vol_ind or getattr(r, "volume_spike", False):
+            if "BEAR" in trend_direction or momentum_score < 50.0:
+                score += 15
+                
+        return min(score, 100)
+        
     def execute_swing_scan(self, progress_callback=None) -> List[Dict[str, Any]]:
         start_time = time.time()
         logger.info(f"Entered Function: execute_swing_scan in core/swing_scanner_service.py")
@@ -237,14 +294,29 @@ class SwingScannerService:
                 
                 data_dict = pipeline_res
                 
-                # SPRINT-73 FIX: Use the engine's original calculated score, avoid pipeline overwrite of 0.0
+                # SPRINT-234: Dual Scoring System (Bullish vs Bearish)
                 engine_score = getattr(r, "adjusted_score", getattr(r, "total_score", 50))
-                score = safe_int(engine_score, 50)
-                bullish_score = score
+                bullish_score = safe_int(engine_score, 50)
+                bearish_score = self.calculate_bearish({
+                    "r": r,
+                    "pipeline_res": pipeline_res,
+                    "price": price,
+                    "breakdown": breakdown
+                })
                 
-                # Normalization Layer before Elite Selection
-                if decision_str in ["SELL", "STRONG_SELL"] and bullish_score <= 50:
-                    score = 100 - bullish_score
+                # TASK-2: Final Signal Decision
+                if bullish_score >= 70:
+                    final_signal = "BUY"
+                elif bearish_score >= 70:
+                    final_signal = "SELL"
+                else:
+                    final_signal = "WATCH"
+                    
+                decision_str = final_signal
+                score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal == "SELL" else max(bullish_score, bearish_score))
+                
+                # TASK-6: Debug print
+                print(f"{symbol} | Bull: {bullish_score} | Bear: {bearish_score} | Signal: {final_signal}")
                 
                 # BUG-04 FIX: Use real confidence from the engine, never fabricate 80.0
                 # Priority: pipeline calibrated_confidence > ScanResult.confidence > computed from scores
@@ -577,14 +649,14 @@ class SwingScannerService:
                 if v_score < 50.0: rejection_analytics["Low Volume"] += 1
                 if s_score < 50.0: rejection_analytics["Structure Unaligned"] += 1
 
-                mode = getattr(self.config, 'swing_signal_mode', 'Balanced')
-                if mode == 'Conservative': min_score = 80.0; min_conf = 75.0; min_rr = 2.0
-                elif mode == 'Aggressive': min_score = 70.0; min_conf = 65.0; min_rr = 1.5
-                else: min_score = 75.0; min_conf = 70.0; min_rr = 1.8
+                # SPRINT-234 TASK-5: Relaxed thresholds (min_score = 60, min_confidence = 60)
+                min_score = 60.0
+                min_conf = 60.0
+                min_rr = 1.5
 
                 if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
                     downgrade_reasons = []
-                    directional_min_conf = 55.0 if signal in ["SELL", "STRONG_SELL"] else min_conf
+                    directional_min_conf = 60.0
                     if conf < directional_min_conf: downgrade_reasons.append("Confidence below directional threshold")
                     if score < min_score: downgrade_reasons.append(f"Score below directional threshold")
                     if rr < min_rr: downgrade_reasons.append("RR below minimum threshold")
