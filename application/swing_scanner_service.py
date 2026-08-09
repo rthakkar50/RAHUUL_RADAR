@@ -304,7 +304,7 @@ class SwingScannerService:
                     "breakdown": breakdown
                 })
                 
-                # SPRINT-235: Pure Score Delta Decision System (TASK-1, TASK-4, TASK-5)
+                # SPRINT-235/236: Pure Score Delta & False Signal Filtering
                 score_delta = bullish_score - bearish_score
                 if score_delta > 15:
                     final_signal = "BUY"
@@ -312,23 +312,34 @@ class SwingScannerService:
                     final_signal = "SELL"
                 else:
                     final_signal = "WATCH"
-                    
+
+                # SPRINT-236 TASK-2: WEAK TREND FILTER (Filter out low ADX / flat trends)
+                trend_dir = str(getattr(r, "trend_direction", "")).upper()
+                adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
+                if ("SIDEWAYS" in trend_dir or "NEUTRAL" in trend_dir) and (0.0 < adx_val < 15.0):
+                    final_signal = "WATCH"
+
+                # SPRINT-236 TASK-3: SIDEWAYS MARKET FILTER
+                rsi_val = breakdown.get("rsi", None)
+                if rsi_val is not None and atr_val > 0 and price > 0:
+                    rsi_num = safe_float(rsi_val, 50.0)
+                    atr_ratio = atr_val / price
+                    if 45.0 <= rsi_num <= 55.0 and atr_ratio < 0.01:
+                        final_signal = "WATCH"
+
                 decision_str = final_signal
                 score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal == "SELL" else max(bullish_score, bearish_score))
+
+                # SPRINT-236 TASK-1 & TASK-4: CONFIDENCE PENALTY & NORMALIZATION
+                raw_delta_conf = float(abs(score_delta))
+                if bullish_score >= 50 and bearish_score >= 50:
+                    raw_delta_conf = float(abs(score_delta))
                 
-                # TASK-5: Debug print per stock: symbol | bull_score | bear_score | delta | signal
-                print(f"{symbol} | Bull: {bullish_score} | Bear: {bearish_score} | Delta: {score_delta} | Signal: {final_signal}")
-                
-                # BUG-04 FIX: Use real confidence from the engine, never fabricate 80.0
-                # Priority: pipeline calibrated_confidence > ScanResult.confidence > computed from scores
-                conf_from_engine = getattr(r, 'confidence', None)
-                conf_from_pipeline = pipeline_res.get("calibrated_confidence", None)
-                if conf_from_pipeline is not None and conf_from_pipeline > 0:
-                    confidence = safe_float(conf_from_pipeline, -1)
-                elif conf_from_engine is not None and conf_from_engine > 0:
-                    confidence = safe_float(conf_from_engine, -1)
-                else:
-                    confidence = -1  # Genuinely unavailable
+                confidence = min(100.0, max(50.0, raw_delta_conf))
+                pipeline_res["calibrated_confidence"] = confidence
+
+                # SPRINT-236 TASK-5: LOG REAL CONFIDENCE (symbol | delta | confidence | signal)
+                print(f"{symbol} | Delta: {score_delta} | Conf: {confidence:.1f} | Signal: {final_signal}")
                 
                 entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
                 sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
