@@ -117,21 +117,21 @@ class SwingScannerService:
         if "BEAR" in trend_direction or trend_score < 40.0 or "BEAR" in trend_ind:
             score += 25
             
-        # 2. RSI < 45 -> +20
+        # 2. RSI < 50 (SPRINT-238 TASK-3) -> +20
         rsi_val = breakdown.get("rsi", None)
         momentum_score = safe_float(getattr(r, "momentum_score", 50.0), 50.0)
         rsi_ind = str(indicators.get("RSI", ""))
-        if rsi_val is not None and safe_float(rsi_val, 50.0) < 45.0:
+        if rsi_val is not None and safe_float(rsi_val, 50.0) < 50.0:
             score += 20
-        elif momentum_score < 45.0 or "Bearish" in rsi_ind:
+        elif momentum_score < 50.0 or "Bearish" in rsi_ind:
             score += 20
             
-        # 3. Price below EMA50 -> +20
-        ema50 = breakdown.get("ema50", None)
-        ema50_ind = str(indicators.get("EMA50", "")).upper()
-        if ema50 is not None and price > 0 and price < safe_float(ema50, price + 1):
+        # 3. Price below EMA20 (SPRINT-238 TASK-2) -> +20
+        ema20 = breakdown.get("ema20", breakdown.get("ema50", None))
+        ema20_ind = str(indicators.get("EMA20", indicators.get("EMA50", ""))).upper()
+        if ema20 is not None and price > 0 and price < safe_float(ema20, price + 1):
             score += 20
-        elif "BELOW" in ema50_ind or getattr(r, "price_below_ema50", False) or "BEAR" in trend_direction:
+        elif "BELOW" in ema20_ind or getattr(r, "price_below_ema20", getattr(r, "price_below_ema50", False)) or "BEAR" in trend_direction:
             score += 20
             
         # 4. Lower High structure -> +20
@@ -320,11 +320,16 @@ class SwingScannerService:
                 buy_thresh = 10 if (is_strong_asset_trend or market_regime == "BULLISH") else 20
                 sell_thresh = -10 if (is_strong_asset_trend or market_regime == "BEARISH") else -20
 
+                # SPRINT-238: Early Swing SELL Detection (TASK-1 & TASK-4)
+                is_early_sell = (bearish_score >= 50 and bullish_score < 60)
+
                 score_delta = bullish_score - bearish_score
                 if score_delta >= buy_thresh:
                     final_signal = "BUY"
                 elif score_delta <= sell_thresh:
                     final_signal = "SELL"
+                elif is_early_sell:
+                    final_signal = "EARLY SELL"
                 else:
                     final_signal = "WATCH"
 
@@ -341,7 +346,7 @@ class SwingScannerService:
                         final_signal = "WATCH"
 
                 decision_str = final_signal
-                score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal == "SELL" else max(bullish_score, bearish_score))
+                score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal in ["SELL", "EARLY SELL"] else max(bullish_score, bearish_score))
 
                 # SPRINT-236 & 237 TASK-3: CONFIDENCE NORMALIZATION & CONFIDENCE BOOST
                 raw_delta_conf = float(abs(score_delta))
@@ -352,9 +357,9 @@ class SwingScannerService:
 
                 # SPRINT-237 TASK-3: CONFIDENCE BOOST (If trend + momentum aligned)
                 momentum_score_val = safe_float(getattr(r, 'momentum_score', 50.0), 50.0)
-                is_trend_aligned = ("BULL" in trend_dir and final_signal == "BUY") or ("BEAR" in trend_dir and final_signal == "SELL")
+                is_trend_aligned = ("BULL" in trend_dir and final_signal == "BUY") or ("BEAR" in trend_dir and final_signal in ["SELL", "EARLY SELL"])
                 is_mom_aligned = (momentum_score_val >= 50.0 if final_signal == "BUY" else momentum_score_val < 50.0)
-                if is_trend_aligned and is_mom_aligned and final_signal in ["BUY", "SELL"]:
+                if is_trend_aligned and is_mom_aligned and final_signal in ["BUY", "SELL", "EARLY SELL"]:
                     confidence = min(100.0, confidence + 10.0)
 
                 pipeline_res["calibrated_confidence"] = confidence
@@ -372,7 +377,11 @@ class SwingScannerService:
                         risk_amt = abs(entry - sl)
                         t1 = t1 if t1 > 0 else round(entry + risk_amt * 2.0, 2)
                         t2 = t2 if t2 > 0 else round(entry + risk_amt * 3.0, 2)
-                    elif decision_str in ["SELL", "STRONG_SELL"]:
+                    elif decision_str in ["SELL", "STRONG_SELL", "EARLY SELL"]:
+                        sl = sl if sl > 0 else round(entry * 1.02, 2)
+                        risk_amt = abs(entry - sl)
+                        t1 = t1 if t1 > 0 else round(entry - risk_amt * 2.0, 2)
+                        t2 = t2 if t2 > 0 else round(entry - risk_amt * 3.0, 2)
                         sl = sl if sl > 0 else round(entry * 1.02, 2)
                         risk_amt = abs(entry - sl)
                         t1 = t1 if t1 > 0 else round(entry - risk_amt * 2.0, 2)
@@ -687,11 +696,12 @@ class SwingScannerService:
                 min_conf = 60.0
                 min_rr = 1.5
 
-                if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL"]:
+                if signal in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL", "EARLY SELL"]:
                     downgrade_reasons = []
-                    directional_min_conf = 50.0 if signal in ["SELL", "STRONG_SELL"] else min_conf
+                    directional_min_conf = 50.0 if signal in ["SELL", "STRONG_SELL", "EARLY SELL"] else min_conf
+                    directional_min_score = 50.0 if signal == "EARLY SELL" else min_score
                     if conf < directional_min_conf: downgrade_reasons.append("Confidence below directional threshold")
-                    if score < min_score: downgrade_reasons.append(f"Score below directional threshold")
+                    if score < directional_min_score: downgrade_reasons.append(f"Score below directional threshold")
                     if rr < min_rr: downgrade_reasons.append("RR below minimum threshold")
                     if downgrade_reasons:
                         item["Signal"] = "WATCH"
