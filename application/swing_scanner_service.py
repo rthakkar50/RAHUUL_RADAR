@@ -245,8 +245,16 @@ class SwingScannerService:
             if progress_callback:
                 progress_callback(80)
                 
-            processed_results = []
-            
+            # SPRINT-237 TASK-1: Pre-calculate market regime from scan_market results
+            bull_advances = sum(1 for res in raw_results if "BULL" in str(getattr(res, "trend_direction", "")).upper())
+            bear_declines = sum(1 for res in raw_results if "BEAR" in str(getattr(res, "trend_direction", "")).upper())
+            if bull_advances > bear_declines * 1.2:
+                market_regime = "BULLISH"
+            elif bear_declines > bull_advances * 1.2:
+                market_regime = "BEARISH"
+            else:
+                market_regime = "SIDEWAYS"
+
             def process_post_scan(r):
                 symbol = r.symbol
                 tick_start = time.time()
@@ -304,18 +312,23 @@ class SwingScannerService:
                     "breakdown": breakdown
                 })
                 
-                # SPRINT-235/236: Pure Score Delta & False Signal Filtering
+                # SPRINT-237 TASK-1 & TASK-2: DYNAMIC DELTA THRESHOLD & MARKET REGIME ADAPTATION
+                trend_dir = str(getattr(r, "trend_direction", "")).upper()
+                adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
+                is_strong_asset_trend = adx_val > 22.0 or "STRONG" in trend_dir
+                
+                buy_thresh = 10 if (is_strong_asset_trend or market_regime == "BULLISH") else 20
+                sell_thresh = -10 if (is_strong_asset_trend or market_regime == "BEARISH") else -20
+
                 score_delta = bullish_score - bearish_score
-                if score_delta > 15:
+                if score_delta >= buy_thresh:
                     final_signal = "BUY"
-                elif score_delta < -15:
+                elif score_delta <= sell_thresh:
                     final_signal = "SELL"
                 else:
                     final_signal = "WATCH"
 
                 # SPRINT-236 TASK-2: WEAK TREND FILTER (Filter out low ADX / flat trends)
-                trend_dir = str(getattr(r, "trend_direction", "")).upper()
-                adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
                 if ("SIDEWAYS" in trend_dir or "NEUTRAL" in trend_dir) and (0.0 < adx_val < 15.0):
                     final_signal = "WATCH"
 
@@ -330,15 +343,23 @@ class SwingScannerService:
                 decision_str = final_signal
                 score = bullish_score if final_signal == "BUY" else (bearish_score if final_signal == "SELL" else max(bullish_score, bearish_score))
 
-                # SPRINT-236 TASK-1 & TASK-4: CONFIDENCE PENALTY & NORMALIZATION
+                # SPRINT-236 & 237 TASK-3: CONFIDENCE NORMALIZATION & CONFIDENCE BOOST
                 raw_delta_conf = float(abs(score_delta))
                 if bullish_score >= 50 and bearish_score >= 50:
                     raw_delta_conf = float(abs(score_delta))
                 
                 confidence = min(100.0, max(50.0, raw_delta_conf))
+
+                # SPRINT-237 TASK-3: CONFIDENCE BOOST (If trend + momentum aligned)
+                momentum_score_val = safe_float(getattr(r, 'momentum_score', 50.0), 50.0)
+                is_trend_aligned = ("BULL" in trend_dir and final_signal == "BUY") or ("BEAR" in trend_dir and final_signal == "SELL")
+                is_mom_aligned = (momentum_score_val >= 50.0 if final_signal == "BUY" else momentum_score_val < 50.0)
+                if is_trend_aligned and is_mom_aligned and final_signal in ["BUY", "SELL"]:
+                    confidence = min(100.0, confidence + 10.0)
+
                 pipeline_res["calibrated_confidence"] = confidence
 
-                # SPRINT-236 TASK-5: LOG REAL CONFIDENCE (symbol | delta | confidence | signal)
+                # LOG REAL CONFIDENCE (symbol | delta | confidence | signal)
                 print(f"{symbol} | Delta: {score_delta} | Conf: {confidence:.1f} | Signal: {final_signal}")
                 
                 entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
