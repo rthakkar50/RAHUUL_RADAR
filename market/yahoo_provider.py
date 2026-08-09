@@ -249,7 +249,6 @@ class YahooFinanceProvider(MarketDataProvider):
                             }
             except Exception as e:
                 logger.warning(f"Chunk download error for {interval} {period}: {e}")
-            time.sleep(0.3)
                 
         self._save_disk_cache()
 
@@ -291,21 +290,12 @@ class YahooFinanceProvider(MarketDataProvider):
                     return self._cache[cache_key]['data']
             self.stats["cache_misses"] += 1
         
-        for attempt in range(3):
-            try:
-                ticker = yf.Ticker(formatted_symbol, session=self._session)
-                df = ticker.history(period=period, interval=interval)
-                
-                rows_downloaded = len(df) if not df.empty else 0
-                if df.empty:
-                    logger.warning(f"Symbol: {formatted_symbol}, Attempt {attempt + 1}: yfinance returned empty dataframe.")
-                    time.sleep(0.5 * (2 ** attempt))
-                    continue
-                else:
-                    logger.debug(f"Symbol: {formatted_symbol}, Rows downloaded: {rows_downloaded}, Reason skipped: N/A")
-                
+        try:
+            ticker = yf.Ticker(formatted_symbol, session=self._session)
+            df = ticker.history(period=period, interval=interval)
+            
+            if not df.empty:
                 df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'], inplace=True)
-                    
                 ohlcv_list = []
                 for index, row in df.iterrows():
                     ohlcv_list.append(
@@ -318,9 +308,6 @@ class YahooFinanceProvider(MarketDataProvider):
                             volume=int(row['Volume'])
                         )
                     )
-                
-                logger.debug(f"Successfully retrieved {len(ohlcv_list)} candles for {formatted_symbol}")
-                
                 with self._cache_lock:
                     self._cache[cache_key] = {
                         'timestamp': time.time(),
@@ -328,22 +315,9 @@ class YahooFinanceProvider(MarketDataProvider):
                     }
                     self.stats["success"] += 1
                     self.stats["successful_downloads"] += 1
-                    lat = (time.time() - t0) * 1000
-                    self.stats["total_latency_ms"] += lat
-                    self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
-                    
                 return ohlcv_list
-            except Exception as e:
-                err_str = str(e).lower()
-                logger.warning(f"Fetch failed for {formatted_symbol} (Attempt {attempt + 1}): {e}")
-                with self._cache_lock:
-                    if "429" in err_str or "too many requests" in err_str:
-                        self.stats["http_429"] += 1
-                    if "timeout" in err_str:
-                        self.stats["timeout"] += 1
-                    else:
-                        self.stats["failure"] += 1
-                time.sleep(1.0 * (2 ** attempt))
+        except Exception as e:
+            logger.debug(f"Fetch failed for {formatted_symbol}: {e}")
 
         with self._cache_lock:
             self.stats["failed_symbols"] += 1
