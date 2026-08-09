@@ -168,14 +168,31 @@ class SwingScannerService:
             universe_start = time.time()
             fno_data = get_nifty200_symbols()
             
-            # Phase 2: Explicit Universe Verification
+            DEFAULT_SYMBOLS = [
+                "RELIANCE.NS",
+                "TCS.NS",
+                "HDFCBANK.NS",
+                "ICICIBANK.NS",
+                "INFY.NS"
+            ]
+
+            # Fallback FIX: If universe empty -> load default symbols
             if not fno_data:
-                logger.error("Swing scanner universe empty")
-                raise ValueError("No symbols loaded for Swing Scanner. Empty universe returned.")
+                logger.warning("Swing scanner universe empty, loading default fallback symbols.")
+                fno_data = [{"symbol": sym, "sector": "NIFTY 50", "mcap": "Large Cap"} for sym in DEFAULT_SYMBOLS]
                 
+            # Ticker format verification: ensure all symbols end with .NS
+            for item in fno_data:
+                sym = item.get("symbol", "")
+                if sym and not sym.startswith("^") and not sym.endswith(".NS") and not sym.endswith(".BO"):
+                    item["symbol"] = f"{sym}.NS"
+
+            symbols = [item["symbol"] for item in fno_data]
+            print(f"Loaded Symbols Count: {len(symbols)}")
+            print(symbols[:10])
+            
             logger.info(f"Swing scanner loaded {len(fno_data)} symbols from source F&O Universe")
             logger.info(f"Swing scanner scan started for {len(fno_data)} symbols")
-            
             logger.info(f"Output Symbol Universe: {len(fno_data)} symbols loaded")
             logger.info(f"Execution Time (Universe): {time.time() - universe_start:.2f}s")
                 

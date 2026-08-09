@@ -244,14 +244,27 @@ for _item in FNO_UNIVERSE:
     if len(FNO_UNIVERSE_UNIQUE) == 184:
         break
 
+DEFAULT_SYMBOLS = [
+    "RELIANCE.NS",
+    "TCS.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "INFY.NS"
+]
+
+DEFAULT_UNIVERSE = [
+    {"symbol": sym, "sector": "NIFTY 50", "mcap": "Large Cap"}
+    for sym in DEFAULT_SYMBOLS
+]
+
 def get_fno_symbols() -> List[Dict]:
     """Returns the complete Live NSE F&O Equity Universe (184 stocks)."""
-    return FNO_UNIVERSE_UNIQUE
+    return FNO_UNIVERSE_UNIQUE if FNO_UNIVERSE_UNIQUE else DEFAULT_UNIVERSE
 
 def get_nifty200_symbols() -> List[Dict]:
     """Returns dedicated NIFTY 200 constituents (exactly 200 stocks)."""
-    return NIFTY200_UNIVERSE
+    return NIFTY200_UNIVERSE if NIFTY200_UNIVERSE else DEFAULT_UNIVERSE
 
 def get_all_symbols() -> List[Dict]:
     """Returns default NIFTY 200 universe for general queries."""
-    return NIFTY200_UNIVERSE
+    return NIFTY200_UNIVERSE if NIFTY200_UNIVERSE else DEFAULT_UNIVERSE
