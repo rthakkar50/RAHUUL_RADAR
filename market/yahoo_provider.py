@@ -70,11 +70,21 @@ class YahooFinanceProvider(MarketDataProvider):
         # Load from disk if exists
         try:
             if os.path.exists(self._disk_cache_file):
-                # Only load if modified in the last 15 minutes
-                if time.time() - os.path.getmtime(self._disk_cache_file) < self._cache_ttl:
+                now = time.time()
+                # Only load if file was modified in the last TTL seconds
+                if now - os.path.getmtime(self._disk_cache_file) < self._cache_ttl:
                     with open(self._disk_cache_file, "rb") as f:
-                        self._cache = pickle.load(f)
-                        logger.info(f"Loaded {len(self._cache)} items from disk cache.")
+                        loaded_cache = pickle.load(f)
+                    if isinstance(loaded_cache, dict):
+                        # Filter to only retain items that are strictly within _cache_ttl
+                        valid_cache = {
+                            k: v for k, v in loaded_cache.items()
+                            if isinstance(v, dict) and (now - v.get('timestamp', 0) < self._cache_ttl) and bool(v.get('data'))
+                        }
+                        self._cache = valid_cache
+                        logger.info(f"Loaded {len(self._cache)} valid items from disk cache.")
+                    else:
+                        self._cache = {}
                 else:
                     logger.info("Disk cache expired. Starting fresh.")
         except Exception as e:
@@ -87,8 +97,12 @@ class YahooFinanceProvider(MarketDataProvider):
         """Saves current memory cache to disk asynchronously"""
         def save():
             try:
+                now = time.time()
                 with self._cache_lock:
-                    cache_copy = self._cache.copy()
+                    cache_copy = {
+                        k: v for k, v in self._cache.items()
+                        if isinstance(v, dict) and (now - v.get('timestamp', 0) < self._cache_ttl) and bool(v.get('data'))
+                    }
                 with open(self._disk_cache_file, "wb") as f:
                     import pickle
                     pickle.dump(cache_copy, f)
@@ -247,6 +261,9 @@ class YahooFinanceProvider(MarketDataProvider):
                                 'timestamp': time.time(),
                                 'data': ohlcv_list
                             }
+                        else:
+                            if cache_key in self._cache:
+                                del self._cache[cache_key]
             except Exception as e:
                 logger.warning(f"Chunk download error for {interval} {period}: {e}")
                 
@@ -279,73 +296,68 @@ class YahooFinanceProvider(MarketDataProvider):
         cache_key = f"{formatted_symbol}_{interval}_{period}"
         
         with self._cache_lock:
-            if cache_key in self._cache and bool(self._cache[cache_key].get('data')):
-                if time.time() - self._cache[cache_key]['timestamp'] < self._cache_ttl:
+            if cache_key in self._cache:
+                entry = self._cache[cache_key]
+                if isinstance(entry, dict) and bool(entry.get('data')) and (time.time() - entry.get('timestamp', 0) < self._cache_ttl):
                     logger.debug(f"Returning CACHED OHLCV data for {cache_key}")
                     self.stats["cache_hits"] += 1
                     self.stats["success"] += 1
                     lat = (time.time() - t0) * 1000
                     self.stats["total_latency_ms"] += lat
                     self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
-                    return self._cache[cache_key]['data']
+                    return entry['data']
+                else:
+                    del self._cache[cache_key]
             self.stats["cache_misses"] += 1
         
         try:
             ticker = yf.Ticker(formatted_symbol, session=self._session)
             df = ticker.history(period=period, interval=interval)
             
-            if not df.empty:
+            if df is not None and not df.empty:
                 df.dropna(subset=['Open', 'High', 'Low', 'Close', 'Volume'], inplace=True)
-                ohlcv_list = []
-                for index, row in df.iterrows():
-                    ohlcv_list.append(
-                        OHLCV(
-                            timestamp=index.to_pydatetime() if hasattr(index, 'to_pydatetime') else index,
-                            open=float(row['Open']),
-                            high=float(row['High']),
-                            low=float(row['Low']),
-                            close=float(row['Close']),
-                            volume=int(row['Volume'])
+                if not df.empty:
+                    ohlcv_list = []
+                    for index, row in df.iterrows():
+                        ohlcv_list.append(
+                            OHLCV(
+                                timestamp=index.to_pydatetime() if hasattr(index, 'to_pydatetime') else index,
+                                open=float(row['Open']),
+                                high=float(row['High']),
+                                low=float(row['Low']),
+                                close=float(row['Close']),
+                                volume=int(row['Volume'])
+                            )
                         )
-                    )
-                with self._cache_lock:
-                    self._cache[cache_key] = {
-                        'timestamp': time.time(),
-                        'data': ohlcv_list
-                    }
-                    self.stats["success"] += 1
-                    self.stats["successful_downloads"] += 1
-                return ohlcv_list
+                    with self._cache_lock:
+                        self._cache[cache_key] = {
+                            'timestamp': time.time(),
+                            'data': ohlcv_list
+                        }
+                        self.stats["success"] += 1
+                        self.stats["successful_downloads"] += 1
+                    lat = (time.time() - t0) * 1000
+                    with self._cache_lock:
+                        self.stats["total_latency_ms"] += lat
+                        self.stats["average_latency_ms"] = round(self.stats["total_latency_ms"] / max(1, self.stats["total_requests"]), 1)
+                    return ohlcv_list
+            logger.warning(f"Yahoo Finance returned empty history for {formatted_symbol} ({interval}, {period})")
         except Exception as e:
-            logger.debug(f"Fetch failed for {formatted_symbol}: {e}")
+            err_msg = str(e)
+            if "429" in err_msg or "Too Many Requests" in err_msg:
+                with self._cache_lock:
+                    self.stats["http_429"] += 1
+                logger.warning(f"Yahoo Finance rate limit (429) hit for {formatted_symbol}: {e}")
+            else:
+                logger.warning(f"Fetch failed for {formatted_symbol} ({interval}, {period}): {e}")
 
         with self._cache_lock:
             self.stats["failed_symbols"] += 1
-                
-        # On network or rate-limit failure, check cache regardless of TTL
-        with self._cache_lock:
-            if cache_key in self._cache and bool(self._cache[cache_key].get('data')):
-                logger.info(f"Rate limited or offline: Returning stale cached data for {cache_key}")
-                return self._cache[cache_key]['data']
-                
-        # Generate synthetic fallback candles if no cache exists to prevent total scanner blackout
-        import random
-        from datetime import datetime, timedelta
-        base_price = 1000.0 + random.uniform(50, 500)
-        synth_ohlcv = []
-        now = datetime.now()
-        for i in range(60, 0, -1):
-            p = base_price * (1 + random.uniform(-0.01, 0.015))
-            ts = now - timedelta(days=i)
-            synth_ohlcv.append(OHLCV(
-                timestamp=ts,
-                open=p * 0.998,
-                high=p * 1.005,
-                low=p * 0.995,
-                close=p,
-                volume=int(random.uniform(50000, 200000))
-            ))
-        return synth_ohlcv
+            self.stats["failure"] += 1
+            if cache_key in self._cache:
+                del self._cache[cache_key]
+
+        return []
 
     def get_volume(self, symbol: str) -> int:
         """

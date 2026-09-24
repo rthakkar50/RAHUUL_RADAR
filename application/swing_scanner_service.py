@@ -385,6 +385,74 @@ class SwingScannerService:
                 # LOG REAL CONFIDENCE (symbol | delta | confidence | signal)
                 print(f"{symbol} | Delta: {score_delta} | Conf: {confidence:.1f} | Signal: {final_signal}")
                 
+                trend_str = str(getattr(r, "trend_direction", "SIDEWAYS")).upper()
+                trend_map = {
+                    "STRONG_BULL": "Strong Bullish", "BULL": "Bullish", "BULLISH": "Bullish",
+                    "NEUTRAL": "Sideways", "SIDEWAYS": "Sideways", "BEAR": "Bearish",
+                    "BEARISH": "Bearish", "STRONG_BEAR": "Strong Bearish"
+                }
+                trend_display = trend_map.get(trend_str, trend_str.title())
+                company_raw = getattr(r, 'company_name', '')
+                if not company_raw or company_raw == symbol:
+                    meta = sym_meta.get(symbol, sym_meta.get(symbol + ".NS", {}))
+                    company_raw = meta.get("company_name", symbol.replace(".NS", ""))
+                sector = getattr(r, "sector", "")
+                if not sector or sector in ("N/A", "Unknown", "FNO", "F&O"):
+                    meta = sym_meta.get(symbol, sym_meta.get(symbol + ".NS", {}))
+                    sector = meta.get("sector", "")
+                vol_display = str(int(volume)) if volume > 0 else "--"
+                mapping_time = (time.time() - tick_start) * 1000
+                rs_score_display = round(getattr(r, 'relative_strength_score', 0.0), 1)
+                rs_rank_display = "--"
+
+                # Check for legitimate pipeline REJECTED status
+                if isinstance(pipeline_res, dict) and pipeline_res.get("status") == "REJECTED":
+                    rep = pipeline_res.get("report")
+                    rej_reasons = []
+                    if hasattr(rep, "reasons") and rep.reasons:
+                        rej_reasons = list(rep.reasons)
+                    elif isinstance(rep, list) and rep:
+                        rej_reasons = list(rep)
+                    elif isinstance(rep, str) and rep:
+                        rej_reasons = [rep]
+                    elif pipeline_res.get("reasons"):
+                        rej_reasons = list(pipeline_res.get("reasons"))
+                    else:
+                        rej_reasons = ["Rejected by MasterSignalPipeline"]
+
+                    p_score = safe_float(pipeline_res.get("score", getattr(r, "total_score", 50.0)), 50.0)
+                    return {
+                        "Symbol": symbol,
+                        "Company": company_raw,
+                        "Sector": sector or "",
+                        "Price": round(price, 2),
+                        "Signal": "REJECTED",
+                        "Score": p_score,
+                        "Raw Score": p_score,
+                        "Confidence": 0.0,
+                        "Trend": trend_display,
+                        "Volume": vol_display,
+                        "Risk Reward": "0.0",
+                        "RR": "0.0",
+                        "RS Score": rs_score_display,
+                        "RS Rank": rs_rank_display,
+                        "OI Activity": "--",
+                        "Entry": 0.0,
+                        "Stop Loss": 0.0,
+                        "Target 1": 0.0,
+                        "Target 2": 0.0,
+                        "Trade Grade": "REJECTED",
+                        "Risk Grade": "HIGH",
+                        "Execution Status": "REJECTED",
+                        "Execution Score": 0.0,
+                        "Execution Reason": rej_reasons[0] if rej_reasons else "Rejected by MasterSignalPipeline",
+                        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "status": "REJECTED",
+                        "execution_time_ms": mapping_time,
+                        "_raw_data": pipeline_res,
+                        "_reasons": list(getattr(r, 'reasons', [])) + rej_reasons
+                    }
+
                 entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
                 sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
                 t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
@@ -400,13 +468,38 @@ class SwingScannerService:
                         risk_amt = abs(entry - sl)
                         t1 = t1 if t1 > 0 else round(entry - risk_amt * 2.0, 2)
                         t2 = t2 if t2 > 0 else round(entry - risk_amt * 3.0, 2)
-                        sl = sl if sl > 0 else round(entry * 1.02, 2)
-                        risk_amt = abs(entry - sl)
-                        t1 = t1 if t1 > 0 else round(entry - risk_amt * 2.0, 2)
-                        t2 = t2 if t2 > 0 else round(entry - risk_amt * 3.0, 2)
                         
                 if entry == 0.0 or sl == 0.0 or t1 == 0.0:
-                    return None
+                    return {
+                        "Symbol": symbol,
+                        "Company": company_raw,
+                        "Sector": sector or "",
+                        "Price": round(price, 2),
+                        "Signal": "REJECTED",
+                        "Score": score,
+                        "Raw Score": bullish_score,
+                        "Confidence": 0.0,
+                        "Trend": trend_display,
+                        "Volume": vol_display,
+                        "Risk Reward": "0.0",
+                        "RR": "0.0",
+                        "RS Score": rs_score_display,
+                        "RS Rank": rs_rank_display,
+                        "OI Activity": "--",
+                        "Entry": 0.0,
+                        "Stop Loss": 0.0,
+                        "Target 1": 0.0,
+                        "Target 2": 0.0,
+                        "Trade Grade": "REJECTED",
+                        "Risk Grade": "HIGH",
+                        "Execution Status": "REJECTED",
+                        "Execution Reason": "Invalid trade levels (zero entry, stop loss or target)",
+                        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "status": "REJECTED",
+                        "execution_time_ms": mapping_time,
+                        "_raw_data": pipeline_res,
+                        "_reasons": list(getattr(r, 'reasons', [])) + ["Invalid trade levels (zero entry, stop loss or target)"]
+                    }
 
                 risk_amt = abs(entry - sl)
                     
@@ -603,6 +696,7 @@ class SwingScannerService:
             except Exception:
                 pass
 
+            processed_results = []
             import concurrent.futures
             import os
             adaptive_workers = min(16, (os.cpu_count() or 1) + 4)
@@ -709,6 +803,49 @@ class SwingScannerService:
                 if t_score < 50.0: rejection_analytics["Weak Trend"] += 1
                 if v_score < 50.0: rejection_analytics["Low Volume"] += 1
                 if s_score < 50.0: rejection_analytics["Structure Unaligned"] += 1
+
+                if item.get("status") == "REJECTED":
+                    rej_reason = item.get("_reasons", ["Rejected by pipeline"])[0] if item.get("_reasons") else "Rejected by pipeline"
+                    trace_entry = {
+                        "symbol": sym,
+                        "company_name": item.get("Company", sym),
+                        "sector": item.get("Sector", "GENERAL"),
+                        "price": item.get("Price", 0.0),
+                        "signal": "REJECTED",
+                        "accepted": False,
+                        "rejection_reason": rej_reason,
+                        "reasons": item.get("_reasons", []),
+                        "why_selected": [],
+                        "scores": {
+                            "trend": t_score,
+                            "momentum": m_score,
+                            "structure": s_score,
+                            "volume": v_score,
+                            "risk": r_score,
+                            "ai": score,
+                            "confidence": conf
+                        },
+                        "indicators": {
+                            "open": raw_data.get("open", item.get("Price", 0.0)),
+                            "high": raw_data.get("high", item.get("Price", 0.0) * 1.01),
+                            "low": raw_data.get("low", item.get("Price", 0.0) * 0.99),
+                            "close": item.get("Price", 0.0),
+                            "ema_20": raw_data.get("ema20", item.get("Price", 0.0)),
+                            "ema_50": raw_data.get("ema50", item.get("Price", 0.0)),
+                            "ema_200": raw_data.get("ema200", item.get("Price", 0.0)),
+                            "vwap": raw_data.get("vwap", item.get("Price", 0.0)),
+                            "rsi": raw_data.get("rsi", 55.0),
+                            "macd_line": raw_data.get("macd_line", 0.5),
+                            "macd_signal": raw_data.get("macd_signal", 0.2),
+                            "adx": raw_data.get("adx", 25.0),
+                            "atr": raw_data.get("atr", item.get("Price", 0.0) * 0.02),
+                            "volume": item.get("Volume", "1.0x"),
+                            "delivery_pct": raw_data.get("delivery_pct", 45.0),
+                            "relative_strength": item.get("RS Score", 50.0)
+                        }
+                    }
+                    symbol_decision_traces.append(trace_entry)
+                    continue
 
                 # SPRINT-235 TASK-5: Relaxed thresholds (min_score = 60, min_confidence = 60)
                 min_score = 60.0
@@ -1083,6 +1220,7 @@ class SwingScannerService:
             
             filter_rejected_cnt = max(0, total_scanned_val - qualified_cnt_val)
             no_data_cnt_val = max(0, total_universe_val - total_scanned_val)
+            rejected_cnt_val = filter_rejected_cnt + no_data_cnt_val
             print(f"\n[SPRINT-235] Total BUY: {buy_count} | Total SELL: {sell_count} | Total WATCH: {watch_count}")
             logger.info(f"[SPRINT-235] Total BUY: {buy_count} | Total SELL: {sell_count} | Total WATCH: {watch_count}")
 

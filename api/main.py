@@ -244,6 +244,8 @@ CACHE_FILE_INTRADAY = "data/cache_intraday.json"
 def _save_cache_to_disk(filepath: str, cache_dict: dict):
     try:
         os.makedirs("data", exist_ok=True)
+        if isinstance(cache_dict, dict) and "cache_timestamp" not in cache_dict:
+            cache_dict["cache_timestamp"] = time.time()
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(cache_dict, f)
     except Exception as e:
@@ -251,15 +253,30 @@ def _save_cache_to_disk(filepath: str, cache_dict: dict):
 
 def _load_cache_from_disk():
     global _SCANNER_CACHE, _INTRADAY_CACHE
+    now = time.time()
     try:
         if os.path.exists(CACHE_FILE_SWING):
+            file_mtime = os.path.getmtime(CACHE_FILE_SWING)
             with open(CACHE_FILE_SWING, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if data and isinstance(data, dict) and data.get("qualified_results"):
-                    with _CACHE_LOCK:
-                        _SCANNER_CACHE["data"] = data
-                        _SCANNER_CACHE["last_updated"] = time.time()
-                    logger.info(f"Loaded {len(data.get('qualified_results', []))} swing results from disk cache.")
+
+            cache_ts = (data.get("cache_timestamp") or file_mtime) if isinstance(data, dict) else file_mtime
+            cache_age = now - cache_ts
+
+            if cache_age > CACHE_TTL_SECONDS or cache_age < 0:
+                logger.warning(
+                    f"Persisted swing cache is EXPIRED (age: {cache_age:.1f}s > TTL {CACHE_TTL_SECONDS}s, "
+                    f"mtime: {datetime.fromtimestamp(file_mtime)}). Purging stale disk cache."
+                )
+                try:
+                    os.remove(CACHE_FILE_SWING)
+                except Exception:
+                    pass
+            elif data and isinstance(data, dict) and data.get("qualified_results") is not None:
+                with _CACHE_LOCK:
+                    _SCANNER_CACHE["data"] = data
+                    _SCANNER_CACHE["last_updated"] = cache_ts
+                logger.info(f"Loaded {len(data.get('qualified_results', []))} swing results from disk cache (age: {cache_age:.1f}s).")
     except Exception as e:
         logger.warning(f"Failed to load swing cache from disk, removing corrupt file: {e}")
         try:
@@ -270,13 +287,28 @@ def _load_cache_from_disk():
 
     try:
         if os.path.exists(CACHE_FILE_INTRADAY):
+            file_mtime = os.path.getmtime(CACHE_FILE_INTRADAY)
             with open(CACHE_FILE_INTRADAY, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if data and isinstance(data, dict) and data.get("qualified_results"):
-                    with _INTRADAY_LOCK:
-                        _INTRADAY_CACHE["data"] = data
-                        _INTRADAY_CACHE["last_updated"] = time.time()
-                    logger.info(f"Loaded {len(data.get('qualified_results', []))} intraday results from disk cache.")
+
+            intra_ttl = _get_intraday_cache_ttl()
+            cache_ts = (data.get("cache_timestamp") or file_mtime) if isinstance(data, dict) else file_mtime
+            cache_age = now - cache_ts
+
+            if cache_age > intra_ttl or cache_age < 0:
+                logger.warning(
+                    f"Persisted intraday cache is EXPIRED (age: {cache_age:.1f}s > TTL {intra_ttl}s, "
+                    f"mtime: {datetime.fromtimestamp(file_mtime)}). Purging stale disk cache."
+                )
+                try:
+                    os.remove(CACHE_FILE_INTRADAY)
+                except Exception:
+                    pass
+            elif data and isinstance(data, dict) and data.get("qualified_results") is not None:
+                with _INTRADAY_LOCK:
+                    _INTRADAY_CACHE["data"] = data
+                    _INTRADAY_CACHE["last_updated"] = cache_ts
+                logger.info(f"Loaded {len(data.get('qualified_results', []))} intraday results from disk cache (age: {cache_age:.1f}s).")
     except Exception as e:
         logger.warning(f"Failed to load intraday cache from disk, removing corrupt file: {e}")
         try:
@@ -291,11 +323,12 @@ _load_cache_from_disk()
 _ORCHESTRATOR_LOCK = threading.Lock()
 _ORCHESTRATION_IS_RUNNING = False
 
-def _is_valid_complete_cache(new_data: dict, existing_data: dict) -> bool:
+def _is_valid_complete_cache(new_data: dict, existing_data: dict, is_existing_expired: bool = False) -> bool:
     """
     SPRINT-196F Cache Consistency Validation:
     Returns True if new_data is a complete scan result and should overwrite existing cache.
-    Prevents partial payloads (e.g. total_scanned < 100) from overwriting valid complete cache.
+    Prevents partial payloads (e.g. total_scanned < 100) from overwriting valid unexpired complete cache.
+    Expired caches NEVER lock out fresh scans.
     """
     if not new_data or not isinstance(new_data, dict):
         return False
@@ -305,6 +338,11 @@ def _is_valid_complete_cache(new_data: dict, existing_data: dict) -> bool:
     
     if not existing_data or not isinstance(existing_data, dict):
         return new_scanned >= 50 or new_qualified > 0
+
+    # Expired existing cache must never block fresh scan results
+    if is_existing_expired:
+        logger.info(f"[SPRINT-196F] Existing cache is expired. Overwriting with fresh scan (scanned: {new_scanned}, qualified: {new_qualified}).")
+        return True
         
     existing_scanned = existing_data.get("total_scanned", 0)
     existing_qualified = len(existing_data.get("qualified_results", []))
@@ -341,12 +379,15 @@ def _run_enterprise_orchestration():
         swing_signals = swing_res.get("qualified_results", [])
 
         # Update Swing Cache immediately if valid & complete
+        now_ts = time.time()
         json_swing = json.loads(json.dumps(swing_res, default=str))
+        json_swing["cache_timestamp"] = now_ts
         with _CACHE_LOCK:
             existing_swing = _SCANNER_CACHE.get("data")
-            if _is_valid_complete_cache(json_swing, existing_swing):
+            is_expired = (_SCANNER_CACHE.get("last_updated", 0.0) == 0.0) or (now_ts - _SCANNER_CACHE.get("last_updated", 0.0) > CACHE_TTL_SECONDS)
+            if _is_valid_complete_cache(json_swing, existing_swing, is_existing_expired=is_expired):
                 _SCANNER_CACHE["data"] = json_swing
-                _SCANNER_CACHE["last_updated"] = time.time()
+                _SCANNER_CACHE["last_updated"] = now_ts
                 _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
             else:
                 logger.info("[SPRINT-196F] Preserved existing valid Swing cache over partial scan payload.")
@@ -372,9 +413,11 @@ def _run_enterprise_orchestration():
         
         # Final Swing Cache Update
         json_swing["qualified_results"] = json.loads(json.dumps(display_swing, default=str))
+        json_swing["cache_timestamp"] = time.time()
         with _CACHE_LOCK:
             existing_swing = _SCANNER_CACHE.get("data")
-            if _is_valid_complete_cache(json_swing, existing_swing):
+            is_expired = (_SCANNER_CACHE.get("last_updated", 0.0) == 0.0) or (time.time() - _SCANNER_CACHE.get("last_updated", 0.0) > CACHE_TTL_SECONDS)
+            if _is_valid_complete_cache(json_swing, existing_swing, is_existing_expired=is_expired):
                 _SCANNER_CACHE["data"] = json_swing
                 _SCANNER_CACHE["last_updated"] = time.time()
                 _save_cache_to_disk(CACHE_FILE_SWING, json_swing)
@@ -409,6 +452,7 @@ def _run_enterprise_orchestration():
             "market_summary": {},
             "performance_metrics": {},
             "qualified_results": json.loads(json.dumps(display_intra, default=str)),
+            "cache_timestamp": time.time(),
         }
         with _INTRADAY_LOCK:
             _INTRADAY_CACHE["data"] = intra_cache_res
@@ -442,11 +486,14 @@ def _run_background_intraday_scan():
 def _delayed_startup_scan():
     time.sleep(5)  # Short delay for uvicorn port binding
     try:
-        if _SCANNER_CACHE.get("data") is None or _INTRADAY_CACHE.get("data") is None:
-            logger.info("Cache empty on startup. Running initial enterprise signal orchestration...")
+        now = time.time()
+        swing_expired = (_SCANNER_CACHE.get("data") is None) or (now - _SCANNER_CACHE.get("last_updated", 0.0) > CACHE_TTL_SECONDS)
+        intra_expired = (_INTRADAY_CACHE.get("data") is None) or (now - _INTRADAY_CACHE.get("last_updated", 0.0) > _get_intraday_cache_ttl())
+        if swing_expired or intra_expired:
+            logger.info("Cache empty or expired on startup. Running initial enterprise signal orchestration...")
             _run_enterprise_orchestration()
         else:
-            logger.info("Instant disk cache active. Skipping heavy background startup download to ensure zero latency.")
+            logger.info("Fresh disk cache active. Skipping heavy background startup download to ensure zero latency.")
     except Exception as e:
         logger.warning(f"Background startup scan encountered error (isolated): {e}")
 
@@ -455,7 +502,7 @@ async def startup_event():
     logger.info("Server booted successfully. Mobile API ready.")
     threading.Thread(target=_delayed_startup_scan, daemon=True).start()
 
-def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_universe: int = 200) -> dict:
+def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_universe: int = 200, cache_timestamp: Optional[float] = None) -> dict:
     """Normalizes raw cache data into a canonical response dictionary guaranteed to never throw AttributeError."""
     meta = _get_provider_metadata()
     
@@ -485,7 +532,7 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
             "qualified_results": [],
             "rejection_analytics": default_rejections,
             "is_scanning": is_scanning,
-            "status": "SCANNING" if is_scanning else "COMPLETED",
+            "status": "SCANNING" if is_scanning else "DATA_UNAVAILABLE",
             **meta
         }
         
@@ -493,6 +540,7 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
         buy_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
         sell_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
         watch_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+        scan_ts = cache_timestamp or meta.get("timestamp", time.time())
         res_dict = {
             "total_universe": total_universe,
             "total_attempted": total_universe,
@@ -509,13 +557,21 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
             "rejection_analytics": default_rejections,
             "is_scanning": is_scanning,
             "status": "COMPLETED",
-            **meta
+            **meta,
+            "timestamp": scan_ts,
+            "cache_timestamp": scan_ts,
+            "cache_age_seconds": round(time.time() - scan_ts, 2)
         }
         return res_dict
         
     if isinstance(data, dict):
         res_dict = dict(data)  # Shallow copy to avoid mutating cache in place
+        scan_ts = cache_timestamp or res_dict.get("cache_timestamp") or res_dict.get("timestamp")
         res_dict.update(meta)
+        if scan_ts:
+            res_dict["timestamp"] = scan_ts
+            res_dict["cache_timestamp"] = scan_ts
+            res_dict["cache_age_seconds"] = round(time.time() - scan_ts, 2)
         if "qualified_results" not in res_dict or not isinstance(res_dict["qualified_results"], list):
             res_dict["qualified_results"] = []
         if "total_attempted" not in res_dict:
@@ -527,6 +583,11 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
             res_dict["total_ranked"] = res_dict.get("total_scanned", 34)
         if "rejection_analytics" not in res_dict or not res_dict["rejection_analytics"]:
             res_dict["rejection_analytics"] = default_rejections
+        if is_scanning:
+            res_dict["is_scanning"] = True
+            res_dict["status"] = "SCANNING"
+        elif "status" not in res_dict or res_dict["status"] is None:
+            res_dict["status"] = "COMPLETED"
         return res_dict
 
     # Fallback for unexpected data types
@@ -540,7 +601,7 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
         "watch_count": 0,
         "qualified_results": [],
         "is_scanning": is_scanning,
-        "status": "COMPLETED",
+        "status": "DATA_UNAVAILABLE",
         **meta
     }
 
@@ -558,14 +619,21 @@ async def run_swing_scanner(debug: bool = False):
         if raw_data is None:
             logger.info("Cache empty on request. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
+                with _CACHE_LOCK:
+                    _SCANNER_CACHE["is_scanning"] = True
                 threading.Thread(target=_run_background_scan, daemon=True).start()
             return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
 
-        if current_time - last_updated > CACHE_TTL_SECONDS and not is_scanning:
-            logger.info("Cache expired. Triggering background refresh...")
-            threading.Thread(target=_run_background_scan, daemon=True).start()
+        # Strict cache validity check: expired cache must NOT be served as current
+        if current_time - last_updated > CACHE_TTL_SECONDS:
+            logger.info(f"Swing cache expired (age: {current_time - last_updated:.1f}s > TTL {CACHE_TTL_SECONDS}s). Triggering fresh scan...")
+            if not _ORCHESTRATION_IS_RUNNING:
+                with _CACHE_LOCK:
+                    _SCANNER_CACHE["is_scanning"] = True
+                threading.Thread(target=_run_background_scan, daemon=True).start()
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
 
-        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=200)
+        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=200, cache_timestamp=last_updated)
 
         if not debug:
             clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
@@ -604,14 +672,21 @@ async def run_intraday_scanner(debug: bool = False):
         if raw_data is None:
             logger.info("Intraday cache empty. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
+                with _INTRADAY_LOCK:
+                    _INTRADAY_CACHE["is_scanning"] = True
                 threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
             return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
 
-        if current_time - last_updated > ttl and not is_scanning:
-            logger.info(f"Intraday cache expired (TTL {ttl}s). Triggering background refresh...")
-            threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+        # Strict cache validity check: expired cache must NOT be served as current
+        if current_time - last_updated > ttl:
+            logger.info(f"Intraday cache expired (age: {current_time - last_updated:.1f}s > TTL {ttl}s). Triggering fresh scan...")
+            if not _ORCHESTRATION_IS_RUNNING:
+                with _INTRADAY_LOCK:
+                    _INTRADAY_CACHE["is_scanning"] = True
+                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
 
-        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=184)
+        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=184, cache_timestamp=last_updated)
 
         if not debug:
             clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
