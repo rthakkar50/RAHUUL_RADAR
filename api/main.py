@@ -263,9 +263,9 @@ def _load_cache_from_disk():
             cache_ts = (data.get("cache_timestamp") or file_mtime) if isinstance(data, dict) else file_mtime
             cache_age = now - cache_ts
 
-            if cache_age > CACHE_TTL_SECONDS or cache_age < 0:
+            if cache_age > 86400 * 7 or cache_age < 0:
                 logger.warning(
-                    f"Persisted swing cache is EXPIRED (age: {cache_age:.1f}s > TTL {CACHE_TTL_SECONDS}s, "
+                    f"Persisted swing cache is excessively old (age: {cache_age:.1f}s > 7 days, "
                     f"mtime: {datetime.fromtimestamp(file_mtime)}). Purging stale disk cache."
                 )
                 try:
@@ -295,9 +295,9 @@ def _load_cache_from_disk():
             cache_ts = (data.get("cache_timestamp") or file_mtime) if isinstance(data, dict) else file_mtime
             cache_age = now - cache_ts
 
-            if cache_age > intra_ttl or cache_age < 0:
+            if cache_age > 86400 * 7 or cache_age < 0:
                 logger.warning(
-                    f"Persisted intraday cache is EXPIRED (age: {cache_age:.1f}s > TTL {intra_ttl}s, "
+                    f"Persisted intraday cache is excessively old (age: {cache_age:.1f}s > 7 days, "
                     f"mtime: {datetime.fromtimestamp(file_mtime)}). Purging stale disk cache."
                 )
                 try:
@@ -585,8 +585,7 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
             res_dict["rejection_analytics"] = default_rejections
         if is_scanning:
             res_dict["is_scanning"] = True
-            res_dict["status"] = "SCANNING"
-        elif "status" not in res_dict or res_dict["status"] is None:
+        if "status" not in res_dict or res_dict["status"] is None:
             res_dict["status"] = "COMPLETED"
         return res_dict
 
@@ -620,18 +619,20 @@ async def run_swing_scanner(debug: bool = False):
             logger.info("Cache empty on request. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
                 with _CACHE_LOCK:
-                    _SCANNER_CACHE["is_scanning"] = True
-                threading.Thread(target=_run_background_scan, daemon=True).start()
+                    if not _SCANNER_CACHE["is_scanning"]:
+                        _SCANNER_CACHE["is_scanning"] = True
+                        threading.Thread(target=_run_background_scan, daemon=True).start()
             return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
 
-        # Strict cache validity check: expired cache must NOT be served as current
+        # Stale-While-Revalidate: If expired, trigger background scan while serving last valid scan
         if current_time - last_updated > CACHE_TTL_SECONDS:
-            logger.info(f"Swing cache expired (age: {current_time - last_updated:.1f}s > TTL {CACHE_TTL_SECONDS}s). Triggering fresh scan...")
+            logger.info(f"Swing cache expired (age: {current_time - last_updated:.1f}s > TTL {CACHE_TTL_SECONDS}s). Triggering background scan (stale-while-revalidate)...")
             if not _ORCHESTRATION_IS_RUNNING:
                 with _CACHE_LOCK:
-                    _SCANNER_CACHE["is_scanning"] = True
-                threading.Thread(target=_run_background_scan, daemon=True).start()
-            return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
+                    if not _SCANNER_CACHE["is_scanning"]:
+                        _SCANNER_CACHE["is_scanning"] = True
+                        threading.Thread(target=_run_background_scan, daemon=True).start()
+            is_scanning = True
 
         resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=200, cache_timestamp=last_updated)
 
@@ -673,18 +674,20 @@ async def run_intraday_scanner(debug: bool = False):
             logger.info("Intraday cache empty. Triggering live background scan...")
             if not _ORCHESTRATION_IS_RUNNING:
                 with _INTRADAY_LOCK:
-                    _INTRADAY_CACHE["is_scanning"] = True
-                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+                    if not _INTRADAY_CACHE["is_scanning"]:
+                        _INTRADAY_CACHE["is_scanning"] = True
+                        threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
             return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
 
-        # Strict cache validity check: expired cache must NOT be served as current
+        # Stale-While-Revalidate: If expired, trigger background scan while serving last valid scan
         if current_time - last_updated > ttl:
-            logger.info(f"Intraday cache expired (age: {current_time - last_updated:.1f}s > TTL {ttl}s). Triggering fresh scan...")
+            logger.info(f"Intraday cache expired (age: {current_time - last_updated:.1f}s > TTL {ttl}s). Triggering background scan (stale-while-revalidate)...")
             if not _ORCHESTRATION_IS_RUNNING:
                 with _INTRADAY_LOCK:
-                    _INTRADAY_CACHE["is_scanning"] = True
-                threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
-            return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
+                    if not _INTRADAY_CACHE["is_scanning"]:
+                        _INTRADAY_CACHE["is_scanning"] = True
+                        threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
+            is_scanning = True
 
         resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=184, cache_timestamp=last_updated)
 
