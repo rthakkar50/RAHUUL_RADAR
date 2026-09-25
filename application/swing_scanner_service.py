@@ -74,6 +74,19 @@ def safe_int(val, default=0):
         return default
 
 
+def normalize_trend_score(val, default=0.0) -> float:
+    """Normalizes raw TrendEngine score (0-30) to percentage scale (0-100)."""
+    raw = safe_float(val, default)
+    return min(100.0, max(0.0, (raw / 30.0) * 100.0))
+
+
+def normalize_momentum_score(val, default=0.0) -> float:
+    """Normalizes raw MomentumEngine score (0-25) to percentage scale (0-100)."""
+    raw = safe_float(val, default)
+    return min(100.0, max(0.0, (raw / 25.0) * 100.0))
+
+
+
 class SwingScannerService:
     _instance = None
 
@@ -113,17 +126,19 @@ class SwingScannerService:
         # 1. Downtrend confirmation -> +25
         trend_direction = str(getattr(r, "trend_direction", "")).upper()
         trend_score = safe_float(getattr(r, "trend_score", 50.0), 50.0)
+        norm_trend = normalize_trend_score(trend_score)
         trend_ind = str(indicators.get("Trend", "")).upper()
-        if "BEAR" in trend_direction or trend_score < 40.0 or "BEAR" in trend_ind:
+        if "BEAR" in trend_direction or norm_trend < 40.0 or "BEAR" in trend_ind:
             score += 25
             
         # 2. RSI < 50 (SPRINT-238 TASK-3) -> +20
         rsi_val = breakdown.get("rsi", None)
         momentum_score = safe_float(getattr(r, "momentum_score", 50.0), 50.0)
+        norm_momentum = normalize_momentum_score(momentum_score)
         rsi_ind = str(indicators.get("RSI", ""))
         if rsi_val is not None and safe_float(rsi_val, 50.0) < 50.0:
             score += 20
-        elif momentum_score < 50.0 or "Bearish" in rsi_ind:
+        elif norm_momentum < 50.0 or "Bearish" in rsi_ind:
             score += 20
             
         # 3. Price below EMA20 (SPRINT-238 TASK-2) -> +20
@@ -146,7 +161,7 @@ class SwingScannerService:
         volume_score = safe_float(getattr(r, "volume_score", 50.0), 50.0)
         vol_ind = str(indicators.get("Volume", ""))
         if volume_score >= 50.0 or "x" in vol_ind or "+" in vol_ind or getattr(r, "volume_spike", False):
-            if "BEAR" in trend_direction or momentum_score < 50.0:
+            if "BEAR" in trend_direction or norm_momentum < 50.0:
                 score += 15
                 
         return min(score, 100)
@@ -295,7 +310,8 @@ class SwingScannerService:
                     except Exception:
                         volume = 100000.0
                     
-                decision_str = getattr(r.signal, 'value', str(r.signal))
+                upstream_decision = getattr(r.signal, 'value', str(r.signal))
+                decision_str = upstream_decision
                 
                 breakdown = getattr(r, 'breakdown_detail', {}) or {}
                 atr_val = breakdown.get("atr", 0.0)
@@ -375,8 +391,9 @@ class SwingScannerService:
 
                 # SPRINT-237 TASK-3: CONFIDENCE BOOST (If trend + momentum aligned)
                 momentum_score_val = safe_float(getattr(r, 'momentum_score', 50.0), 50.0)
+                norm_mom_val = normalize_momentum_score(momentum_score_val)
                 is_trend_aligned = ("BULL" in trend_dir and final_signal == "BUY") or ("BEAR" in trend_dir and final_signal in ["SELL", "EARLY SELL"])
-                is_mom_aligned = (momentum_score_val >= 50.0 if final_signal == "BUY" else momentum_score_val < 50.0)
+                is_mom_aligned = (norm_mom_val >= 50.0 if final_signal == "BUY" else norm_mom_val < 50.0)
                 if is_trend_aligned and is_mom_aligned and final_signal in ["BUY", "SELL", "EARLY SELL"]:
                     confidence = min(100.0, confidence + 10.0)
 
@@ -420,43 +437,61 @@ class SwingScannerService:
                     else:
                         rej_reasons = ["Rejected by MasterSignalPipeline"]
 
-                    p_score = safe_float(pipeline_res.get("score", getattr(r, "total_score", 50.0)), 50.0)
-                    return {
-                        "Symbol": symbol,
-                        "Company": company_raw,
-                        "Sector": sector or "",
-                        "Price": round(price, 2),
-                        "Signal": "REJECTED",
-                        "Score": p_score,
-                        "Raw Score": p_score,
-                        "Confidence": 0.0,
-                        "Trend": trend_display,
-                        "Volume": vol_display,
-                        "Risk Reward": "0.0",
-                        "RR": "0.0",
-                        "RS Score": rs_score_display,
-                        "RS Rank": rs_rank_display,
-                        "OI Activity": "--",
-                        "Entry": 0.0,
-                        "Stop Loss": 0.0,
-                        "Target 1": 0.0,
-                        "Target 2": 0.0,
-                        "Trade Grade": "REJECTED",
-                        "Risk Grade": "HIGH",
-                        "Execution Status": "REJECTED",
-                        "Execution Score": 0.0,
-                        "Execution Reason": rej_reasons[0] if rej_reasons else "Rejected by MasterSignalPipeline",
-                        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "status": "REJECTED",
-                        "execution_time_ms": mapping_time,
-                        "_raw_data": pipeline_res,
-                        "_reasons": list(getattr(r, 'reasons', [])) + rej_reasons
-                    }
+                    # FIX #2: Narrow check - Execution-gate non-actionable WATCH rejection is NOT fatal for scanner screening
+                    is_watch_gate_rejection = (
+                        (upstream_decision == "WATCH" or any("No active signal to validate (WATCH)" in str(reas) for reas in rej_reasons))
+                        and all("No active signal to validate" in str(reas) for reas in rej_reasons)
+                    )
+
+                    if not is_watch_gate_rejection:
+                        p_score = safe_float(pipeline_res.get("score", getattr(r, "total_score", 50.0)), 50.0)
+                        return {
+                            "Symbol": symbol,
+                            "Company": company_raw,
+                            "Sector": sector or "",
+                            "Price": round(price, 2),
+                            "Signal": "REJECTED",
+                            "Score": p_score,
+                            "Raw Score": p_score,
+                            "Confidence": 0.0,
+                            "Trend": trend_display,
+                            "Volume": vol_display,
+                            "Risk Reward": "0.0",
+                            "RR": "0.0",
+                            "RS Score": rs_score_display,
+                            "RS Rank": rs_rank_display,
+                            "OI Activity": "--",
+                            "Entry": 0.0,
+                            "Stop Loss": 0.0,
+                            "Target 1": 0.0,
+                            "Target 2": 0.0,
+                            "Trade Grade": "REJECTED",
+                            "Risk Grade": "HIGH",
+                            "Execution Status": "REJECTED",
+                            "Execution Score": 0.0,
+                            "Execution Reason": rej_reasons[0] if rej_reasons else "Rejected by MasterSignalPipeline",
+                            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "status": "REJECTED",
+                            "execution_time_ms": mapping_time,
+                            "_raw_data": pipeline_res,
+                            "_reasons": list(getattr(r, 'reasons', [])) + rej_reasons
+                        }
+                    else:
+                        # Preserve execution-gate status note internally for transparency
+                        if "reasons" not in pipeline_res:
+                            pipeline_res["reasons"] = []
+                        for reas in rej_reasons:
+                            if reas not in pipeline_res["reasons"]:
+                                pipeline_res["reasons"].append(reas)
+                        pipeline_res["execution_status"] = "WATCH_SETUP"
+                        pipeline_res["execution_reason"] = "No active trade execution signal; retained for scanner monitoring"
 
                 entry = safe_float(pipeline_res.get("recommended_entry", 0.0), 0.0)
                 sl = safe_float(pipeline_res.get("stop_loss", 0.0), 0.0)
                 t1 = safe_float(pipeline_res.get("target_1", 0.0), 0.0)
                 t2 = safe_float(pipeline_res.get("target_2", 0.0), 0.0)
+                if entry <= 0.0 and price > 0.0:
+                    entry = round(price, 2)
                 if entry > 0.0 and (sl == 0.0 or t1 == 0.0):
                     if decision_str in ["BUY", "STRONG_BUY", "WATCH"]:
                         sl = sl if sl > 0 else round(entry * 0.98, 2)
@@ -519,6 +554,12 @@ class SwingScannerService:
                     if "reasons" not in pipeline_res:
                         pipeline_res["reasons"] = []
                     pipeline_res["reasons"].append(f"Downgraded to WATCH: {valid_reason}")
+                    # FIX #4: Sanitize trade levels when downgraded to WATCH due to invalid levels
+                    entry = round(price, 2)
+                    sl = 0.0
+                    t1 = 0.0
+                    t2 = 0.0
+                    rr = 0.0
                 
                 # BUG-3 FIX: Use exactly what the TrendEngine evaluated, no generic fallbacks
                 trend_str = str(getattr(r, "trend_direction", "SIDEWAYS")).upper()
@@ -655,8 +696,8 @@ class SwingScannerService:
                     "Confidence": conf_display,
                     "Trend": trend_display,
                     "Volume": vol_display,
-                    "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
-                    "RR": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
+                    "Risk Reward": f"1:{round(rr, 1)}" if (isinstance(rr, (int, float)) and rr > 0) else ("0.0" if rr == 0.0 else str(rr)),
+                    "RR": f"1:{round(rr, 1)}" if (isinstance(rr, (int, float)) and rr > 0) else ("0.0" if rr == 0.0 else str(rr)),
                     "RS Score": rs_score_display,
                     "RS Rank": rs_rank_display,
                     "OI Activity": "--", # Only for F&O, handled by detail_map usually
@@ -782,9 +823,12 @@ class SwingScannerService:
                 v_score = safe_float(raw_data.get("volume", {}).get("score", 50.0), 50.0)
                 r_score = safe_float(raw_data.get("risk", {}).get("score", 50.0), 50.0)
 
+                norm_t = normalize_trend_score(t_score)
+                norm_m = normalize_momentum_score(m_score)
+
                 # Pipeline Stage Counters
-                if t_score >= 50.0: stage_counts["Trend Filter"] += 1
-                if m_score >= 50.0: stage_counts["Momentum Filter"] += 1
+                if norm_t >= 50.0: stage_counts["Trend Filter"] += 1
+                if norm_m >= 50.0: stage_counts["Momentum Filter"] += 1
                 if v_score >= 50.0: stage_counts["Volume Filter"] += 1
                 if s_score >= 50.0: stage_counts["Structure Gate"] += 1
                 if rr >= 1.5: stage_counts["Risk Gate"] += 1
@@ -800,12 +844,50 @@ class SwingScannerService:
                 # Rejection tracking
                 if conf < 65.0: rejection_analytics["Low Confidence"] += 1
                 if rr < 1.5: rejection_analytics["Low RR"] += 1
-                if t_score < 50.0: rejection_analytics["Weak Trend"] += 1
+                if norm_t < 50.0: rejection_analytics["Weak Trend"] += 1
                 if v_score < 50.0: rejection_analytics["Low Volume"] += 1
                 if s_score < 50.0: rejection_analytics["Structure Unaligned"] += 1
 
                 if item.get("status") == "REJECTED":
-                    rej_reason = item.get("_reasons", ["Rejected by pipeline"])[0] if item.get("_reasons") else "Rejected by pipeline"
+                    # FIX #3: Extract actual terminal rejection reason rather than the first technical indicator
+                    rej_reason = None
+
+                    # 1. Primary source: Explicit "Execution Reason" or "execution_reason"
+                    exec_reason = item.get("Execution Reason") or item.get("execution_reason")
+                    if exec_reason and exec_reason != "Rejected by pipeline":
+                        rej_reason = str(exec_reason)
+
+                    # 2. Secondary source: Pipeline report / raw_data reasons
+                    if not rej_reason:
+                        raw_data_obj = item.get("_raw_data", {})
+                        rep_obj = raw_data_obj.get("report") if isinstance(raw_data_obj, dict) else None
+                        if hasattr(rep_obj, "reasons") and rep_obj.reasons:
+                            rej_reason = str(rep_obj.reasons[0])
+                        elif isinstance(rep_obj, list) and rep_obj:
+                            rej_reason = str(rep_obj[0])
+                        elif isinstance(rep_obj, str) and rep_obj:
+                            rej_reason = str(rep_obj)
+                        elif isinstance(raw_data_obj, dict) and raw_data_obj.get("reasons"):
+                            rej_reason = str(raw_data_obj["reasons"][0])
+
+                    # 3. Tertiary source: Search _reasons from the end for explicit failure/rejection keywords
+                    if not rej_reason and item.get("_reasons"):
+                        reasons_list = item.get("_reasons", [])
+                        failure_keywords = (
+                            "no active signal", "failure", "failed", "rejected", "conflict",
+                            "invalid", "unaligned", "below directional threshold", "rr below"
+                        )
+                        for r_item in reversed(reasons_list):
+                            r_str = str(r_item).strip()
+                            if any(kw in r_str.lower() for kw in failure_keywords):
+                                rej_reason = r_str
+                                break
+
+                    # 4. Safe fallback: terminal element of _reasons if available, else default string
+                    if not rej_reason:
+                        reasons_list = item.get("_reasons", [])
+                        rej_reason = reasons_list[-1] if reasons_list else "Rejected by pipeline"
+
                     trace_entry = {
                         "symbol": sym,
                         "company_name": item.get("Company", sym),
@@ -878,10 +960,29 @@ class SwingScannerService:
                             item["_reasons"] = ["Setup ready; waiting for breakout confirmation"]
 
                 if item["Signal"] == "WATCH":
+                    # FIX #4: Sanitize inverted or invalid directional levels on WATCH setups
+                    t_upper = str(trend).upper()
+                    inferred_dir = "BUY" if "BULL" in t_upper else ("SELL" if "BEAR" in t_upper else "")
+                    if inferred_dir:
+                        try:
+                            e_chk = float(item.get("Entry", 0.0))
+                            s_chk = float(item.get("Stop Loss", 0.0))
+                            t_chk = float(item.get("Target 1", 0.0))
+                            if s_chk > 0 or t_chk > 0:
+                                is_lvl_valid, _ = validate_trade_levels(inferred_dir, e_chk, s_chk, t_chk)
+                                if not is_lvl_valid:
+                                    item["Stop Loss"] = 0.0
+                                    item["Target 1"] = 0.0
+                                    item["Target 2"] = 0.0
+                                    item["Risk Reward"] = "0.0"
+                                    item["RR"] = "0.0"
+                        except (ValueError, TypeError):
+                            pass
+
                     if "_reasons" not in item: item["_reasons"] = []
                     has_specific_downgrade = any(r for r in item["_reasons"] if "below directional threshold" in r or "Invalid" in r or "RR below" in r or "Downgraded to WATCH" in r)
                     if not has_specific_downgrade:
-                        if t_score < 50.0 and m_score < 50.0: item["_reasons"].append("Trend and momentum not aligned")
+                        if norm_t < 50.0 and norm_m < 50.0: item["_reasons"].append("Trend and momentum not aligned")
                         elif s_score < 50.0: item["_reasons"].append("Sector strength not aligned")
                         elif v_score < 50.0: item["_reasons"].append("Volume confirmation missing")
                         else:
@@ -900,7 +1001,18 @@ class SwingScannerService:
 
                 # Symbol Inspector & Trace payload
                 is_accepted = item["Signal"] in ["BUY", "STRONG_BUY", "SELL", "STRONG_SELL", "READY"]
-                rej_reason = "Accepted" if is_accepted else (item["_reasons"][0] if item.get("_reasons") else "Below threshold")
+                if is_accepted:
+                    rej_reason = "Accepted"
+                else:
+                    reasons_list = item.get("_reasons", [])
+                    watch_keywords = ("waiting", "aligned", "below", "threshold", "invalid", "setup", "missing", "downgrade")
+                    watch_reason = None
+                    for r_item in reversed(reasons_list):
+                        r_str = str(r_item).strip()
+                        if any(kw in r_str.lower() for kw in watch_keywords):
+                            watch_reason = r_str
+                            break
+                    rej_reason = watch_reason or (reasons_list[-1] if reasons_list else "Below threshold")
                 
                 trace_entry = {
                     "symbol": sym,
@@ -1021,7 +1133,7 @@ class SwingScannerService:
                     conf_val = safe_float(p_item.get("Confidence", 0.0), 0.0)
                     dec_val = p_item.get("Signal", "WATCH")
                     lat_val = round(p_item.get("execution_time_ms", 10.0), 1)
-                    rea_val = p_item.get("_reasons", ["Processed successfully"])[0] if p_item.get("_reasons") else "Processed"
+                    rea_val = p_item.get("Execution Reason") or (p_item.get("_reasons")[-1] if p_item.get("_reasons") else "Processed")
 
                     entry_rep = {
                         "symbol": sym,
