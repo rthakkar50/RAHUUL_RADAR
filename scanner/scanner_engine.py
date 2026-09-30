@@ -418,7 +418,7 @@ class ScannerEngine:
                     ohlcv_list = self.data_provider.get_ohlcv(stock.symbol, interval="5m", period="5d")
                 elif mode == "INTRADAY":
                     # Dedicated INTRADAY branch (Sprint 81C.1 Integration)
-                    ohlcv_list = self.data_provider.get_ohlcv(stock.symbol)
+                    ohlcv_list = self.data_provider.get_ohlcv(stock.symbol, interval="5m", period="5d")
                 else:
                     ohlcv_list = self.data_provider.get_ohlcv(stock.symbol, interval="1d", period="3mo")
                 if not ohlcv_list:

@@ -459,7 +459,7 @@ class PaytmMoneyProvider(MarketDataProvider):
 
     def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
         """TASK-3 & TASK-7: Paytm Live Intraday candles/ticks with NO FALLBACK to Yahoo."""
-        return self.get_ohlcv(symbol)
+        return self.get_ohlcv(symbol, interval=interval, period=period)
 
     def get_quote(self, symbol: str) -> Dict[str, Any]:
         ltp = self.get_last_price(symbol)
