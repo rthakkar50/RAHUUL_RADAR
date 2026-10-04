@@ -1139,13 +1139,13 @@ class _DashboardScreenState extends State<DashboardScreen>
             _quickActionCard(
               'F&O Terminal',
               Icons.show_chart,
-              Colors.purpleAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(4),
             ),
             _quickActionCard(
               'Portfolio',
               Icons.pie_chart,
-              Colors.cyanAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(6),
             ),
             _quickActionCard(
@@ -1157,31 +1157,31 @@ class _DashboardScreenState extends State<DashboardScreen>
             _quickActionCard(
               'Journal',
               Icons.menu_book,
-              Colors.amberAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(7),
             ),
             _quickActionCard(
               'Risk Center',
               Icons.shield,
-              AppDesignSystem.danger,
+              AppDesignSystem.primary,
               () => widget.onNavigate(8),
             ),
             _quickActionCard(
               'AI Copilot',
               Icons.psychology,
-              Colors.cyanAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(3),
             ),
             _quickActionCard(
               'AI Sentinel',
               Icons.security,
-              Colors.orangeAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(12),
             ),
             _quickActionCard(
               'Global Macro',
               Icons.public,
-              Colors.tealAccent,
+              AppDesignSystem.primary,
               () => widget.onNavigate(10),
             ),
           ],
@@ -1200,21 +1200,23 @@ class _DashboardScreenState extends State<DashboardScreen>
       onTap: onTap,
       borderRadius: AppDesignSystem.radiusSmall,
       child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: AppDesignSystem.glassCard(
-          borderColor: col.withValues(alpha: 0.3),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppDesignSystem.surface,
+          borderRadius: AppDesignSystem.radiusSmall,
+          border: Border.all(color: AppDesignSystem.border, width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: col, size: 20),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               label,
               style: const TextStyle(
                 color: AppDesignSystem.textPrimary,
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,

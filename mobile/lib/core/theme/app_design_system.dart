@@ -1,35 +1,35 @@
 import 'package:flutter/material.dart';
 
 class AppDesignSystem {
-  // Theme Colors
+  // Theme Colors — Sober Institutional Palette
   static const Color background = Color(0xFF0B0E14);
-  static const Color surface = Color(0xFF161B22);
-  static const Color surfaceLight = Color(0xFF21262D);
-  static const Color border = Color(0xFF30363D);
+  static const Color surface = Color(0xFF121721);
+  static const Color surfaceLight = Color(0xFF18202D);
+  static const Color border = Color(0xFF1F2735);
 
-  static const Color primary = Color(0xFF00E5FF);
-  static const Color secondary = Color(0xFF7C4DFF);
-  static const Color success = Color(0xFF00E676);
-  static const Color warning = Color(0xFFFFAB00);
-  static const Color danger = Color(0xFFFF1744);
+  static const Color primary = Color(0xFF3B82F6);
+  static const Color secondary = Color(0xFF2563EB);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color danger = Color(0xFFEF4444);
   static const Color textPrimary = Color(0xFFF0F6FC);
   static const Color textSecondary = Color(0xFF8B949E);
 
-  // Gradients
+  // Gradients — Subtle Monochrome Tones (No Rainbow / Neon Transitions)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, secondary],
+    colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient successGradient = LinearGradient(
-    colors: [Color(0xFF00E676), Color(0xFF00B0FF)],
+    colors: [Color(0xFF10B981), Color(0xFF059669)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient dangerGradient = LinearGradient(
-    colors: [Color(0xFFFF1744), Color(0xFFD500F9)],
+    colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -42,14 +42,14 @@ class AppDesignSystem {
   // Box Decorations
   static BoxDecoration glassCard({Color? borderColor}) {
     return BoxDecoration(
-      color: surface.withValues(alpha: 0.85),
+      color: surface,
       borderRadius: radiusMedium,
       border: Border.all(color: borderColor ?? border, width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
+          color: Colors.black.withValues(alpha: 0.2),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
         ),
       ],
     );
