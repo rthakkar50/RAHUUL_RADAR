@@ -92,7 +92,7 @@ class PaperPositionManager:
                 return "Target 1 Hit", max(1, pos.qty // 3)
                 
             # Fallback legacy target
-            if pos.target > 0 and cmp >= pos.target:
+            if pos.target_1 == 0 and pos.target_2 == 0 and pos.target_3 == 0 and pos.target > 0 and cmp >= pos.target:
                 return "Target Hit", pos.qty
                 
         else: # SELL
@@ -110,7 +110,7 @@ class PaperPositionManager:
                 pos.target_1 = 0.0
                 return "Target 1 Hit", max(1, pos.qty // 3)
                 
-            if pos.target > 0 and cmp <= pos.target:
+            if pos.target_1 == 0 and pos.target_2 == 0 and pos.target_3 == 0 and pos.target > 0 and cmp <= pos.target:
                 return "Target Hit", pos.qty
 
         return None, None

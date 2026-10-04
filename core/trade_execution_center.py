@@ -179,13 +179,24 @@ class TradeExecutionCenter:
         if req.quantity > self.execution_settings.get("maximum_position_size", 1000):
             return False, "Position size exceeds maximum limit."
             
-        risk_pct = 0.0
         if req.entry_price > 0 and req.stop_loss > 0:
-            risk_pct = abs(req.entry_price - req.stop_loss) / req.entry_price * 100.0
-            
-        if risk_pct > self.risk_limits.get("maximum_risk_per_trade_pct", 2.0):
-            return False, f"Risk {risk_pct:.2f}% exceeds limit."
-            
+            price_risk = abs(req.entry_price - req.stop_loss)
+            portfolio_capital = float(
+                getattr(self, "virtual_capital", 0.0)
+                or self.risk_limits.get("portfolio_capital", 0.0)
+                or self.execution_settings.get("portfolio_capital", 0.0)
+                or 1000000.0
+            )
+            trade_risk_amount = req.quantity * price_risk
+            capital_risk_pct = (trade_risk_amount / portfolio_capital) * 100.0
+            if capital_risk_pct > self.risk_limits.get("maximum_risk_per_trade_pct", 2.0):
+                return False, f"Risk {capital_risk_pct:.2f}% exceeds limit."
+
+            stop_distance_pct = (price_risk / req.entry_price) * 100.0
+            max_stop_distance_pct = self.risk_limits.get("maximum_stop_distance_pct", 8.0)
+            if stop_distance_pct > max_stop_distance_pct:
+                return False, f"Stop distance {stop_distance_pct:.2f}% exceeds limit of {max_stop_distance_pct:.2f}%."
+
         return True, "Risk check passed."
 
     def perform_validation_check(self, req: ExecutionRequest) -> (bool, str):
