@@ -27,9 +27,10 @@ class PaytmMoneyProvider(MarketDataProvider):
         self.api_key = os.environ.get("PAYTM_API_KEY", None)
         self.api_secret = os.environ.get("PAYTM_API_SECRET", None)
         self.request_token = os.environ.get("PAYTM_REQUEST_TOKEN", None)
-        self.access_token = None
-        self.public_access_token = None
-        self.read_access_token = None
+        self.access_token = os.environ.get("PAYTM_ACCESS_TOKEN", None)
+        self.public_access_token = os.environ.get("PAYTM_PUBLIC_ACCESS_TOKEN", None)
+        self.read_access_token = os.environ.get("PAYTM_READ_ACCESS_TOKEN", None)
+        self.token_expiry = 0.0
         
         self.fallback = YahooFinanceProvider()
         self.ws_cache = PaytmLiveBroadcast.get_instance()
@@ -42,8 +43,7 @@ class PaytmMoneyProvider(MarketDataProvider):
             "cache_misses": 0
         }
         
-        if not self.api_key or not self.api_secret or not self.request_token:
-            self._load_credentials_from_config()
+        self._load_credentials_from_config()
 
         if not self.api_key or self.api_key == "YOUR_PAYTM_API_KEY":
             self.logger.warning("PaytmMoneyProvider: Paytm API key not set. Using Yahoo Finance fallback for live market data.")
@@ -57,27 +57,50 @@ class PaytmMoneyProvider(MarketDataProvider):
             if os.path.exists(config_path):
                 with open(config_path, "r") as f:
                     config_data = json.load(f)
-                    
-                    paytm_block = config_data.get("paytm", {})
-                    if not self.api_key:
-                        self.api_key = paytm_block.get("api_key", "")
-                    if not self.api_secret:
-                        self.api_secret = paytm_block.get("api_secret_key", "")
-                    if not self.request_token:
-                        # Sometimes it might be in the config or we just rely on OAuth callback to set it dynamically
-                        self.request_token = paytm_block.get("request_token", "")
-                        
-                    if not self.access_token:
-                        self.access_token = paytm_block.get("access_token", "")
-                    if not self.public_access_token:
-                        self.public_access_token = paytm_block.get("public_access_token", "")
-                    if not self.read_access_token:
-                        self.read_access_token = paytm_block.get("read_access_token", "")
-                    if "http_timeout" in paytm_block and self.timeout == self.DEFAULT_HTTP_TIMEOUT:
-                        try:
-                            self.timeout = float(paytm_block.get("http_timeout", self.DEFAULT_HTTP_TIMEOUT))
-                        except (ValueError, TypeError):
-                            pass
+                    if isinstance(config_data, dict):
+                        paytm_block = config_data.get("paytm")
+                        if not isinstance(paytm_block, dict):
+                            paytm_block = {}
+                        if not self.api_key:
+                            self.api_key = paytm_block.get("api_key") or config_data.get("paytm_api_key") or ""
+                        if not self.api_secret:
+                            self.api_secret = (
+                                paytm_block.get("api_secret_key")
+                                or paytm_block.get("api_secret")
+                                or config_data.get("paytm_api_secret")
+                                or ""
+                            )
+                        if not self.request_token:
+                            # Sometimes it might be in the config or we just rely on OAuth callback to set it dynamically
+                            self.request_token = paytm_block.get("request_token") or config_data.get("paytm_request_token") or ""
+
+                        if not self.access_token:
+                            self.access_token = paytm_block.get("access_token") or config_data.get("paytm_access_token") or ""
+                        if not self.public_access_token:
+                            self.public_access_token = paytm_block.get("public_access_token") or config_data.get("paytm_public_access_token") or ""
+                        if not self.read_access_token:
+                            self.read_access_token = paytm_block.get("read_access_token") or config_data.get("paytm_read_access_token") or ""
+                        raw_expiry = paytm_block.get("token_expiry") if "token_expiry" in paytm_block else config_data.get("paytm_token_expiry", 0.0)
+                        if not getattr(self, "token_expiry", 0.0):
+                            self.token_expiry = float(raw_expiry or 0.0)
+                        if "http_timeout" in paytm_block and self.timeout == self.DEFAULT_HTTP_TIMEOUT:
+                            try:
+                                self.timeout = float(paytm_block.get("http_timeout", self.DEFAULT_HTTP_TIMEOUT))
+                            except (ValueError, TypeError):
+                                pass
+            if self.api_key:
+                from market.paytm_auth_manager import PaytmAuthManager
+                auth_mgr = PaytmAuthManager.get_instance()
+                if not self.request_token and auth_mgr.request_token:
+                    self.request_token = auth_mgr.request_token
+                if not self.access_token and auth_mgr.access_token:
+                    self.access_token = auth_mgr.access_token
+                if not self.public_access_token and auth_mgr.public_access_token:
+                    self.public_access_token = auth_mgr.public_access_token
+                if not self.read_access_token and auth_mgr.read_access_token:
+                    self.read_access_token = auth_mgr.read_access_token
+                if not getattr(self, "token_expiry", 0.0) and getattr(auth_mgr, "token_expiry", 0.0):
+                    self.token_expiry = float(auth_mgr.token_expiry or 0.0)
         except Exception as e:
             self.logger.warning(f"Failed to load Paytm credentials from config.json: {e}")
 
@@ -85,11 +108,26 @@ class PaytmMoneyProvider(MarketDataProvider):
         self.logger.info("Attempting to connect to Paytm Money API...")
         from market.paytm_auth_manager import PaytmAuthManager
         auth_mgr = PaytmAuthManager.get_instance()
+        if not auth_mgr.api_key and self.api_key:
+            auth_mgr.api_key = self.api_key
+        if not auth_mgr.api_secret and self.api_secret:
+            auth_mgr.api_secret = self.api_secret
+        if not auth_mgr.request_token and self.request_token:
+            auth_mgr.request_token = self.request_token
+        if not auth_mgr.access_token and self.access_token:
+            auth_mgr.access_token = self.access_token
+        if not auth_mgr.read_access_token and self.read_access_token:
+            auth_mgr.read_access_token = self.read_access_token
+        if not auth_mgr.public_access_token and self.public_access_token:
+            auth_mgr.public_access_token = self.public_access_token
+        if not getattr(auth_mgr, "token_expiry", 0.0) and getattr(self, "token_expiry", 0.0):
+            auth_mgr.token_expiry = self.token_expiry
         
         if auth_mgr.is_authenticated():
-            self.access_token = auth_mgr.access_token
-            self.read_access_token = auth_mgr.read_access_token
-            self.public_access_token = auth_mgr.public_access_token
+            self.access_token = auth_mgr.access_token or self.access_token
+            self.read_access_token = auth_mgr.read_access_token or self.read_access_token
+            self.public_access_token = auth_mgr.public_access_token or self.public_access_token
+            self.token_expiry = getattr(auth_mgr, "token_expiry", 0.0) or getattr(self, "token_expiry", 0.0)
             self.logger.info("Paytm Login Success: Using stored authenticated Paytm tokens.")
             self._connected = True
             try:
@@ -103,9 +141,10 @@ class PaytmMoneyProvider(MarketDataProvider):
             
         success, msg = auth_mgr.refresh_token()
         if success:
-            self.access_token = auth_mgr.access_token
-            self.read_access_token = auth_mgr.read_access_token
-            self.public_access_token = auth_mgr.public_access_token
+            self.access_token = auth_mgr.access_token or self.access_token
+            self.read_access_token = auth_mgr.read_access_token or self.read_access_token
+            self.public_access_token = auth_mgr.public_access_token or self.public_access_token
+            self.token_expiry = getattr(auth_mgr, "token_expiry", 0.0) or getattr(self, "token_expiry", 0.0)
             self.logger.info("Paytm Login Success: Token Refreshed via PaytmAuthManager.")
             self._connected = True
             try:

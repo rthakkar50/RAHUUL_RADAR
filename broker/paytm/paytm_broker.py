@@ -45,9 +45,10 @@ class PaytmBroker(BaseBroker):
         self.access_token = os.environ.get("PAYTM_ACCESS_TOKEN", None)
         self.public_access_token = os.environ.get("PAYTM_PUBLIC_ACCESS_TOKEN", None)
         self.read_access_token = os.environ.get("PAYTM_READ_ACCESS_TOKEN", None)
+        self.request_token = os.environ.get("PAYTM_REQUEST_TOKEN", None)
+        self.token_expiry = None
         
-        if not self.api_key or not self.api_secret:
-            self._load_credentials_from_config()
+        self._load_credentials_from_config()
 
         if not self.api_key or not self.api_secret:
             raise ValueError("PaytmBroker initialization error: Missing required credentials (PAYTM_API_KEY and PAYTM_API_SECRET). Never silently use placeholder credentials.")
@@ -63,17 +64,30 @@ class PaytmBroker(BaseBroker):
             if os.path.exists(config_path):
                 with open(config_path, "r") as f:
                     config_data = json.load(f)
-                    paytm_block = config_data.get("paytm", {})
+                    if not isinstance(config_data, dict):
+                        return
+                    paytm_block = config_data.get("paytm")
+                    if not isinstance(paytm_block, dict):
+                        paytm_block = {}
                     if not self.api_key:
-                        self.api_key = paytm_block.get("api_key", "")
+                        self.api_key = paytm_block.get("api_key") or config_data.get("paytm_api_key") or ""
                     if not self.api_secret:
-                        self.api_secret = paytm_block.get("api_secret_key", "")
+                        self.api_secret = (
+                            paytm_block.get("api_secret_key")
+                            or paytm_block.get("api_secret")
+                            or config_data.get("paytm_api_secret")
+                            or ""
+                        )
                     if not self.access_token:
-                        self.access_token = paytm_block.get("access_token", "")
+                        self.access_token = paytm_block.get("access_token") or config_data.get("paytm_access_token") or ""
                     if not self.public_access_token:
-                        self.public_access_token = paytm_block.get("public_access_token", "")
+                        self.public_access_token = paytm_block.get("public_access_token") or config_data.get("paytm_public_access_token") or ""
                     if not self.read_access_token:
-                        self.read_access_token = paytm_block.get("read_access_token", "")
+                        self.read_access_token = paytm_block.get("read_access_token") or config_data.get("paytm_read_access_token") or ""
+                    if not getattr(self, "request_token", None):
+                        self.request_token = paytm_block.get("request_token") or config_data.get("paytm_request_token") or ""
+                    if getattr(self, "token_expiry", None) is None:
+                        self.token_expiry = paytm_block.get("token_expiry") if "token_expiry" in paytm_block else config_data.get("paytm_token_expiry")
         except Exception as e:
             self.logger.warning(f"Failed to load Paytm credentials from config.json: {e}")
 

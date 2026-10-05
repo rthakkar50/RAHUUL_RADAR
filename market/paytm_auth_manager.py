@@ -44,26 +44,36 @@ class PaytmAuthManager:
         self.access_token = os.environ.get("PAYTM_ACCESS_TOKEN")
         self.read_access_token = os.environ.get("PAYTM_READ_ACCESS_TOKEN")
         self.public_access_token = os.environ.get("PAYTM_PUBLIC_ACCESS_TOKEN")
+        self.token_expiry = 0.0
 
         config_path = os.path.join(os.getcwd(), "config.json")
         if os.path.exists(config_path):
             try:
                 with open(config_path, "r") as f:
                     cdata = json.load(f)
-                    paytm_cfg = cdata.get("paytm", {})
+                    if not isinstance(cdata, dict):
+                        return
+                    paytm_cfg = cdata.get("paytm")
+                    if not isinstance(paytm_cfg, dict):
+                        paytm_cfg = {}
                     if not self.api_key:
-                        self.api_key = paytm_cfg.get("api_key")
+                        self.api_key = paytm_cfg.get("api_key") or cdata.get("paytm_api_key")
                     if not self.api_secret:
-                        self.api_secret = paytm_cfg.get("api_secret_key")
+                        self.api_secret = (
+                            paytm_cfg.get("api_secret_key")
+                            or paytm_cfg.get("api_secret")
+                            or cdata.get("paytm_api_secret")
+                        )
                     if not self.request_token:
-                        self.request_token = paytm_cfg.get("request_token")
+                        self.request_token = paytm_cfg.get("request_token") or cdata.get("paytm_request_token")
                     if not self.access_token:
-                        self.access_token = paytm_cfg.get("access_token")
+                        self.access_token = paytm_cfg.get("access_token") or cdata.get("paytm_access_token")
                     if not self.read_access_token:
-                        self.read_access_token = paytm_cfg.get("read_access_token")
+                        self.read_access_token = paytm_cfg.get("read_access_token") or cdata.get("paytm_read_access_token")
                     if not self.public_access_token:
-                        self.public_access_token = paytm_cfg.get("public_access_token")
-                    self.token_expiry = float(paytm_cfg.get("token_expiry", 0.0))
+                        self.public_access_token = paytm_cfg.get("public_access_token") or cdata.get("paytm_public_access_token")
+                    raw_expiry = paytm_cfg.get("token_expiry") if "token_expiry" in paytm_cfg else cdata.get("paytm_token_expiry", 0.0)
+                    self.token_expiry = float(raw_expiry or 0.0)
             except Exception as e:
                 logger.warning(f"Error reading config.json in PaytmAuthManager: {e}")
 

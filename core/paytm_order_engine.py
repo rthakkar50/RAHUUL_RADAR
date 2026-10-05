@@ -286,6 +286,8 @@ class PaytmOrderEngine:
         order_no = None
 
         try:
+            if not self.broker.is_connected:
+                self.broker.connect()
             order_no = self.broker.place_order(
                 symbol=symbol_clean,
                 qty=quantity,
@@ -434,6 +436,8 @@ class PaytmOrderEngine:
     def cancel_live_order(self, order_id: str) -> bool:
         start_time = time.time()
         try:
+            if not self.broker.is_connected:
+                self.broker.connect()
             res = self.broker.cancel_order(order_id)
             latency_ms = (time.time() - start_time) * 1000.0
             self.log_audit(
