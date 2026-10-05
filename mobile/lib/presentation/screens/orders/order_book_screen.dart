@@ -3,16 +3,21 @@ import '../../../data/models/order_model.dart';
 import '../../../data/repositories/order_repository.dart';
 
 class OrderBookScreen extends StatefulWidget {
-  const OrderBookScreen({super.key});
+  final OrderRepository? repository;
+
+  const OrderBookScreen({super.key, this.repository});
 
   @override
   State<OrderBookScreen> createState() => _OrderBookScreenState();
 }
 
 class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProviderStateMixin {
-  final OrderRepository _repository = OrderRepository();
+  late final OrderRepository _repository = widget.repository ?? OrderRepository();
   List<OrderBookItemModel> _orders = [];
+  TradeBookResponseModel? _tradeBookResponse;
   bool _isLoading = false;
+  bool _isTradesLoading = false;
+  bool _tradeNetworkError = false;
   late TabController _tabController;
 
   @override
@@ -20,6 +25,7 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     _fetchBook();
+    _fetchTrades();
   }
 
   @override
@@ -43,6 +49,35 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
     }
   }
 
+  Future<void> _fetchTrades() async {
+    setState(() {
+      _isTradesLoading = true;
+      _tradeNetworkError = false;
+    });
+    try {
+      final res = await _repository.fetchTradeBook();
+      if (mounted) {
+        setState(() {
+          _tradeBookResponse = res;
+          _isTradesLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _tradeBookResponse = null;
+          _tradeNetworkError = true;
+          _isTradesLoading = false;
+        });
+      }
+    }
+  }
+
+  void _refreshAll() {
+    _fetchBook();
+    _fetchTrades();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +99,7 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchBook),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refreshAll),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -133,18 +168,63 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
   }
 
   Widget _buildTradeBookTab() {
-    final trades = [
-      {'date': '2026-08-01', 'time': '14:22:10', 'symbol': 'RELIANCE', 'type': 'BUY', 'qty': '100', 'broker': 'Paytm Money', 'charges': '₹34.50', 'pnl': '+₹2,450.00'},
-      {'date': '2026-08-01', 'time': '11:15:40', 'symbol': 'HDFCBANK', 'type': 'BUY', 'qty': '150', 'broker': 'Paytm Money', 'charges': '₹42.00', 'pnl': '+₹3,120.00'},
-      {'date': '2026-07-31', 'time': '15:10:05', 'symbol': 'ICICIBANK', 'type': 'SELL', 'qty': '80', 'broker': 'Paytm Money', 'charges': '₹28.10', 'pnl': '+₹1,840.00'},
-    ];
+    if (_isTradesLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.amberAccent));
+    }
+
+    final resp = _tradeBookResponse;
+    if (_tradeNetworkError || resp == null || resp.status == 'BROKER_ERROR') {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Unable to load trade book', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            SizedBox(height: 6),
+            Text('Broker or API error occurred. Tap refresh to retry.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+      );
+    }
+
+    if (resp.isBrokerUnconfigured) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Paytm Money is not connected', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            SizedBox(height: 6),
+            Text('Configure broker credentials to view live trades.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+      );
+    }
+
+    if (resp.isBrokerAuthError || !resp.brokerConnected) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Paytm Money authentication required', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            SizedBox(height: 6),
+            Text('Reconnect your broker session to view live trades.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+      );
+    }
+
+    final trades = resp.trades;
+    if (trades.isEmpty) {
+      return const Center(
+        child: Text('No trades found', style: TextStyle(color: Colors.grey)),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: trades.length,
       itemBuilder: (ctx, i) {
         final t = trades[i];
-        final isBuy = t['type'] == 'BUY';
+        final isBuy = t.txnType.toUpperCase() == 'BUY';
         return Card(
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 12),
@@ -159,21 +239,22 @@ class _OrderBookScreenState extends State<OrderBookScreen> with SingleTickerProv
                   children: [
                     Row(
                       children: [
-                        Text(t['symbol']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(t.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: (isBuy ? Colors.greenAccent : Colors.redAccent).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                          child: Text(t['type']!, style: TextStyle(color: isBuy ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 10)),
+                          child: Text(t.txnType.toUpperCase(), style: TextStyle(color: isBuy ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 10)),
                         ),
                       ],
                     ),
-                    Text(t['pnl']!, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('₹${t.tradePrice}', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Qty: ${t['qty']} • Broker: ${t['broker']} • Charges: ${t['charges']}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                Text('Executed: ${t['date']} at ${t['time']}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                Text('Qty: ${t.quantity} • Trade No: ${t.tradeNo} • Order No: ${t.orderNo}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                if (t.tradeTime.isNotEmpty)
+                  Text('Executed: ${t.tradeTime}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
               ],
             ),
           ),

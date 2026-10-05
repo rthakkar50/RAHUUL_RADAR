@@ -409,6 +409,8 @@ class PaytmOrderEngine:
             self.logger.warning(f"Telegram order alert dispatch skipped: {e}")
 
     def get_order_book(self) -> List[Dict[str, Any]]:
+        if not self.broker.is_connected:
+            self.broker.connect()
         orders = self.broker.get_orders()
         result = []
         for o in orders:
@@ -423,6 +425,11 @@ class PaytmOrderEngine:
                 "timestamp": o.timestamp.isoformat() if hasattr(o, "timestamp") and o.timestamp else datetime.now().isoformat()
             })
         return result
+
+    def get_trade_book(self) -> List[Dict[str, Any]]:
+        if not self.broker.is_connected:
+            self.broker.connect()
+        return self.broker.get_trade_book()
 
     def cancel_live_order(self, order_id: str) -> bool:
         start_time = time.time()

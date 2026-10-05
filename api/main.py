@@ -2070,11 +2070,52 @@ async def get_order_book():
         engine = PaytmOrderEngine()
         orders = engine.get_order_book()
         meta = _get_provider_metadata()
-        return {"orders": orders, **meta}
+        return {"orders": orders, "broker_connected": True, "status": "OK", **meta}
     except Exception as e:
         logger.warning(f"Order book fetch fallback: {e}")
+        err_msg = str(e)
+        if "Missing required credentials" in err_msg or "initialization error" in err_msg.lower():
+            err_status = "BROKER_UNCONFIGURED"
+        elif e.__class__.__name__ in ("BrokerAuthError", "TokenExpiredError"):
+            err_status = "BROKER_AUTH_ERROR"
+        else:
+            err_status = "BROKER_ERROR"
         meta = _get_provider_metadata()
-        return {"orders": [], "message": str(e), **meta}
+        return {
+            "orders": [],
+            "broker_connected": False,
+            "status": err_status,
+            "message": err_msg,
+            **meta,
+            "provider_health": "DEGRADED",
+        }
+
+@v1_router.get("/orders/trades", tags=["Orders"])
+async def get_trade_book():
+    try:
+        from core.paytm_order_engine import PaytmOrderEngine
+        engine = PaytmOrderEngine()
+        trades = engine.get_trade_book()
+        meta = _get_provider_metadata()
+        return {"trades": trades, "broker_connected": True, "status": "OK", **meta}
+    except Exception as e:
+        logger.warning(f"Trade book fetch fallback: {e}")
+        err_msg = str(e)
+        if "Missing required credentials" in err_msg or "initialization error" in err_msg.lower():
+            err_status = "BROKER_UNCONFIGURED"
+        elif e.__class__.__name__ in ("BrokerAuthError", "TokenExpiredError"):
+            err_status = "BROKER_AUTH_ERROR"
+        else:
+            err_status = "BROKER_ERROR"
+        meta = _get_provider_metadata()
+        return {
+            "trades": [],
+            "broker_connected": False,
+            "status": err_status,
+            "message": err_msg,
+            **meta,
+            "provider_health": "DEGRADED",
+        }
 
 @v1_router.post("/orders/cancel/{order_id}", tags=["Orders"])
 async def cancel_order(order_id: str):
