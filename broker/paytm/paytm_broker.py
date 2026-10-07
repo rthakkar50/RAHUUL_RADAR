@@ -257,7 +257,7 @@ class PaytmBroker(BaseBroker):
     # 5, 6 & 7. Profile, Funds & Margin
     # -------------------------------------------------------------------------
     def get_profile(self) -> dict:
-        url = f"{self.BASE_URL_ACCOUNTS}/user/profile"
+        url = f"{self.BASE_URL_ACCOUNTS}/user/details"
         self._update_headers()
         if not self._headers.get("x-jwt-token"):
             raise TokenExpiredError("Paytm session token missing. Re-authentication required.")
