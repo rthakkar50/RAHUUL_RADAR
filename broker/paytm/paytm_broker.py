@@ -426,21 +426,78 @@ class PaytmBroker(BaseBroker):
     # -------------------------------------------------------------------------
     # 11, 12, 13 & 14. Order Placement, Modification, Cancellation & Square Off
     # -------------------------------------------------------------------------
-    def place_order(self, symbol: str, qty: int, order_type: OrderType, price: float = 0.0, trigger_price: float = 0.0) -> str:
+    def place_order(self, symbol: str, qty: int, order_type: OrderType, price: float = 0.0, trigger_price: float = 0.0, action: str = "BUY", product: str = "I") -> str:
         if not self.is_connected:
             raise BrokerAuthError("Order placement blocked: Paytm Money is not connected or token expired. Live trading stopped.")
 
+        raw_sym = str(symbol or "").strip()
+        if raw_sym.isdigit():
+            security_id = raw_sym
+        else:
+            security_id = str(self._data_provider._get_security_id(raw_sym) or "").strip()
+        if not security_id or not security_id.isdigit():
+            raise InvalidSymbolError(f"Unable to resolve numeric Paytm security_id for symbol: {symbol}")
+
+        norm_action = str(action or "").strip().upper()
+        if norm_action not in ("BUY", "SELL"):
+            raise OrderPlacementError(f"Invalid order action '{action}'. Must be 'BUY' or 'SELL'.")
+
+        raw_product = str(product or "").strip().upper()
+        if raw_product in ("I", "INTRADAY"):
+            norm_product = "I"
+        elif raw_product in ("C", "DELIVERY"):
+            norm_product = "C"
+        else:
+            raise OrderPlacementError(f"Invalid product type '{product}'. Must be 'I'/'INTRADAY' or 'C'/'DELIVERY'.")
+
+        if isinstance(order_type, OrderType):
+            ot_map = {
+                OrderType.MARKET: "MARKET",
+                OrderType.LIMIT: "LIMIT",
+                OrderType.STOP_LOSS: "SL",
+                OrderType.STOP_LOSS_MARKET: "SL-M",
+            }
+            norm_order_type = ot_map.get(order_type)
+        else:
+            raw_ot = str(order_type or "").strip().upper()
+            ot_str_map = {
+                "MARKET": "MARKET",
+                "LIMIT": "LIMIT",
+                "SL": "SL",
+                "STOP_LOSS": "SL",
+                "SL-M": "SL-M",
+                "SL_M": "SL-M",
+                "STOP_LOSS_MARKET": "SL-M",
+            }
+            norm_order_type = ot_str_map.get(raw_ot)
+
+        if not norm_order_type:
+            raise OrderPlacementError(f"Invalid order_type '{order_type}'. Must be MARKET, LIMIT, SL, or SL-M.")
+
+        if norm_order_type == "MARKET":
+            norm_price = 0.0
+            norm_trigger_price = 0.0
+        elif norm_order_type == "LIMIT":
+            norm_price = float(price or 0.0)
+            norm_trigger_price = 0.0
+        elif norm_order_type == "SL":
+            norm_price = float(price or 0.0)
+            norm_trigger_price = float(trigger_price or 0.0)
+        else:  # SL-M
+            norm_price = 0.0
+            norm_trigger_price = float(trigger_price or 0.0)
+
         url = f"{self.BASE_URL_ORDERS}/place"
         payload = {
-            "txn_type": "BUY",
+            "txn_type": norm_action,
             "exchange": "NSE",
             "segment": "EQUITY",
-            "product": "I",
-            "security_id": symbol,
+            "product": norm_product,
+            "security_id": security_id,
             "quantity": qty,
-            "order_type": "LIMIT" if price > 0 else "MARKET",
-            "price": price,
-            "trigger_price": trigger_price
+            "order_type": norm_order_type,
+            "price": norm_price,
+            "trigger_price": norm_trigger_price
         }
 
         try:
@@ -527,7 +584,7 @@ class PaytmBroker(BaseBroker):
         if pos and pos.qty != 0:
             opp_txn = "SELL" if pos.qty > 0 else "BUY"
             # Place exit order
-            self.place_order(symbol, abs(pos.qty), OrderType.MARKET)
+            self.place_order(symbol, abs(pos.qty), OrderType.MARKET, action=opp_txn)
             return True
         return True
 

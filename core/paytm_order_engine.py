@@ -293,7 +293,9 @@ class PaytmOrderEngine:
                 qty=quantity,
                 order_type=ot_enum,
                 price=price,
-                trigger_price=trigger_price
+                trigger_price=trigger_price,
+                action=action_clean,
+                product=product
             )
             latency_ms = (time.time() - start_time) * 1000.0
 
