@@ -179,10 +179,48 @@ class PaytmMoneyProvider(MarketDataProvider):
     def is_connected(self) -> bool:
         return self._connected
 
+    _symbol_to_security_id: Dict[str, str] = {}
+    _instruments_loaded: bool = False
+    _INDEX_SECURITY_IDS: Dict[str, str] = {
+        "NIFTY": "13",
+        "^NSEI": "13",
+        "NIFTY 50": "13",
+        "NIFTY-50": "13",
+        "NIFTY50": "13",
+        "BANKNIFTY": "25",
+        "^NSEBANK": "25",
+        "NIFTY BANK": "25",
+        "NIFTY-BANK": "25",
+        "FINNIFTY": "27",
+        "MIDCPNIFTY": "442",
+    }
+
+    def _load_instruments(self):
+        if PaytmMoneyProvider._instruments_loaded and PaytmMoneyProvider._symbol_to_security_id:
+            self.symbol_to_security_id = PaytmMoneyProvider._symbol_to_security_id
+            return
+        try:
+            from market.dhan_provider import DhanProvider
+            self.symbol_to_security_id = PaytmMoneyProvider._symbol_to_security_id
+            DhanProvider._load_instruments(self)
+            if PaytmMoneyProvider._symbol_to_security_id:
+                PaytmMoneyProvider._instruments_loaded = True
+        except Exception as e:
+            self.logger.warning(f"Failed to load instrument mapping for PaytmMoneyProvider: {e}")
+
     def _get_security_id(self, symbol: str) -> str:
         """Helper method to resolve trading symbol to security ID"""
-        # Remove Yahoo .NS suffix if present
-        return symbol.replace('.NS', '')
+        clean_sym = str(symbol or "").strip().upper().replace('.NS', '').replace('.BO', '')
+        if not clean_sym:
+            return ""
+        if clean_sym.isdigit():
+            return clean_sym
+        if clean_sym in self._INDEX_SECURITY_IDS:
+            return self._INDEX_SECURITY_IDS[clean_sym]
+        if not PaytmMoneyProvider._instruments_loaded or not PaytmMoneyProvider._symbol_to_security_id:
+            self._load_instruments()
+        sec_id = PaytmMoneyProvider._symbol_to_security_id.get(clean_sym) or PaytmMoneyProvider._symbol_to_security_id.get(f"{clean_sym}-EQ")
+        return str(sec_id).strip() if sec_id else clean_sym
 
     def get_last_price(self, symbol: str) -> float:
         self.logger.debug(f"Requesting LTP for {symbol} via Paytm Money...")
@@ -200,7 +238,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         if security_id in self._rest_cache:
             return self._rest_cache[security_id].get('price', 0.0)
                 
-        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "13", "25", "27", "442"]:
             pref_string = f"NSE:{security_id}:INDEX"
         else:
             pref_string = f"NSE:{security_id}:EQUITY"
