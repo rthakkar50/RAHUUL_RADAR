@@ -336,7 +336,7 @@ class PaytmMoneyProvider(MarketDataProvider):
                 prefs = []
                 for sec_id in chunk:
                     self._rest_cache[sec_id] = {'price': 0.0, 'volume': 0}
-                    if sec_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+                    if sec_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "13", "25", "27", "442"]:
                         prefs.append(f"NSE:{sec_id}:INDEX")
                     else:
                         prefs.append(f"NSE:{sec_id}:EQUITY")
@@ -356,8 +356,8 @@ class PaytmMoneyProvider(MarketDataProvider):
                         sec = str(item.get('security_id', ''))
                         if sec:
                             ltp = item.get('last_price', item.get('lastPrice', item.get('ltp', 0.0)))
-                            vol = item.get('volume', item.get('traded_volume', 0.0))
-                            self._rest_cache[sec] = {'price': float(ltp), 'volume': int(vol)}
+                            vol = item.get('volume_traded', item.get('volume', item.get('traded_volume', 0.0)))
+                            self._rest_cache[sec] = {'price': float(ltp), 'volume': int(vol or 0)}
         except Exception as e:
             self.logger.warning(f"Failed to bulk fetch from Paytm API: {e}")
 
@@ -377,11 +377,15 @@ class PaytmMoneyProvider(MarketDataProvider):
         if security_id in self._rest_cache:
             return self._rest_cache[security_id].get('volume', 0)
         
-        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"]:
+        if security_id in ["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "13", "25", "27", "442"]:
             pref_string = f"NSE:{security_id}:INDEX"
         else:
             pref_string = f"NSE:{security_id}:EQUITY"
         url = f"{self.BASE_URL_DATA}/v1/price/live"
+        params = {
+            "mode": "QUOTE",
+            "pref": pref_string
+        }
         
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
         if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token or not str(jwt_token).strip():
@@ -402,10 +406,18 @@ class PaytmMoneyProvider(MarketDataProvider):
             items = data.get('data', [])
             if not items: return 0
             
-            return int(items[0].get('volume', 0))
+            first_item = items[0]
+            vol = first_item.get(
+                "volume_traded",
+                first_item.get(
+                    "volume",
+                    first_item.get("traded_volume", 0)
+                )
+            )
+            return int(vol or 0)
         except Exception as e:
             self.logger.error(f"Failed to fetch volume for {symbol}: {e}")
-            return self.fallback.get_volume(symbol)
+            return self.fallback.get_volume(symbol) if self.fallback else 0
 
     def get_market_status(self) -> MarketStatus:
         self.logger.debug("Delegating Market Status to Yahoo fallback.")
