@@ -37,8 +37,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   final List<String> _sortOptions = ['AI Score', 'Confidence', 'Volume', 'R:R', 'Risk'];
   String _searchQuery = '';
 
-  final Set<String> _heldSymbols = {'DIXON.NS', 'TATASTEEL', 'RELIANCE'};
-  final Set<String> _pendingOrderSymbols = {'HDFCBANK'};
+  final Set<String> _heldSymbols = {};
+  final Set<String> _pendingOrderSymbols = {};
 
   ScanResultModel? _compareItemA;
   ScanResultModel? _compareItemB;
@@ -214,8 +214,170 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
+  Widget _buildHeaderStatusSubtitle() {
+    final bool isIntradayTab = _tabController.index == 1;
+    final ScanResponseModel? resp = isIntradayTab ? _intradayResponse : _swingResponse;
+    final String? err = isIntradayTab ? _intradayError : _swingError;
+
+    if (err != null && resp != null) {
+      return Text(
+        'REFRESH FAILED ⚠️ • Cached (${resp.formattedCacheAge} old)',
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 10, color: Colors.redAccent, fontWeight: FontWeight.w600),
+      );
+    }
+
+    if (resp == null) {
+      return Text(
+        err != null ? 'OFFLINE • Connection Failed' : 'CONNECTING • Verifying Telemetry...',
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 10, color: err != null ? Colors.redAccent : Colors.grey),
+      );
+    }
+
+    final bool isTrulyLive = !resp.isStale &&
+        !resp.fallbackUsed &&
+        resp.paytmAuthenticated &&
+        resp.marketStatus.toUpperCase() == 'OPEN' &&
+        resp.providerHealth.toUpperCase() == 'HEALTHY';
+
+    if (isTrulyLive) {
+      return Text(
+        'LIVE 🟢 • ${resp.provider} • Scan ${resp.timestamp}',
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 10, color: Colors.greenAccent),
+      );
+    }
+
+    final String stateLabel = resp.isStale
+        ? 'STALE CACHE (${resp.formattedCacheAge} old)'
+        : (resp.marketStatus.toUpperCase() == 'OPEN' ? 'SNAPSHOT' : 'MARKET ${resp.marketStatus.toUpperCase()}');
+    final String providerLabel = resp.fallbackUsed ? 'Yahoo Fallback' : resp.provider;
+    final String authLabel = resp.paytmAuthenticated ? 'Paytm Auth' : 'Paytm Unauth';
+
+    return Text(
+      '$stateLabel • $providerLabel • $authLabel',
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 10,
+        color: resp.isStale || resp.fallbackUsed || !resp.paytmAuthenticated
+            ? Colors.amberAccent
+            : Colors.white70,
+      ),
+    );
+  }
+
+  Widget _buildDataIntegrityBanner() {
+    final bool isIntradayTab = _tabController.index == 1;
+    final ScanResponseModel? resp = isIntradayTab ? _intradayResponse : _swingResponse;
+    final String? err = isIntradayTab ? _intradayError : _swingError;
+
+    if (resp == null) return const SizedBox.shrink();
+
+    final List<Widget> banners = [];
+
+    if (err != null) {
+      banners.add(
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.redAccent.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'REFRESH FAILED: Showing last cached results from ${resp.timestamp} (Age: ${resp.formattedCacheAge}). Old results are NOT live.',
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  if (isIntradayTab) {
+                    _fetchIntradayScans();
+                  } else {
+                    _fetchSwingScans();
+                  }
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Icon(Icons.refresh, color: Colors.redAccent, size: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final bool needsSafetyBanner = resp.isStale ||
+        resp.fallbackUsed ||
+        !resp.paytmAuthenticated ||
+        resp.marketStatus.toUpperCase() != 'OPEN' ||
+        resp.providerHealth.toUpperCase() != 'HEALTHY';
+
+    if (needsSafetyBanner) {
+      final List<String> notices = [];
+      if (resp.isStale) {
+        notices.add('STALE DATA (${resp.formattedCacheAge} old • Scan: ${resp.timestamp}) — Cached signals are NOT actionable live signals.');
+      } else {
+        notices.add('Scan Time: ${resp.timestamp} (Age: ${resp.formattedCacheAge})');
+      }
+      if (!resp.paytmAuthenticated) {
+        notices.add('Paytm Money: Unauthenticated (401)');
+      }
+      if (resp.fallbackUsed) {
+        notices.add('Provider: ${resp.provider}');
+      }
+      if (resp.marketStatus.toUpperCase() != 'OPEN') {
+        notices.add('Market: ${resp.marketStatus}');
+      }
+
+      banners.add(
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 15),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  notices.join(' • '),
+                  style: const TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.w600, height: 1.3),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (banners.isEmpty) return const SizedBox.shrink();
+    return Column(children: banners);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isIntradayTab = _tabController.index == 1;
+    final ScanResponseModel? activeResponse = isIntradayTab ? _intradayResponse : _swingResponse;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0B0E14),
       appBar: AppBar(
@@ -233,18 +395,18 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
               child: const Icon(Icons.radar, color: Colors.black, size: 18),
             ),
             const SizedBox(width: 8),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Institutional Decision Terminal',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  'LIVE 🟢 • 24x7 Broadcast Active',
-                  style: TextStyle(fontSize: 10, color: Colors.greenAccent),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Institutional Decision Terminal',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  _buildHeaderStatusSubtitle(),
+                ],
+              ),
             ),
           ],
         ),
@@ -284,10 +446,16 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
       ),
       body: Column(
         children: [
+          _buildDataIntegrityBanner(),
           _buildScannerDecisionHeader(),
           _buildFilterBar(),
           Expanded(child: _buildBody()),
-          const FooterStatusWidget(),
+          FooterStatusWidget(
+            provider: activeResponse?.provider,
+            providerHealth: activeResponse?.providerHealth,
+            fallbackUsed: activeResponse?.fallbackUsed,
+            marketStatus: activeResponse?.marketStatus,
+          ),
         ],
       ),
     );
@@ -304,7 +472,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
       );
     }
     final results = activeResponse?.qualifiedResults ?? [];
-    final totalScanned = _selectedUniverse == 'F&O Stocks' ? 184 : (activeResponse?.totalScanned ?? 200);
+    final totalScanned = activeResponse?.totalScanned ?? 0;
     final buyCount = results.where((r) => ['BUY', 'STRONG_BUY', 'INSTITUTIONAL_BUY'].contains(r.signal.toUpperCase())).length;
     final sellCount = results.where((r) => ['SELL', 'STRONG_SELL', 'INSTITUTIONAL_SELL'].contains(r.signal.toUpperCase())).length;
     final watchCount = results.where((r) => r.signal.toUpperCase() == 'WATCH').length;
@@ -453,11 +621,11 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     }).toList();
 
     // DATA SOURCE: /api/v1/scanner/intraday
-    // Intraday API only returns intraday-specific results, no further filtering needed
     final intradayList = intradayFiltered;
 
     // DATA SOURCE: /api/v1/scanner/swing
     final volumeList = swingFiltered.where((r) {
+      if (r.volume == 'N/A' || r.volume.isEmpty) return false;
       if (r.volume.contains('+') || r.volume.contains('x') || r.volume.contains('M') || r.volume.contains('K')) return true;
       final volVal = double.tryParse(r.volume.replaceAll(',', '').trim()) ?? 0;
       return volVal > 100000;
@@ -469,8 +637,12 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     // DATA SOURCE: /api/v1/scanner/swing
     final watchlistList = swingFiltered.where((r) => _heldSymbols.contains(r.symbol) || _pendingOrderSymbols.contains(r.symbol)).toList();
 
-    // DATA SOURCE: /api/v1/scanner/swing
-    final sortedList = List<ScanResultModel>.from(swingFiltered)
+    // DATA SOURCE: /api/v1/scanner/swing — Filter Today's Best to BUY / STRONG_BUY only
+    final buyOnlyList = swingFiltered.where((r) {
+      final sig = r.signal.toUpperCase();
+      return sig == 'BUY' || sig == 'STRONG_BUY' || sig == 'INSTITUTIONAL_BUY';
+    }).toList();
+    final sortedList = List<ScanResultModel>.from(buyOnlyList)
       ..sort((a, b) {
         int cmpScore = b.score.compareTo(a.score);
         if (cmpScore != 0) return cmpScore;
@@ -480,7 +652,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
       });
     final todaysBestList = sortedList.take(10).toList();
 
-    // TASK-3: Pass explicit lists without fallback logic (no list.isNotEmpty ? list : filtered)
     return TabBarView(
       controller: _tabController,
       children: [
@@ -533,6 +704,9 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           scannerType: 'Swing',
           isHeld: isHeld,
           isPending: isPending,
+          isStale: _swingResponse?.isStale ?? false,
+          fallbackUsed: _swingResponse?.fallbackUsed ?? false,
+          marketStatus: _swingResponse?.marketStatus ?? 'UNKNOWN',
           onTap: () => _openDetail(item),
           onCompareSelect: (selectedItem) {
             if (_compareItemA == null) {
@@ -576,6 +750,9 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
           scannerType: 'Intraday',
           isHeld: isHeld,
           isPending: isPending,
+          isStale: _intradayResponse?.isStale ?? false,
+          fallbackUsed: _intradayResponse?.fallbackUsed ?? false,
+          marketStatus: _intradayResponse?.marketStatus ?? 'UNKNOWN',
           onTap: () => _openDetail(item),
           onCompareSelect: (selectedItem) {
             if (_compareItemA == null) {
@@ -617,13 +794,13 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(item.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Volume Surge ${item.volume}', style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('Volume: ${item.volume}', style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('5-Day Avg Vol: 1.2M • Today Vol: 4.8M (+300% Spike)', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  Text('Delivery %: 68.4% • Institutional Money Flow: STRONG BUY', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
-                  Text('Liquidity Score: 96/100 • Volume Rank: #${i + 1}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                  Text('Price: ₹${item.price.toStringAsFixed(2)} • Signal: ${item.displaySignal} • Sector: ${item.sector}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text('AI Score: ${item.score.toStringAsFixed(1)} • Confidence: ${item.confidence.toStringAsFixed(1)}% • R:R: ${item.riskReward}', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
+                  Text('Trend: ${item.trend} • Data Timestamp: ${item.timestamp} • Rank: #${i + 1}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                 ],
               ),
             ),
@@ -657,13 +834,13 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(item.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Breakout +${(item.score - 70).toStringAsFixed(1)}%', style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('Trend: ${item.trend}', style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Key Resistance Cleared: ₹${item.stopLoss * 1.05} • Support: ₹${item.stopLoss}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  Text('52-Week High Breakout • All-Time High Proximity: 1.2%', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
-                  Text('AI Confidence: ${item.confidence}% • Volume Confirmation: VERIFIED', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
+                  Text('Entry: ₹${item.entry.toStringAsFixed(2)} • Target 1: ₹${item.target1.toStringAsFixed(2)} • Stop Loss: ₹${item.stopLoss.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text('Signal: ${item.displaySignal} • R:R: ${item.riskReward} • Volume: ${item.volume}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                  Text('AI Score: ${item.score.toStringAsFixed(1)} • Confidence: ${item.confidence.toStringAsFixed(1)}% • Grade: ${item.tradeGrade}', style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
                 ],
               ),
             ),
@@ -689,7 +866,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
             onTap: () => _openDetail(item),
             leading: const Icon(Icons.star, color: Colors.amberAccent),
             title: Text(item.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-            subtitle: Text('Price: ₹${item.price} • PnL: +₹1,450.00 (+5.88%)\nTarget: ₹${item.target1} • SL: ₹${item.stopLoss}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            subtitle: Text('Price: ₹${item.price.toStringAsFixed(2)} • Signal: ${item.displaySignal}\nTarget 1: ₹${item.target1.toStringAsFixed(2)} • SL: ₹${item.stopLoss.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
             trailing: const Icon(Icons.notifications_active_outlined, color: Colors.cyanAccent, size: 20),
           ),
         );
@@ -698,13 +875,22 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   }
 
   Widget _buildTodaysBestTab(List<ScanResultModel> list) {
-    if (list.isEmpty) return _emptyState('No qualified opportunities available.');
+    if (list.isEmpty) return _emptyState('No qualified BUY/STRONG_BUY opportunities available.');
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: list.length,
       itemBuilder: (ctx, i) {
         final item = list[i];
+        final String t1DistancePct = (item.entry > 0 && item.target1 > 0)
+            ? '${((item.target1 - item.entry) / item.entry * 100).toStringAsFixed(2)}% to T1'
+            : 'T1: N/A';
+        final String rationaleText = item.whySelected.isNotEmpty
+            ? item.whySelected.join(' • ')
+            : (item.reasons.isNotEmpty
+                ? item.reasons.join(' • ')
+                : 'Score: ${item.score.toStringAsFixed(1)} | Trend: ${item.trend} | Vol: ${item.volume}');
+
         return Card(
           color: const Color(0xFF161B22),
           margin: const EdgeInsets.only(bottom: 12),
@@ -735,10 +921,10 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Signal: ${item.signal} • Confidence: ${item.confidence}% • Sector: ${item.sector}', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  Text('Expected Return: +5.88% • Risk: LOW • Hold: Swing Positional', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                  Text('Signal: ${item.displaySignal} • Confidence: ${item.confidence.toStringAsFixed(1)}% • Sector: ${item.sector}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  Text('Entry: ₹${item.entry.toStringAsFixed(2)} • T1: ₹${item.target1.toStringAsFixed(2)} ($t1DistancePct) • Risk: ${item.riskGrade}', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11)),
                   const SizedBox(height: 4),
-                  Text('AI Rationale: Strong multi-timeframe trend alignment with institutional volume surge.', style: const TextStyle(color: Colors.white70, fontSize: 11, fontStyle: FontStyle.italic)),
+                  Text('Rationale: $rationaleText', style: const TextStyle(color: Colors.white70, fontSize: 11, fontStyle: FontStyle.italic)),
                 ],
               ),
             ),

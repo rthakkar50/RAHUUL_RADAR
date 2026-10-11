@@ -56,6 +56,12 @@ class NetworkManager {
   String _pythonVersion = 'Unknown';
   String _marketStatus = 'UNKNOWN';
   String _serverVersion = '1.0.0';
+  String _provider = 'UNKNOWN';
+  String _providerHealth = 'UNKNOWN';
+  bool _fallbackUsed = false;
+  bool _paytmAuthenticated = false;
+  String _brokerHealth = 'UNKNOWN';
+  String _scannerHealth = 'UNKNOWN';
   int _httpStatus = 0;
 
   NetworkState get state => _state;
@@ -70,7 +76,37 @@ class NetworkManager {
   String get pythonVersion => _pythonVersion;
   String get marketStatus => _marketStatus;
   String get serverVersion => _serverVersion;
+  String get provider => _provider;
+  String get providerHealth => _providerHealth;
+  bool get fallbackUsed => _fallbackUsed;
+  bool get paytmAuthenticated => _paytmAuthenticated;
+  String get brokerHealth => _brokerHealth;
+  String get scannerHealth => _scannerHealth;
   int get httpStatus => _httpStatus;
+
+  void updateProviderTelemetry({
+    String? provider,
+    String? providerHealth,
+    bool? fallbackUsed,
+    bool? paytmAuthenticated,
+    String? marketStatus,
+  }) {
+    if (provider != null && provider.trim().isNotEmpty) {
+      _provider = provider.trim();
+    }
+    if (providerHealth != null && providerHealth.trim().isNotEmpty) {
+      _providerHealth = providerHealth.trim();
+    }
+    if (fallbackUsed != null) {
+      _fallbackUsed = fallbackUsed;
+    }
+    if (paytmAuthenticated != null) {
+      _paytmAuthenticated = paytmAuthenticated;
+    }
+    if (marketStatus != null && marketStatus.trim().isNotEmpty) {
+      _marketStatus = marketStatus.trim();
+    }
+  }
 
   String get serverType {
     final target = _activeUrl.toLowerCase();
@@ -233,8 +269,14 @@ class NetworkManager {
           try {
             final data = json.decode(response.body) as Map<String, dynamic>;
             _pythonVersion = data['python_version']?.toString() ?? 'Python 3.x';
-            _marketStatus = data['market_status']?.toString() ?? 'CLOSED';
+            _marketStatus = data['market_status']?.toString() ?? 'UNKNOWN';
             _serverVersion = data['version']?.toString() ?? '1.0.0';
+            _provider = data['provider']?.toString() ?? 'UNKNOWN';
+            _providerHealth = data['provider_health']?.toString() ?? 'UNKNOWN';
+            _fallbackUsed = data['fallback_used'] == true;
+            _paytmAuthenticated = data['paytm_authenticated'] == true;
+            _brokerHealth = data['broker_health']?.toString() ?? (_paytmAuthenticated ? 'CONNECTED' : 'REAUTH_REQUIRED');
+            _scannerHealth = data['scanner_health']?.toString() ?? _providerHealth;
           } catch (_) {}
 
           return true;
@@ -332,7 +374,11 @@ class NetworkManager {
           diag['Scanner Endpoint'] = 'FAIL ($se)';
         }
 
-        diag['Broker Endpoint'] = 'PASS (Paytm OAuth2 Active)';
+        final isPaytmAuth = data['paytm_authenticated'] == true;
+        final brokerHealthVal = data['broker_health']?.toString() ?? (isPaytmAuth ? 'CONNECTED' : 'REAUTH_REQUIRED');
+        diag['Broker Endpoint'] = isPaytmAuth
+            ? 'PASS (Paytm OAuth2 Active)'
+            : 'FAIL ($brokerHealthVal • Paytm Unauthenticated)';
 
         return {
           'currentUrl': healthUrl,

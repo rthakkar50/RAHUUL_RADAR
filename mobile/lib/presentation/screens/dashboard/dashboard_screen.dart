@@ -68,13 +68,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (mounted) {
         setState(() {
           _data = data;
+          _error = null;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _data = null;
           _error = e.toString();
           _isLoading = false;
         });
@@ -104,6 +104,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildTopHeader() {
+    final d = _data;
+    final String brokerLabel = d?.brokerStatusLabel ?? 'Broker: Verifying...';
+    final Color brokerColor = (d != null && d.paytmAuthenticated)
+        ? AppDesignSystem.success
+        : Colors.amberAccent;
+
     return RepaintBoundary(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -144,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         children: [
                           Text(
                             'RAHUUL THAKKAR',
@@ -155,24 +161,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                               letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: const BoxDecoration(
+                          SizedBox(width: 6),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
                               color: Color(0xFF1E293B),
                               borderRadius: BorderRadius.all(
                                 Radius.circular(4),
                               ),
                             ),
-                            child: const Text(
-                              'INSTITUTIONAL PRO+',
-                              style: TextStyle(
-                                color: AppDesignSystem.primary,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              child: Text(
+                                'INSTITUTIONAL PRO+',
+                                style: TextStyle(
+                                  color: AppDesignSystem.primary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -183,11 +191,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: [
                           _buildConnectionBadge(),
                           const SizedBox(width: 8),
-                          Text(
-                            'Broker: Connected (Paytm Money)',
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 11,
+                          Flexible(
+                            child: Text(
+                              brokerLabel,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: brokerColor,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                         ],
@@ -221,7 +232,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             const SizedBox(height: 10),
-            // Header Stats Bar
+            // Header Stats Bar — Explicitly separates Actual Broker Funds vs Virtual Risk Capital vs Paper Equity
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -232,30 +243,38 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _headerStatItem(
-                    'PORTFOLIO EQUITY',
-                    '₹9,93,101.13',
-                    AppDesignSystem.textPrimary,
+                  Flexible(
+                    child: _headerStatItem(
+                      'ACTUAL BROKER CASH',
+                      d?.actualBrokerFundsLabel ?? 'UNAVAILABLE',
+                      (d != null && d.paytmAuthenticated)
+                          ? AppDesignSystem.textPrimary
+                          : Colors.amberAccent,
+                    ),
                   ),
                   Container(
                     height: 20,
                     width: 1,
                     color: AppDesignSystem.border,
                   ),
-                  _headerStatItem(
-                    'TODAY P&L',
-                    '+₹1,450.00 (+0.15%)',
-                    AppDesignSystem.success,
+                  Flexible(
+                    child: _headerStatItem(
+                      'VIRTUAL RISK CAP',
+                      d?.virtualRiskCapitalLabel ?? 'UNAVAILABLE',
+                      AppDesignSystem.primary,
+                    ),
                   ),
                   Container(
                     height: 20,
                     width: 1,
                     color: AppDesignSystem.border,
                   ),
-                  _headerStatItem(
-                    'MARGIN CASH',
-                    '₹2,76,405.13',
-                    AppDesignSystem.primary,
+                  Flexible(
+                    child: _headerStatItem(
+                      'PAPER EQUITY',
+                      d?.paperEquityLabel ?? 'UNAVAILABLE',
+                      AppDesignSystem.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -272,6 +291,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       children: [
         Text(
           label,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: Colors.grey.shade500,
             fontSize: 9,
@@ -281,10 +301,11 @@ class _DashboardScreenState extends State<DashboardScreen>
         const SizedBox(height: 2),
         Text(
           val,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: col,
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 11,
           ),
         ),
       ],
@@ -292,17 +313,27 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildConnectionBadge() {
-    final isOnline = _data?.isOnline ?? true;
+    final d = _data;
+    final isOnline = d?.isOnline ?? false;
+    final isDegraded = isOnline &&
+        (d == null || d.isStale || d.fallbackUsed || !d.paytmAuthenticated || d.providerHealth != 'HEALTHY');
+
+    final Color badgeColor = !isOnline
+        ? AppDesignSystem.danger
+        : (isDegraded ? Colors.amberAccent : AppDesignSystem.success);
+    final String badgeText = !isOnline
+        ? 'OFFLINE'
+        : (isDegraded ? 'FALLBACK / CACHED' : 'ONLINE');
+
     return FadeTransition(
       opacity: _pulseAnimation,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: (isOnline ? AppDesignSystem.success : AppDesignSystem.danger)
-              .withValues(alpha: 0.15),
+          color: badgeColor.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isOnline ? AppDesignSystem.success : AppDesignSystem.danger,
+            color: badgeColor,
             width: 0.8,
           ),
         ),
@@ -313,19 +344,15 @@ class _DashboardScreenState extends State<DashboardScreen>
               width: 5,
               height: 5,
               decoration: BoxDecoration(
-                color: isOnline
-                    ? AppDesignSystem.success
-                    : AppDesignSystem.danger,
+                color: badgeColor,
                 shape: BoxShape.circle,
               ),
             ),
             const SizedBox(width: 4),
             Text(
-              isOnline ? 'LIVE WS' : 'OFFLINE',
+              badgeText,
               style: TextStyle(
-                color: isOnline
-                    ? AppDesignSystem.success
-                    : AppDesignSystem.danger,
+                color: badgeColor,
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
@@ -404,9 +431,47 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSearchBar(),
+            if (_error != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppDesignSystem.danger.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppDesignSystem.danger),
+                ),
+                child: Text(
+                  'REFRESH FAILED: Displaying last cached dashboard state from ${d.lastScanTime} (Age: ${d.cacheAgeDisplay}).',
+                  style: const TextStyle(
+                    color: AppDesignSystem.danger,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (d.isStale || d.fallbackUsed || !d.paytmAuthenticated)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.6)),
+                ),
+                child: Text(
+                  'DATA INTEGRITY NOTICE: ${d.isStale ? "Stale Cache (${d.cacheAgeDisplay} old • Scan: ${d.lastScanTime})" : "Scan: ${d.lastScanTime}"} • Provider: ${d.provider} • Paytm Auth: ${d.paytmAuthenticated ? "YES" : "NO (401)"} • Market: ${d.marketStatus}. Cached signals are NOT actionable live signals.',
+                  style: const TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            _buildSearchBar(d),
             const SizedBox(height: 16),
-            _buildMarketOverviewSection(),
+            _buildMarketOverviewSection(d),
             const SizedBox(height: 16),
             _buildPortfolioSnapshotCard(d),
             const SizedBox(height: 16),
@@ -416,50 +481,23 @@ class _DashboardScreenState extends State<DashboardScreen>
             const SizedBox(height: 16),
             _buildQuickActionsGrid(),
             const SizedBox(height: 16),
-            _buildWatchlistWidget(),
+            _buildWatchlistWidget(d),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(DashboardDataModel d) {
     final query = _searchQuery.trim().toUpperCase();
-    final searchUniverse = [
-      {'symbol': 'DIVISLAB.NS', 'company': "Divi's Laboratories Ltd.", 'sector': 'PHARMA', 'price': '4850.00', 'exchange': 'NSE'},
-      {'symbol': 'RELIANCE.NS', 'company': 'Reliance Industries Ltd.', 'sector': 'ENERGY', 'price': '2980.00', 'exchange': 'NSE'},
-      {'symbol': 'PAYTM.NS', 'company': 'One 97 Communications', 'sector': 'FINTECH', 'price': '850.00', 'exchange': 'NSE'},
-      {'symbol': 'TCS.NS', 'company': 'Tata Consultancy Services', 'sector': 'IT', 'price': '4250.00', 'exchange': 'NSE'},
-      {'symbol': 'INFY.NS', 'company': 'Infosys Ltd.', 'sector': 'IT', 'price': '1820.00', 'exchange': 'NSE'},
-      {'symbol': 'SBIN.NS', 'company': 'State Bank of India', 'sector': 'BANKING', 'price': '845.00', 'exchange': 'NSE'},
-      {'symbol': 'HDFCBANK.NS', 'company': 'HDFC Bank Ltd.', 'sector': 'BANKING', 'price': '1640.00', 'exchange': 'NSE'},
-      {'symbol': 'ICICIBANK.NS', 'company': 'ICICI Bank Ltd.', 'sector': 'BANKING', 'price': '1220.00', 'exchange': 'NSE'},
-      {'symbol': 'TATAMOTORS.NS', 'company': 'Tata Motors Ltd.', 'sector': 'AUTO', 'price': '1040.00', 'exchange': 'NSE'},
-      {'symbol': 'AXISBANK.NS', 'company': 'Axis Bank Ltd.', 'sector': 'BANKING', 'price': '1180.00', 'exchange': 'NSE'},
-      {'symbol': 'BAJFINANCE.NS', 'company': 'Bajaj Finance Ltd.', 'sector': 'FINANCE', 'price': '6850.00', 'exchange': 'NSE'},
-      {'symbol': 'BHARTIARTL.NS', 'company': 'Bharti Airtel Ltd.', 'sector': 'TELECOM', 'price': '1540.00', 'exchange': 'NSE'},
-      {'symbol': 'LT.NS', 'company': 'Larsen & Toubro Ltd.', 'sector': 'INFRA', 'price': '3620.00', 'exchange': 'NSE'},
-      {'symbol': 'MARUTI.NS', 'company': 'Maruti Suzuki India', 'sector': 'AUTO', 'price': '12400.00', 'exchange': 'NSE'},
-      {'symbol': 'SUNPHARMA.NS', 'company': 'Sun Pharmaceutical', 'sector': 'PHARMA', 'price': '1710.00', 'exchange': 'NSE'},
-      {'symbol': 'WIPRO.NS', 'company': 'Wipro Ltd.', 'sector': 'IT', 'price': '520.00', 'exchange': 'NSE'},
-      {'symbol': 'NTPC.NS', 'company': 'NTPC Ltd.', 'sector': 'POWER', 'price': '395.00', 'exchange': 'NSE'},
-      {'symbol': 'ONGC.NS', 'company': 'Oil & Natural Gas Corp', 'sector': 'ENERGY', 'price': '310.00', 'exchange': 'NSE'},
-      {'symbol': 'HAL.NS', 'company': 'Hindustan Aeronautics', 'sector': 'DEFENCE', 'price': '4820.00', 'exchange': 'NSE'},
-      {'symbol': 'BEL.NS', 'company': 'Bharat Electronics', 'sector': 'DEFENCE', 'price': '295.00', 'exchange': 'NSE'},
-      {'symbol': 'DIXON.NS', 'company': 'Dixon Technologies', 'sector': 'ELECTRONICS', 'price': '12400.00', 'exchange': 'NSE'},
-      {'symbol': 'BAJAJAUTO.NS', 'company': 'Bajaj Auto Ltd.', 'sector': 'AUTO', 'price': '11500.00', 'exchange': 'NSE'},
-      {'symbol': 'TRENT.NS', 'company': 'Trent Ltd.', 'sector': 'RETAIL', 'price': '5420.00', 'exchange': 'NSE'},
-      {'symbol': 'ZOMATO.NS', 'company': 'Zomato Ltd.', 'sector': 'CONSUMER', 'price': '230.00', 'exchange': 'NSE'},
-      {'symbol': 'IREDA.NS', 'company': 'Indian Renewable Energy', 'sector': 'ENERGY', 'price': '240.00', 'exchange': 'NSE'},
-      {'symbol': 'JIOFIN.NS', 'company': 'Jio Financial Services', 'sector': 'FINANCE', 'price': '345.00', 'exchange': 'NSE'},
-    ];
-
     final results = query.length < 2
-        ? <Map<String, String>>[]
-        : searchUniverse.where((item) =>
-            item['symbol']!.toUpperCase().contains(query) ||
-            item['company']!.toUpperCase().contains(query) ||
-            item['sector']!.toUpperCase().contains(query)).toList();
+        ? <ScanResultModel>[]
+        : d.qualifiedResults
+            .where((item) =>
+                item.symbol.toUpperCase().contains(query) ||
+                item.company.toUpperCase().contains(query) ||
+                item.sector.toUpperCase().contains(query))
+            .toList();
 
     return Column(
       children: [
@@ -473,7 +511,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               fontSize: 13,
             ),
             decoration: InputDecoration(
-              hintText: 'Search DIV, REL, PAY, TCS, INF or Any Stock...',
+              hintText: 'Search symbols from current backend scan results...',
               hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               prefixIcon: const Icon(
                 Icons.search,
@@ -497,6 +535,21 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ),
         ),
+        if (query.length >= 2 && results.isEmpty)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161B22),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Text(
+              'No symbol matching "$query" in current backend scan results.',
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+            ),
+          ),
         if (results.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 8),
@@ -517,47 +570,24 @@ class _DashboardScreenState extends State<DashboardScreen>
                   leading: CircleAvatar(
                     backgroundColor: AppDesignSystem.primary.withValues(alpha: 0.15),
                     child: Text(
-                      item['symbol']![0],
+                      item.symbol.isNotEmpty ? item.symbol[0] : '?',
                       style: const TextStyle(color: AppDesignSystem.primary, fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(item['symbol']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text('₹${item['price']}', style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(item.symbol, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12)),
                     ],
                   ),
-                  subtitle: Text('${item['company']} • ${item['sector']} (${item['exchange']})', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                  subtitle: Text('${item.sector} • ${item.displaySignal} • Data: ${item.timestamp}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                   onTap: () {
-                    final priceVal = double.tryParse(item['price']!) ?? 1000.0;
-                    final scanModel = ScanResultModel(
-                      symbol: item['symbol']!,
-                      company: item['company']!,
-                      sector: item['sector']!,
-                      price: priceVal,
-                      signal: 'BUY',
-                      score: 92.0,
-                      rawScore: 90.0,
-                      confidence: 90.0,
-                      trend: 'BULLISH BREAKOUT',
-                      volume: '+280%',
-                      riskReward: '1:3.0',
-                      rsScore: 88.0,
-                      entry: priceVal,
-                      stopLoss: priceVal * 0.96,
-                      target1: priceVal * 1.08,
-                      target2: priceVal * 1.15,
-                      target3: priceVal * 1.25,
-                      tradeGrade: 'A+',
-                      riskGrade: 'LOW',
-                      timestamp: 'LIVE',
-                    );
                     _searchController.clear();
                     setState(() => _searchQuery = '');
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => StockDetailScreen(result: scanModel)),
+                      MaterialPageRoute(builder: (_) => StockDetailScreen(result: item)),
                     );
                   },
                 );
@@ -568,14 +598,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildMarketOverviewSection() {
+  Widget _buildMarketOverviewSection(DashboardDataModel d) {
+    final bool isMarketOpen = d.marketStatus.toUpperCase() == 'OPEN';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(
                   Icons.show_chart,
@@ -584,7 +615,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
                 SizedBox(width: 6),
                 Text(
-                  'LIVE MARKET OVERVIEW',
+                  'MARKET & FEED TELEMETRY',
                   style: TextStyle(
                     color: AppDesignSystem.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -595,9 +626,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             Text(
-              'NSE/BSE LIVE',
+              'MARKET: ${d.marketStatus}',
               style: TextStyle(
-                color: AppDesignSystem.success,
+                color: isMarketOpen ? AppDesignSystem.success : Colors.amberAccent,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -610,43 +641,35 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: Row(
             children: [
               _buildIndexSparklineCard(
-                'NIFTY 50',
-                '24,850.40',
-                '+184.20 (+0.75%)',
-                AppDesignSystem.success,
-                [24600, 24650, 24710, 24680, 24790, 24850],
+                'NSE INDICES',
+                'UNAVAILABLE',
+                'Index feed not connected',
+                Colors.grey,
+                const [],
               ),
               const SizedBox(width: 10),
               _buildIndexSparklineCard(
-                'BANK NIFTY',
-                '52,450.15',
-                '+410.50 (+0.79%)',
-                AppDesignSystem.success,
-                [51900, 52100, 52050, 52300, 52450],
+                'DATA PROVIDER',
+                d.provider,
+                d.fallbackUsed ? 'Fallback Active' : 'Primary Feed',
+                d.fallbackUsed ? Colors.amberAccent : AppDesignSystem.success,
+                const [],
               ),
               const SizedBox(width: 10),
               _buildIndexSparklineCard(
-                'FINNIFTY',
-                '23,150.80',
-                '+142.10 (+0.62%)',
-                AppDesignSystem.success,
-                [22950, 23010, 23050, 23100, 23150],
+                'PAYTM AUTH',
+                d.paytmAuthenticated ? 'AUTHENTICATED' : 'UNAUTHENTICATED',
+                d.paytmAuthenticated ? 'OAuth Token Valid' : 'HTTP 401 / Reauth Req',
+                d.paytmAuthenticated ? AppDesignSystem.success : AppDesignSystem.danger,
+                const [],
               ),
               const SizedBox(width: 10),
               _buildIndexSparklineCard(
-                'SENSEX',
-                '81,332.90',
-                '+602.40 (+0.75%)',
-                AppDesignSystem.success,
-                [80600, 80850, 81100, 81332],
-              ),
-              const SizedBox(width: 10),
-              _buildIndexSparklineCard(
-                'INDIA VIX',
-                '12.45',
-                '-0.45 (-3.48%)',
-                AppDesignSystem.primary,
-                [13.8, 13.5, 13.1, 12.8, 12.45],
+                'CACHE AGE',
+                d.cacheAgeDisplay,
+                d.isStale ? 'STALE SNAPSHOT' : 'FRESH SCAN',
+                d.isStale ? Colors.amberAccent : AppDesignSystem.success,
+                const [],
               ),
             ],
           ),
@@ -663,7 +686,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     List<double> sparkPoints,
   ) {
     return Container(
-      width: 155,
+      width: 165,
       padding: const EdgeInsets.all(12),
       decoration: AppDesignSystem.glassCard(),
       child: Column(
@@ -672,18 +695,21 @@ class _DashboardScreenState extends State<DashboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               Icon(
                 color == AppDesignSystem.success
-                    ? Icons.trending_up
-                    : Icons.trending_down,
+                    ? Icons.check_circle_outline
+                    : Icons.info_outline,
                 color: color,
                 size: 14,
               ),
@@ -692,35 +718,42 @@ class _DashboardScreenState extends State<DashboardScreen>
           const SizedBox(height: 6),
           Text(
             price,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: AppDesignSystem.textPrimary,
               fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontSize: 13,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             change,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: color,
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 24,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: _SparklinePainter(points: sparkPoints, color: color),
+          if (sparkPoints.length >= 2) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 24,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _SparklinePainter(points: sparkPoints, color: color),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildPortfolioSnapshotCard(DashboardDataModel d) {
+    final bool isBrokerAuth = d.paytmAuthenticated;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppDesignSystem.glassCard(
@@ -741,12 +774,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                   SizedBox(width: 6),
                   Text(
-                    'PORTFOLIO SNAPSHOT',
+                    'BROKER vs VIRTUAL / PAPER SNAPSHOT',
                     style: TextStyle(
                       color: AppDesignSystem.textPrimary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      letterSpacing: 0.8,
+                      fontSize: 12,
+                      letterSpacing: 0.6,
                     ),
                   ),
                 ],
@@ -754,18 +787,19 @@ class _DashboardScreenState extends State<DashboardScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppDesignSystem.success.withValues(alpha: 0.15),
+                  color: (isBrokerAuth ? AppDesignSystem.success : Colors.amberAccent)
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: AppDesignSystem.success,
+                    color: isBrokerAuth ? AppDesignSystem.success : Colors.amberAccent,
                     width: 0.8,
                   ),
                 ),
-                child: const Text(
-                  'RISK: LOW (0.69%)',
+                child: Text(
+                  isBrokerAuth ? 'BROKER: AUTH' : 'BROKER: UNAUTH (401)',
                   style: TextStyle(
-                    color: AppDesignSystem.success,
-                    fontSize: 10,
+                    color: isBrokerAuth ? AppDesignSystem.success : Colors.amberAccent,
+                    fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -773,44 +807,49 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
           const SizedBox(height: 14),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Total Portfolio Capital',
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '₹9,99,649.32',
-                    style: TextStyle(
-                      color: AppDesignSystem.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Actual Broker Cash (Paytm)',
+                      style: TextStyle(color: Colors.grey, fontSize: 10),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      d.actualBrokerFundsLabel,
+                      style: TextStyle(
+                        color: isBrokerAuth ? AppDesignSystem.textPrimary : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Current Equity Value',
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '₹9,93,101.13',
-                    style: TextStyle(
-                      color: AppDesignSystem.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+              const SizedBox(width: 12),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Paper Portfolio Equity (Virtual)',
+                      style: TextStyle(color: Colors.grey, fontSize: 10),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      d.paperEquityLabel,
+                      style: const TextStyle(
+                        color: AppDesignSystem.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -821,17 +860,17 @@ class _DashboardScreenState extends State<DashboardScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _metricItem(
-                'Available Cash',
-                '₹2,76,405.13',
+                'Paper Cash',
+                d.paperAvailableCashLabel,
                 AppDesignSystem.primary,
               ),
-              _metricItem('Used Margin', '₹7,23,244.20', Colors.purpleAccent),
+              _metricItem('Paper Invested', d.paperUsedMarginLabel, Colors.purpleAccent),
               _metricItem(
                 'Open Positions',
-                '5 Active',
+                d.paperOpenPositionsLabel,
                 AppDesignSystem.textPrimary,
               ),
-              _metricItem('Overall Return', '-0.69%', AppDesignSystem.warning),
+              _metricItem('Paper P&L', d.paperPnlLabel, AppDesignSystem.warning),
             ],
           ),
         ],
@@ -858,6 +897,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildScannerSummaryCard(DashboardDataModel d) {
+    final top = d.topPick;
+    final String topPickText = top != null
+        ? 'TOP PICK: ${top.symbol} (${top.signal}${d.isStale ? " • CACHED" : ""}) — Score: ${top.score.toStringAsFixed(1)} | T1: ₹${top.target1.toStringAsFixed(2)}'
+        : 'TOP PICK: No qualified BUY signal in current scan';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: AppDesignSystem.glassCard(),
@@ -920,7 +964,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 d.marketQuality,
                 AppDesignSystem.primary,
               ),
-              _scannerStat('Last Scan', d.lastScanTime, Colors.cyanAccent),
+              _scannerStat('Scan Timestamp', d.lastScanTime, Colors.cyanAccent),
             ],
           ),
           const SizedBox(height: 10),
@@ -933,12 +977,16 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
             child: Row(
               children: [
-                const Icon(Icons.star, color: Colors.amberAccent, size: 16),
+                Icon(
+                  top != null ? Icons.star : Icons.info_outline,
+                  color: top != null ? Colors.amberAccent : Colors.grey,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'TOP PICK: DIVISLAB (BUY) — Score: 88.5/100 | Target: ₹6,500',
-                    style: TextStyle(
+                    topPickText,
+                    style: const TextStyle(
                       color: AppDesignSystem.textPrimary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -973,7 +1021,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           style: TextStyle(
             color: col,
             fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ],
@@ -981,6 +1029,26 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildAiIntelligencePanel(DashboardDataModel d) {
+    final buyCount = d.qualifiedResults.where((r) => r.signal.toUpperCase().contains('BUY')).length;
+    final sellCount = d.qualifiedResults.where((r) => r.signal.toUpperCase().contains('SELL')).length;
+    final watchCount = d.qualifiedResults.where((r) => r.signal.toUpperCase().contains('WATCH')).length;
+
+    final String avgScoreStr = d.qualifiedResults.isNotEmpty
+        ? '${(d.qualifiedResults.map((r) => r.score).reduce((a, b) => a + b) / d.qualifiedResults.length).toStringAsFixed(1)} / 100'
+        : 'N/A';
+    final String avgConfStr = d.qualifiedResults.isNotEmpty
+        ? '${(d.qualifiedResults.map((r) => r.confidence).reduce((a, b) => a + b) / d.qualifiedResults.length).toStringAsFixed(1)}%'
+        : 'N/A';
+
+    final String verdictLabel = d.isStale
+        ? 'STALE CACHE (NO TRADE)'
+        : (d.fallbackUsed || !d.paytmAuthenticated
+            ? 'FALLBACK FEED ONLY'
+            : (d.marketStatus.toUpperCase() != 'OPEN' ? 'MARKET CLOSED' : 'QUALITY: ${d.marketQuality}'));
+    final Color verdictColor = (d.isStale || d.fallbackUsed || !d.paytmAuthenticated || d.marketStatus.toUpperCase() != 'OPEN')
+        ? Colors.amberAccent
+        : AppDesignSystem.success;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1000,10 +1068,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
                   Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 18),
                   SizedBox(width: 6),
@@ -1019,11 +1087,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ],
               ),
               Text(
-                'BULLISH / ACCUMULATION',
+                verdictLabel,
                 style: TextStyle(
-                  color: AppDesignSystem.success,
+                  color: verdictColor,
                   fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: 10,
                 ),
               ),
             ],
@@ -1035,20 +1103,20 @@ class _DashboardScreenState extends State<DashboardScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _aiIntelItem(
-                'Trend Strength',
-                '88.4 / 100',
+                'Avg Score',
+                avgScoreStr,
                 AppDesignSystem.primary,
               ),
               _aiIntelItem(
-                'Market Breadth',
-                '132 Adv / 44 Dec',
+                'Signal Split',
+                '${buyCount}B / ${watchCount}W / ${sellCount}S',
                 AppDesignSystem.success,
               ),
-              _aiIntelItem('AI Confidence', '94.2%', Colors.amberAccent),
+              _aiIntelItem('Avg Confidence', avgConfStr, Colors.amberAccent),
               _aiIntelItem(
-                'Risk Verdict',
-                'SAFE TO ENTER',
-                AppDesignSystem.success,
+                'Cache Age',
+                d.cacheAgeDisplay,
+                verdictColor,
               ),
             ],
           ),
@@ -1062,14 +1130,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                 color: Colors.purpleAccent.withValues(alpha: 0.3),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.psychology, color: Colors.purpleAccent, size: 18),
-                SizedBox(width: 8),
+                const Icon(Icons.psychology, color: Colors.purpleAccent, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'INSTITUTIONAL BRIEF: Accumulate Pharma & IT on pullbacks. Banking index testing 52,500 resistance.',
-                    style: TextStyle(
+                    'TELEMETRY BRIEF: Provider ${d.provider} (${d.providerHealth}) • Scan ${d.lastScanTime} • ${d.qualifiedSignals} qualified setups ($buyCount BUY, $watchCount WATCH, $sellCount SELL).',
+                    style: const TextStyle(
                       color: Colors.purpleAccent,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -1228,53 +1296,16 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildWatchlistWidget() {
-    final watchlist = [
-      {
-        'symbol': 'DIVISLAB',
-        'name': "Divi's Laboratories",
-        'price': '₹6,240.50',
-        'change': '+3.4%',
-        'signal': 'BUY',
-        'color': AppDesignSystem.success,
-        'conf': '88.5%',
-      },
-      {
-        'symbol': 'DIXON',
-        'name': 'Dixon Technologies',
-        'price': '₹14,850.00',
-        'change': '+2.1%',
-        'signal': 'BUY',
-        'color': AppDesignSystem.success,
-        'conf': '86.2%',
-      },
-      {
-        'symbol': 'PAYTM',
-        'name': 'One97 Communications',
-        'price': '₹895.40',
-        'change': '+5.88%',
-        'signal': 'BUY',
-        'color': AppDesignSystem.success,
-        'conf': '91.0%',
-      },
-      {
-        'symbol': 'TATASTEEL',
-        'name': 'Tata Steel Ltd.',
-        'price': '₹154.20',
-        'change': '-1.2%',
-        'signal': 'WATCH',
-        'color': AppDesignSystem.warning,
-        'conf': '72.0%',
-      },
-    ];
+  Widget _buildWatchlistWidget(DashboardDataModel d) {
+    final items = d.qualifiedResults.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(
                   Icons.remove_red_eye_outlined,
@@ -1283,7 +1314,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
                 SizedBox(width: 6),
                 Text(
-                  'INSTITUTIONAL WATCHLIST',
+                  'SCANNER CANDIDATE MONITOR',
                   style: TextStyle(
                     color: AppDesignSystem.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -1294,8 +1325,8 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             Text(
-              '4 STOCKS',
-              style: TextStyle(
+              '${items.length} SHOWN',
+              style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -1304,68 +1335,46 @@ class _DashboardScreenState extends State<DashboardScreen>
           ],
         ),
         const SizedBox(height: 10),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: watchlist.length,
-          separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
-          itemBuilder: (ctx, idx) {
-            final item = watchlist[idx];
-            final col = item['color'] as Color;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: AppDesignSystem.glassCard(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        if (items.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: AppDesignSystem.glassCard(),
+            child: const Text(
+              'No qualified scan candidates currently available.',
+              style: TextStyle(color: Colors.grey, fontSize: 11),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            separatorBuilder: (ctx, idx) => const SizedBox(height: 8),
+            itemBuilder: (ctx, idx) {
+              final item = items[idx];
+              final sig = item.signal.toUpperCase();
+              final Color col = sig.contains('BUY')
+                  ? AppDesignSystem.success
+                  : (sig.contains('SELL') ? AppDesignSystem.danger : AppDesignSystem.warning);
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => StockDetailScreen(result: item)),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: AppDesignSystem.glassCard(),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        item['symbol'] as String,
-                        style: const TextStyle(
-                          color: AppDesignSystem.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item['name'] as String,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: col.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: col, width: 0.6),
-                        ),
-                        child: Text(
-                          '${item['signal']} (${item['conf']})',
-                          style: TextStyle(
-                            color: col,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['price'] as String,
+                            item.symbol,
                             style: const TextStyle(
                               color: AppDesignSystem.textPrimary,
                               fontWeight: FontWeight.bold,
@@ -1374,22 +1383,66 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            item['change'] as String,
-                            style: TextStyle(
-                              color: col,
+                            '${item.sector} • Data: ${item.timestamp}',
+                            style: const TextStyle(
+                              color: Colors.grey,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
                             ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: col.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: col, width: 0.6),
+                            ),
+                            child: Text(
+                              '${item.signal}${d.isStale ? " (CACHED)" : ""} (${item.confidence.toStringAsFixed(0)}%)',
+                              style: TextStyle(
+                                color: col,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '₹${item.price.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: AppDesignSystem.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'R:R ${item.riskReward}',
+                                style: TextStyle(
+                                  color: col,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              );
+            },
+          ),
       ],
     );
   }

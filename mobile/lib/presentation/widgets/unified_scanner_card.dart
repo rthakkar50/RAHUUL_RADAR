@@ -9,6 +9,9 @@ class UnifiedScannerCard extends StatelessWidget {
   final String scannerType;
   final bool isHeld;
   final bool isPending;
+  final bool isStale;
+  final bool fallbackUsed;
+  final String marketStatus;
   final VoidCallback onTap;
   final void Function(ScanResultModel)? onCompareSelect;
 
@@ -19,6 +22,9 @@ class UnifiedScannerCard extends StatelessWidget {
     this.scannerType = 'Swing',
     this.isHeld = false,
     this.isPending = false,
+    this.isStale = false,
+    this.fallbackUsed = false,
+    this.marketStatus = 'UNKNOWN',
     required this.onTap,
     this.onCompareSelect,
   });
@@ -32,6 +38,25 @@ class UnifiedScannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String footerNote;
+    final Color footerColor;
+    if (isStale) {
+      footerNote = '⚠️ CACHED SNAPSHOT • Verify Live Price Before Acting';
+      footerColor = Colors.amberAccent;
+    } else if (fallbackUsed) {
+      footerNote = '⚠️ Fallback Feed • Verify Broker LTP Before Entry';
+      footerColor = Colors.amberAccent;
+    } else if (marketStatus.toUpperCase() == 'CLOSED') {
+      footerNote = 'Market Closed • Last Recorded Setup (${item.riskGrade} Risk)';
+      footerColor = Colors.white70;
+    } else if (item.entryDecision.isNotEmpty) {
+      footerNote = 'Decision: ${item.entryDecision} • Risk: ${item.riskGrade}';
+      footerColor = sigColor;
+    } else {
+      footerNote = 'Signal: ${item.signal} • Risk Grade: ${item.riskGrade}';
+      footerColor = sigColor;
+    }
+
     return Card(
       color: const Color(0xFF161B22),
       margin: const EdgeInsets.only(bottom: 12),
@@ -52,27 +77,30 @@ class UnifiedScannerCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        item.symbol,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      _badge(item.signal, sigColor),
-                      const SizedBox(width: 6),
-                      if (isHeld)
-                        _badge('Holding', Colors.purpleAccent)
-                      else if (isPending)
-                        _badge('Pending Order', Colors.amberAccent)
-                      else
-                        _badge(item.sector, Colors.cyanAccent),
-                    ],
+                  Flexible(
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          item.symbol,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        _badge(isStale ? '${item.signal} (CACHED)' : item.signal, isStale ? Colors.amberAccent : sigColor),
+                        if (isHeld)
+                          _badge('Holding', Colors.purpleAccent)
+                        else if (isPending)
+                          _badge('Pending Order', Colors.amberAccent)
+                        else
+                          _badge(item.sector, Colors.cyanAccent),
+                      ],
+                    ),
                   ),
                   Row(
                     children: [
                       Text(
-                        '${item.confidence.toStringAsFixed(1)}% AI Score',
+                        'Score: ${item.score.toStringAsFixed(1)} (${item.confidence.toStringAsFixed(0)}%)',
                         style: TextStyle(color: sigColor, fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                       const SizedBox(width: 4),
@@ -92,8 +120,8 @@ class UnifiedScannerCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _chip(item.signal == 'SELL' ? 'Daily: Bearish' : 'Daily: Bullish', item.signal == 'SELL' ? Colors.redAccent : Colors.greenAccent),
-                  _chip(item.signal == 'SELL' ? 'Weekly: Weak' : 'Weekly: Strong Bull', item.signal == 'SELL' ? Colors.orangeAccent : Colors.lightGreenAccent),
+                  _chip('Trend: ${item.trend}', item.signal == 'SELL' ? Colors.redAccent : Colors.greenAccent),
+                  _chip('Grade: ${item.tradeGrade} | Risk: ${item.riskGrade}', Colors.lightGreenAccent),
                   _chip('R:R ${item.riskReward}', Colors.cyanAccent),
                 ],
               ),
@@ -101,11 +129,11 @@ class UnifiedScannerCard extends StatelessWidget {
 
               // Trade Metrics Grid
               Text(
-                'Ideal Entry Zone: ₹${item.entry} - ₹${(item.entry * 1.005).toStringAsFixed(1)} • SL: ₹${item.stopLoss}',
+                'Entry: ₹${item.entry.toStringAsFixed(2)} • Price: ₹${item.price.toStringAsFixed(2)} • SL: ₹${item.stopLoss.toStringAsFixed(2)}',
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               Text(
-                'T1: ₹${item.target1} • T2: ₹${item.target2} • Vol: ${item.volume} • Trend: ${item.trend}',
+                'T1: ₹${item.target1.toStringAsFixed(2)} • T2: ₹${item.target2.toStringAsFixed(2)} • Vol: ${item.volume} • Data: ${item.timestamp}',
                 style: const TextStyle(color: Colors.white70, fontSize: 11),
               ),
               const SizedBox(height: 6),
@@ -114,9 +142,12 @@ class UnifiedScannerCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    item.signal == 'SELL' ? 'Setup Risk: MEDIUM (Short Setup)' : 'Chasing Warning: NO (Ideal Entry)',
-                    style: TextStyle(color: sigColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  Flexible(
+                    child: Text(
+                      footerNote,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: footerColor, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
                   ),
                   Row(
                     children: [

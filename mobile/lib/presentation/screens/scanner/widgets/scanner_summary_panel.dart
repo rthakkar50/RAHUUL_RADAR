@@ -19,17 +19,16 @@ class ScannerSummaryPanel extends StatelessWidget {
     final sellCount = resp.qualifiedResults.where((r) => r.signal.toUpperCase().contains('SELL')).length;
     final watchCount = resp.qualifiedResults.where((r) => r.signal.toUpperCase().contains('WATCH')).length;
 
-    final totUniverse = resp.totalUniverse > 0 ? resp.totalUniverse : 200;
-    final totAttempted = resp.totalAttempted > 0 ? resp.totalAttempted : totUniverse;
-    final noData = resp.noDataCount;
-    final totProcessed = resp.totalProcessed > 0 ? resp.totalProcessed : (totUniverse - noData);
-    final totRanked = resp.totalRanked > 0 ? resp.totalRanked : (resp.totalScanned > 0 ? resp.totalScanned : 34);
+    final totUniverse = resp.totalUniverse;
+    final totAttempted = resp.totalAttempted;
+    final totProcessed = resp.totalProcessed;
+    final totRanked = resp.totalRanked > 0 ? resp.totalRanked : resp.totalScanned;
     final qualCount = resp.qualifiedResults.length;
 
-    final coveragePct = (totAttempted / totUniverse * 100).toStringAsFixed(1);
-    final processPct = (totProcessed / totAttempted * 100).toStringAsFixed(1);
-    final rankPct = (totRanked / totProcessed * 100).toStringAsFixed(1);
-    final qualPct = (qualCount / (totRanked > 0 ? totRanked : 1) * 100).toStringAsFixed(1);
+    final coveragePct = totUniverse > 0 ? '${(totAttempted / totUniverse * 100).toStringAsFixed(1)}%' : '0.0%';
+    final processPct = totAttempted > 0 ? '${(totProcessed / totAttempted * 100).toStringAsFixed(1)}%' : '0.0%';
+    final rankPct = totProcessed > 0 ? '${(totRanked / totProcessed * 100).toStringAsFixed(1)}%' : '0.0%';
+    final qualPct = totRanked > 0 ? '${(qualCount / totRanked * 100).toStringAsFixed(1)}%' : '0.0%';
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
@@ -62,17 +61,17 @@ class ScannerSummaryPanel extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _funnelStep('Universe', '$totUniverse', '100%', const Color(0xFF8899BB)),
+                _funnelStep('Universe', '$totUniverse', totUniverse > 0 ? '100%' : '0.0%', const Color(0xFF8899BB)),
                 _funnelArrow(),
-                _funnelStep('Attempted', '$totAttempted', '$coveragePct%', Colors.lightBlueAccent),
+                _funnelStep('Attempted', '$totAttempted', coveragePct, Colors.lightBlueAccent),
                 _funnelArrow(),
-                _funnelStep('Processed', '$totProcessed', '$processPct%', Colors.cyanAccent),
+                _funnelStep('Processed', '$totProcessed', processPct, Colors.cyanAccent),
                 _funnelArrow(),
-                _funnelStep('Ranked', '$totRanked', '$rankPct%', const Color(0xFFBB86FC)),
+                _funnelStep('Ranked', '$totRanked', rankPct, const Color(0xFFBB86FC)),
                 _funnelArrow(),
-                _funnelStep('Qualified', '$qualCount', '$qualPct%', const Color(0xFF4ADE80)),
+                _funnelStep('Qualified', '$qualCount', qualPct, const Color(0xFF4ADE80)),
                 _funnelArrow(),
-                _funnelStep('Signals', '${buyCount}B/${sellCount}S/${watchCount}W', '100%', Colors.amberAccent),
+                _funnelStep('Signals', '${buyCount}B/${sellCount}S/${watchCount}W', qualCount > 0 ? '100%' : '0.0%', Colors.amberAccent),
               ],
             ),
           ),
@@ -176,13 +175,18 @@ class _AdvancedDiagnosticsWidgetState extends State<AdvancedDiagnosticsWidget> {
                   color: const Color(0xFF0A0E1A),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    _telemetryItem(Icons.satellite_alt_outlined, 'Provider: Yahoo (Live)'),
-                    _telemetryItem(Icons.speed_outlined, 'Latency: 0.8s (24ms/sym)'),
-                    _telemetryItem(Icons.memory_rounded, 'RAM: 64MB | Workers: 5'),
-                    _telemetryItem(Icons.verified_user_outlined, 'Status: ONLINE'),
+                    _telemetryItem(Icons.satellite_alt_outlined, 'Provider: ${resp.provider}'),
+                    _telemetryItem(Icons.speed_outlined, 'Latency: ${resp.providerLatency}'),
+                    _telemetryItem(Icons.history_toggle_off, 'Cache Age: ${resp.formattedCacheAge}'),
+                    _telemetryItem(
+                      Icons.verified_user_outlined,
+                      'Health: ${resp.providerHealth} | Mkt: ${resp.marketStatus}',
+                    ),
                   ],
                 ),
               ),
@@ -241,7 +245,13 @@ class _AdvancedDiagnosticsWidgetState extends State<AdvancedDiagnosticsWidget> {
   }
 
   Widget _buildTodaysBestSection(List<ScanResultModel> qualified) {
-    final top10 = qualified.take(10).toList();
+    final top10 = qualified
+        .where((r) {
+          final sig = r.signal.toUpperCase();
+          return sig == 'BUY' || sig == 'STRONG_BUY' || sig == 'INSTITUTIONAL_BUY';
+        })
+        .take(10)
+        .toList();
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -253,12 +263,12 @@ class _AdvancedDiagnosticsWidgetState extends State<AdvancedDiagnosticsWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'TODAYS BEST QUALIFIED CANDIDATES (TOP 10)',
+            'TODAYS BEST QUALIFIED BUY CANDIDATES (TOP 10)',
             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF4ADE80), letterSpacing: 0.6),
           ),
           const SizedBox(height: 8),
           if (top10.isEmpty)
-            const Text('No candidates currently qualified.', style: TextStyle(fontSize: 10, color: Colors.grey))
+            const Text('No BUY/STRONG_BUY candidates currently qualified.', style: TextStyle(fontSize: 10, color: Colors.grey))
           else
             Column(
               children: List.generate(top10.length, (idx) {

@@ -62,7 +62,7 @@ class ScanResultModel {
 
   factory ScanResultModel.fromJson(Map<String, dynamic> json) {
     final p = (json['Price'] ?? json['price'] as num?)?.toDouble() ?? 0.0;
-    String rawSignal = (json['Signal'] ?? json['signal'])?.toString() ?? 'BUY';
+    String rawSignal = (json['Signal'] ?? json['signal'])?.toString() ?? 'WATCH';
     String entryDec = (json['Entry Decision'] ?? json['entry_decision'])?.toString() ?? '';
 
     // Backward compatibility: normalize legacy concatenated strings ("RETEST FIRST | BUY")
@@ -74,25 +74,12 @@ class ScanResultModel {
       rawSignal = parts[1].trim();
     }
     final sig = rawSignal.toUpperCase();
-    final isBuy = !sig.contains('SELL');
     final entryVal = (json['Entry'] ?? json['entry'] as num?)?.toDouble() ?? p;
     
-    double slVal = (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? (isBuy ? entryVal * 0.96 : entryVal * 1.04);
-    double t1Val = (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.08 : entryVal * 0.92);
-    double t2Val = (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? (isBuy ? entryVal * 1.15 : entryVal * 0.85);
+    double slVal = (json['Stop Loss'] ?? json['sl'] as num?)?.toDouble() ?? 0.0;
+    double t1Val = (json['Target 1'] ?? json['target_1'] as num?)?.toDouble() ?? 0.0;
+    double t2Val = (json['Target 2'] ?? json['target_2'] as num?)?.toDouble() ?? 0.0;
     double t3Val = (json['Target 3'] ?? json['target_3'] as num?)?.toDouble() ?? 0.0;
-
-    if (isBuy) {
-      if (slVal >= entryVal) slVal = entryVal * 0.96;
-      if (t1Val <= entryVal) t1Val = entryVal * 1.08;
-      if (t2Val <= t1Val) t2Val = t1Val * 1.06;
-      if (t3Val <= t2Val) t3Val = t2Val * 1.06;
-    } else {
-      if (slVal <= entryVal) slVal = entryVal * 1.04;
-      if (t1Val >= entryVal) t1Val = entryVal * 0.92;
-      if (t2Val >= t1Val) t2Val = t1Val * 0.94;
-      if (t3Val >= t2Val) t3Val = t2Val * 0.94;
-    }
 
     final whyRaw = json['_why_selected'] ?? json['why_selected'];
     final List<String> whyList = (whyRaw is List)
@@ -104,6 +91,8 @@ class ScanResultModel {
         ? reaRaw.map((e) => e.toString()).toList()
         : <String>[];
 
+    final rawTs = (json['Timestamp'] ?? json['timestamp'])?.toString().trim() ?? '';
+
     return ScanResultModel(
       symbol: (json['Symbol'] ?? json['symbol'])?.toString() ?? '',
       company: (json['Company'] ?? json['company'])?.toString() ?? '',
@@ -111,21 +100,21 @@ class ScanResultModel {
       price: p,
       signal: sig,
       entryDecision: entryDec,
-      score: (json['Score'] ?? json['score'] as num?)?.toDouble() ?? 80.0,
-      rawScore: (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 80.0,
-      confidence: (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ?? 85.0,
-      trend: (json['Trend'] ?? json['trend'])?.toString() ?? 'BULLISH',
-      volume: (json['Volume'] ?? json['volume'])?.toString() ?? '1.5x',
-      riskReward: (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? '1:3.0',
-      rsScore: (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 75.0,
+      score: (json['Score'] ?? json['score'] as num?)?.toDouble() ?? 0.0,
+      rawScore: (json['Raw Score'] ?? json['raw_score'] as num?)?.toDouble() ?? 0.0,
+      confidence: (json['Confidence'] ?? json['confidence'] as num?)?.toDouble() ?? 0.0,
+      trend: (json['Trend'] ?? json['trend'])?.toString() ?? 'NEUTRAL',
+      volume: (json['Volume'] ?? json['volume'])?.toString() ?? 'N/A',
+      riskReward: (json['Risk Reward'] ?? json['risk_reward'])?.toString() ?? 'N/A',
+      rsScore: (json['RS Score'] ?? json['rs_score'] as num?)?.toDouble() ?? 0.0,
       entry: entryVal,
       stopLoss: slVal,
       target1: t1Val,
       target2: t2Val,
       target3: t3Val,
-      tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'A',
-      riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'LOW',
-      timestamp: (json['Timestamp'] ?? json['timestamp'])?.toString() ?? 'LIVE',
+      tradeGrade: (json['Trade Grade'] ?? json['trade_grade'])?.toString() ?? 'N/A',
+      riskGrade: (json['Risk Grade'] ?? json['risk_grade'])?.toString() ?? 'UNKNOWN',
+      timestamp: rawTs.isNotEmpty ? rawTs : 'UNAVAILABLE',
       whySelected: whyList,
       reasons: reaList,
       scores: Map<String, dynamic>.from(json['scores'] as Map? ?? {}),

@@ -103,25 +103,158 @@ async def root():
 _META_LOCK = threading.Lock()
 _PROVIDER_META_CACHE = {"data": None, "timestamp": 0.0}
 
-def _get_provider_metadata(mode: str = "LIVE") -> dict:
-    """Returns standardized provider and market status metadata with 10s caching for ultra-low latency."""
-    global _PROVIDER_META_CACHE
+def _extract_latest_data_timestamp(results: Any) -> Optional[str]:
+    """Extracts the latest market-data timestamp string from qualified_results if available."""
+    if not isinstance(results, list) or not results:
+        return None
+    latest_ts: Optional[str] = None
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        raw = item.get("Timestamp") or item.get("timestamp")
+        if not raw:
+            continue
+        ts_str = str(raw).split(" | ")[0].strip()
+        if ts_str and ts_str.upper() != "LIVE":
+            if latest_ts is None or ts_str > latest_ts:
+                latest_ts = ts_str
+    return latest_ts
+
+def _check_paytm_authenticated(now_t: float) -> bool:
+    """Verifies Paytm authentication status from PaytmAuthManager and JWT expiry without logging secrets."""
+    try:
+        from market.paytm_auth_manager import PaytmAuthManager
+        import base64
+        auth_mgr = PaytmAuthManager.get_instance()
+        auth_mgr.load_credentials()
+        if not auth_mgr.is_authenticated():
+            return False
+        jwt_tok = auth_mgr.get_valid_jwt()
+        if not jwt_tok:
+            return False
+        if jwt_tok.count(".") == 2:
+            payload_b64 = jwt_tok.split(".")[1]
+            payload_b64 += "=" * (-len(payload_b64) % 4)
+            jwt_payload = json.loads(base64.urlsafe_b64decode(payload_b64).decode("utf-8"))
+            exp_val = float(jwt_payload.get("exp") or 0.0)
+            if exp_val > 0.0 and now_t > exp_val:
+                return False
+        return True
+    except Exception as e:
+        logger.warning(f"Paytm authentication check failed: {e}")
+        return False
+
+def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None) -> dict:
+    """Derives provider, health, fallback, and market status from actual auth and scan-provider statistics."""
+    from datetime import timezone, timedelta
     now_t = time.time()
-    with _META_LOCK:
-        if mode.upper() == "LIVE" and _PROVIDER_META_CACHE["data"] is not None and (now_t - _PROVIDER_META_CACHE["timestamp"] < 10.0):
-            return _PROVIDER_META_CACHE["data"]
-            
-    now = datetime.now()
-    is_weekend = now.weekday() >= 5
-    m_status = "HISTORICAL" if mode.upper() == "HISTORICAL" else ("CLOSED" if is_weekend else ("OPEN" if (now.hour > 9 or (now.hour == 9 and now.minute >= 15)) and (now.hour < 15 or (now.hour == 15 and now.minute <= 30)) else "CLOSED"))
-    
+    ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    is_weekend = ist_now.weekday() >= 5
+    in_market_hours = (
+        (ist_now.hour > 9 or (ist_now.hour == 9 and ist_now.minute >= 15))
+        and (ist_now.hour < 15 or (ist_now.hour == 15 and ist_now.minute <= 30))
+    )
+    m_status = (
+        "HISTORICAL"
+        if mode.upper() == "HISTORICAL"
+        else ("CLOSED" if is_weekend else ("OPEN" if in_market_hours else "CLOSED"))
+    )
+
+    paytm_authenticated = _check_paytm_authenticated(now_t)
+
+    provider_stats = None
+    if isinstance(scan_data, dict):
+        raw_ps = scan_data.get("provider_statistics")
+        if isinstance(raw_ps, dict) and raw_ps:
+            provider_stats = raw_ps
+    elif scan_data is None:
+        try:
+            cached_swing = _SCANNER_CACHE.get("data") if "_SCANNER_CACHE" in globals() else None
+            if isinstance(cached_swing, dict):
+                raw_ps = cached_swing.get("provider_statistics")
+                if isinstance(raw_ps, dict) and raw_ps:
+                    provider_stats = raw_ps
+        except Exception:
+            provider_stats = None
+
+    raw_yahoo = provider_stats.get("yahoo") if isinstance(provider_stats, dict) else None
+    raw_paytm = provider_stats.get("paytm") if isinstance(provider_stats, dict) else None
+
+    if isinstance(raw_yahoo, dict):
+        yahoo_success = int(raw_yahoo.get("success", 0) or 0)
+        yahoo_requests = int(raw_yahoo.get("total_requests", 0) or 0)
+        yahoo_latency = raw_yahoo.get("average_latency_ms")
+    elif isinstance(raw_yahoo, (int, float)):
+        yahoo_success = int(raw_yahoo)
+        yahoo_requests = int(raw_yahoo)
+        yahoo_latency = None
+    else:
+        yahoo_success = 0
+        yahoo_requests = 0
+        yahoo_latency = None
+
+    if isinstance(raw_paytm, dict):
+        paytm_success = int(raw_paytm.get("success", 0) or 0)
+        paytm_fallback = int(raw_paytm.get("fallback_count", 0) or 0)
+        paytm_latency = raw_paytm.get("average_latency_ms")
+    elif isinstance(raw_paytm, (int, float)):
+        paytm_success = int(raw_paytm)
+        paytm_fallback = int(provider_stats.get("fallback_count", 0) or 0) if isinstance(provider_stats, dict) else 0
+        paytm_latency = None
+    else:
+        paytm_success = 0
+        paytm_fallback = 0
+        paytm_latency = None
+
+    has_telemetry = bool(
+        provider_stats
+        and (yahoo_success > 0 or yahoo_requests > 0 or paytm_success > 0 or paytm_fallback > 0)
+    )
+
+    if mode.upper() == "HISTORICAL":
+        provider_name = "Yahoo Finance (Historical)"
+        fallback_used = True
+        provider_health = "HEALTHY" if (has_telemetry and yahoo_success > 0) else "UNKNOWN"
+        provider_latency = float(yahoo_latency) if yahoo_latency is not None else None
+    elif not has_telemetry:
+        # Missing telemetry must be reported as UNKNOWN, never HEALTHY
+        if paytm_authenticated:
+            provider_name = "Paytm Money (Unverified - No Scan Telemetry)"
+            fallback_used = False
+        else:
+            provider_name = "Yahoo Finance (Fallback - Paytm Unauthenticated)"
+            fallback_used = True
+        provider_health = "UNKNOWN"
+        provider_latency = None
+    else:
+        if paytm_authenticated and paytm_success > 0 and yahoo_success == 0 and paytm_fallback == 0:
+            provider_name = "Paytm Money (Live)"
+            fallback_used = False
+            provider_health = "HEALTHY"
+            provider_latency = float(paytm_latency) if paytm_latency is not None else None
+        elif yahoo_success > 0 or paytm_fallback > 0 or not paytm_authenticated:
+            if paytm_authenticated and paytm_success > 0 and yahoo_success > 0:
+                provider_name = "Paytm Money + Yahoo Finance (Fallback)"
+            else:
+                provider_name = "Yahoo Finance (Fallback)"
+            fallback_used = True
+            provider_health = "DEGRADED" if (yahoo_success > 0 or paytm_success > 0) else "OFFLINE"
+            provider_latency = float(yahoo_latency) if yahoo_latency is not None else None
+        else:
+            provider_name = "UNKNOWN"
+            fallback_used = not paytm_authenticated
+            provider_health = "UNKNOWN"
+            provider_latency = None
+
     res = {
-        "provider": "Paytm Money (Live)" if mode.upper() != "HISTORICAL" else "Yahoo Finance (Historical)",
+        "provider": provider_name,
         "market_status": m_status,
         "timestamp": now_t,
-        "provider_latency": 12.5,
-        "provider_health": "HEALTHY",
-        "fallback_used": False
+        "server_timestamp": now_t,
+        "provider_latency": provider_latency,
+        "provider_health": provider_health,
+        "fallback_used": fallback_used,
+        "paytm_authenticated": paytm_authenticated,
     }
     with _META_LOCK:
         _PROVIDER_META_CACHE["data"] = res
@@ -174,7 +307,7 @@ async def health_check():
     _REQUEST_COUNTER["total"] += 1
     _REQUEST_COUNTER["success"] += 1
     
-    db_status = "HEALTHY"
+    db_status = "UNKNOWN"
     try:
         if os.path.exists("data/live_journal.db"):
             db_status = "HEALTHY"
@@ -185,22 +318,36 @@ async def health_check():
         meta = _get_provider_metadata()
     except Exception as e:
         logger.warning(f"Error fetching provider metadata in health check: {e}")
+        now_err = time.time()
         meta = {
-            "provider": "Paytm / Yahoo (Degraded)",
+            "provider": "UNKNOWN",
             "market_status": "CLOSED",
-            "timestamp": time.time(),
-            "provider_latency": 0.0,
-            "provider_health": "DEGRADED",
-            "fallback_used": True
+            "timestamp": now_err,
+            "server_timestamp": now_err,
+            "provider_latency": None,
+            "provider_health": "UNKNOWN",
+            "fallback_used": True,
+            "paytm_authenticated": False,
         }
+
+    now_h = time.time()
+    swing_last = _SCANNER_CACHE.get("last_updated", 0.0) if "_SCANNER_CACHE" in globals() else 0.0
+    if _SCANNER_CACHE.get("data") is None:
+        scanner_status = "SCANNING" if _SCANNER_CACHE.get("is_scanning") else "UNKNOWN"
+    elif (now_h - swing_last) > CACHE_TTL_SECONDS:
+        scanner_status = "STALE"
+    else:
+        scanner_status = "HEALTHY"
+
+    broker_status = "HEALTHY" if meta.get("paytm_authenticated") else "UNAUTHENTICATED"
         
-    uptime = round(time.time() - _SERVER_START_TIME, 2)
+    uptime = round(now_h - _SERVER_START_TIME, 2)
     return {
         "status": "online",
         "application_health": "HEALTHY",
         "database_health": db_status,
-        "broker_health": meta.get("provider_health", "HEALTHY"),
-        "scanner_health": "HEALTHY",
+        "broker_health": broker_status,
+        "scanner_health": scanner_status,
         "risk_engine_health": "HEALTHY",
         "paper_trading_health": "HEALTHY",
         "version": "1.0.0",
@@ -305,6 +452,10 @@ def _load_cache_from_disk():
                 except Exception:
                     pass
             elif data and isinstance(data, dict) and data.get("qualified_results") is not None:
+                if "provider_statistics" not in data and isinstance(_SCANNER_CACHE.get("data"), dict):
+                    swing_ps = _SCANNER_CACHE["data"].get("provider_statistics")
+                    if isinstance(swing_ps, dict) and swing_ps:
+                        data["provider_statistics"] = swing_ps
                 with _INTRADAY_LOCK:
                     _INTRADAY_CACHE["data"] = data
                     _INTRADAY_CACHE["last_updated"] = cache_ts
@@ -451,6 +602,7 @@ def _run_enterprise_orchestration():
             "scanner_health": {},
             "market_summary": {},
             "performance_metrics": {},
+            "provider_statistics": swing_res.get("provider_statistics", {}),
             "qualified_results": json.loads(json.dumps(display_intra, default=str)),
             "cache_timestamp": time.time(),
         }
@@ -502,89 +654,114 @@ async def startup_event():
     logger.info("Server booted successfully. Mobile API ready.")
     threading.Thread(target=_delayed_startup_scan, daemon=True).start()
 
-def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_universe: int = 200, cache_timestamp: Optional[float] = None) -> dict:
-    """Normalizes raw cache data into a canonical response dictionary guaranteed to never throw AttributeError."""
-    meta = _get_provider_metadata()
-    
-    default_rejections = {
-        "Low Confidence": 64,
-        "Weak Trend": 42,
-        "Low Volume": 28,
-        "Structure Unaligned": 22,
-        "Low RR": 18,
-        "Missing Data": 5,
-        "ATR Failed": 0
-    }
+def _normalize_scanner_response(
+    data: Any,
+    is_scanning: bool = False,
+    total_universe: int = 200,
+    cache_timestamp: Optional[float] = None,
+    ttl_seconds: float = CACHE_TTL_SECONDS,
+) -> dict:
+    """Normalizes raw cache data into a canonical response dictionary with truthful timestamps and provider metadata."""
+    server_ts = time.time()
+    scan_dict = data if isinstance(data, dict) else {}
+    meta = _get_provider_metadata(scan_data=scan_dict)
 
     if data is None:
         return {
             "total_universe": total_universe,
-            "total_attempted": total_universe,
-            "total_processed": total_universe - 5,
-            "total_scanned": 34,
-            "total_ranked": 34,
+            "total_attempted": 0,
+            "total_processed": 0,
+            "total_scanned": 0,
+            "total_ranked": 0,
             "qualified_count": 0,
             "filter_rejected_count": 0,
-            "no_data_count": 5,
+            "no_data_count": 0,
             "buy_count": 0,
             "sell_count": 0,
             "watch_count": 0,
             "qualified_results": [],
-            "rejection_analytics": default_rejections,
-            "is_scanning": is_scanning,
+            "rejection_analytics": {},
+            "is_scanning": bool(is_scanning),
+            "is_stale": True,
             "status": "SCANNING" if is_scanning else "DATA_UNAVAILABLE",
-            **meta
+            **meta,
+            "server_timestamp": server_ts,
+            "scan_timestamp": None,
+            "cache_timestamp": None,
+            "data_timestamp": None,
+            "timestamp": None,
+            "cache_age_seconds": None,
         }
         
     if isinstance(data, list):
         buy_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
         sell_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
         watch_c = sum(1 for x in data if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
-        scan_ts = cache_timestamp or meta.get("timestamp", time.time())
+        scan_ts = float(cache_timestamp) if (cache_timestamp is not None and float(cache_timestamp) > 0) else None
+        cache_age = round(max(0.0, server_ts - scan_ts), 2) if scan_ts is not None else None
+        is_stale = True if (cache_age is None or cache_age > ttl_seconds) else False
+        data_ts = _extract_latest_data_timestamp(data)
         res_dict = {
             "total_universe": total_universe,
             "total_attempted": total_universe,
-            "total_processed": total_universe - 5,
-            "total_scanned": 34,
-            "total_ranked": 34,
+            "total_processed": len(data),
+            "total_scanned": len(data),
+            "total_ranked": len(data),
             "qualified_count": len(data),
             "filter_rejected_count": max(0, total_universe - len(data)),
-            "no_data_count": 5,
+            "no_data_count": 0,
             "buy_count": buy_c,
             "sell_count": sell_c,
             "watch_count": watch_c,
             "qualified_results": data,
-            "rejection_analytics": default_rejections,
-            "is_scanning": is_scanning,
-            "status": "COMPLETED",
+            "rejection_analytics": {},
+            "is_scanning": bool(is_scanning),
+            "is_stale": is_stale,
+            "status": "STALE" if is_stale else "COMPLETED",
             **meta,
-            "timestamp": scan_ts,
+            "server_timestamp": server_ts,
+            "scan_timestamp": scan_ts,
             "cache_timestamp": scan_ts,
-            "cache_age_seconds": round(time.time() - scan_ts, 2)
+            "data_timestamp": data_ts,
+            "timestamp": scan_ts,
+            "cache_age_seconds": cache_age,
         }
         return res_dict
         
     if isinstance(data, dict):
         res_dict = dict(data)  # Shallow copy to avoid mutating cache in place
-        scan_ts = cache_timestamp or res_dict.get("cache_timestamp") or res_dict.get("timestamp")
+        raw_scan_ts = cache_timestamp or res_dict.get("cache_timestamp") or res_dict.get("scan_timestamp") or res_dict.get("timestamp")
+        try:
+            scan_ts = float(raw_scan_ts) if (raw_scan_ts is not None and float(raw_scan_ts) > 0) else None
+        except (TypeError, ValueError):
+            scan_ts = None
+
         res_dict.update(meta)
-        if scan_ts:
-            res_dict["timestamp"] = scan_ts
-            res_dict["cache_timestamp"] = scan_ts
-            res_dict["cache_age_seconds"] = round(time.time() - scan_ts, 2)
+        cache_age = round(max(0.0, server_ts - scan_ts), 2) if scan_ts is not None else None
+        is_stale = True if (cache_age is None or cache_age > ttl_seconds) else False
+
         if "qualified_results" not in res_dict or not isinstance(res_dict["qualified_results"], list):
             res_dict["qualified_results"] = []
+        data_ts = _extract_latest_data_timestamp(res_dict["qualified_results"]) or res_dict.get("data_timestamp")
+
+        res_dict["server_timestamp"] = server_ts
+        res_dict["scan_timestamp"] = scan_ts
+        res_dict["cache_timestamp"] = scan_ts
+        res_dict["data_timestamp"] = data_ts
+        res_dict["timestamp"] = scan_ts
+        res_dict["cache_age_seconds"] = cache_age
+        res_dict["is_stale"] = is_stale
+        res_dict["is_scanning"] = bool(is_scanning)
+
         if "total_attempted" not in res_dict:
             res_dict["total_attempted"] = res_dict.get("total_universe", total_universe)
         if "total_processed" not in res_dict:
-            no_data = res_dict.get("no_data_count", 5)
+            no_data = res_dict.get("no_data_count", 0)
             res_dict["total_processed"] = max(0, res_dict.get("total_universe", total_universe) - no_data)
         if "total_ranked" not in res_dict:
-            res_dict["total_ranked"] = res_dict.get("total_scanned", 34)
-        if "rejection_analytics" not in res_dict or not res_dict["rejection_analytics"]:
-            res_dict["rejection_analytics"] = default_rejections
-        if is_scanning:
-            res_dict["is_scanning"] = True
+            res_dict["total_ranked"] = res_dict.get("total_scanned", 0)
+        if "rejection_analytics" not in res_dict or not isinstance(res_dict["rejection_analytics"], dict):
+            res_dict["rejection_analytics"] = {}
         if "status" not in res_dict or res_dict["status"] is None:
             res_dict["status"] = "COMPLETED"
         return res_dict
@@ -599,9 +776,16 @@ def _normalize_scanner_response(data: Any, is_scanning: bool = False, total_univ
         "sell_count": 0,
         "watch_count": 0,
         "qualified_results": [],
-        "is_scanning": is_scanning,
+        "is_scanning": bool(is_scanning),
+        "is_stale": True,
         "status": "DATA_UNAVAILABLE",
-        **meta
+        **meta,
+        "server_timestamp": server_ts,
+        "scan_timestamp": None,
+        "cache_timestamp": None,
+        "data_timestamp": None,
+        "timestamp": None,
+        "cache_age_seconds": None,
     }
 
 # Swing Scanner Endpoint (Returns instantly from cache)
@@ -622,7 +806,7 @@ async def run_swing_scanner(debug: bool = False):
                     if not _SCANNER_CACHE["is_scanning"]:
                         _SCANNER_CACHE["is_scanning"] = True
                         threading.Thread(target=_run_background_scan, daemon=True).start()
-            return _normalize_scanner_response(None, is_scanning=True, total_universe=200)
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=200, ttl_seconds=CACHE_TTL_SECONDS)
 
         # Stale-While-Revalidate: If expired, trigger background scan while serving last valid scan
         if current_time - last_updated > CACHE_TTL_SECONDS:
@@ -634,7 +818,13 @@ async def run_swing_scanner(debug: bool = False):
                         threading.Thread(target=_run_background_scan, daemon=True).start()
             is_scanning = True
 
-        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=200, cache_timestamp=last_updated)
+        resp_dict = _normalize_scanner_response(
+            raw_data,
+            is_scanning=is_scanning,
+            total_universe=200,
+            cache_timestamp=last_updated,
+            ttl_seconds=CACHE_TTL_SECONDS,
+        )
 
         if not debug:
             clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
@@ -642,7 +832,8 @@ async def run_swing_scanner(debug: bool = False):
         return resp_dict
     except Exception as e:
         logger.error(f"Error serving swing scan: {e}", exc_info=True)
-        meta = _get_provider_metadata()
+        meta = _get_provider_metadata(scan_data={})
+        now_err = time.time()
         return {
             "total_universe": 200,
             "total_scanned": 0,
@@ -653,9 +844,16 @@ async def run_swing_scanner(debug: bool = False):
             "watch_count": 0,
             "qualified_results": [],
             "is_scanning": False,
+            "is_stale": True,
             "status": "ERROR_FALLBACK",
             "error_detail": str(e),
-            **meta
+            **meta,
+            "server_timestamp": now_err,
+            "scan_timestamp": None,
+            "cache_timestamp": None,
+            "data_timestamp": None,
+            "timestamp": None,
+            "cache_age_seconds": None,
         }
 
 @v1_router.get("/scanner/intraday", tags=["Scanner"])
@@ -677,7 +875,7 @@ async def run_intraday_scanner(debug: bool = False):
                     if not _INTRADAY_CACHE["is_scanning"]:
                         _INTRADAY_CACHE["is_scanning"] = True
                         threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
-            return _normalize_scanner_response(None, is_scanning=True, total_universe=184)
+            return _normalize_scanner_response(None, is_scanning=True, total_universe=184, ttl_seconds=ttl)
 
         # Stale-While-Revalidate: If expired, trigger background scan while serving last valid scan
         if current_time - last_updated > ttl:
@@ -689,7 +887,13 @@ async def run_intraday_scanner(debug: bool = False):
                         threading.Thread(target=_run_background_intraday_scan, daemon=True).start()
             is_scanning = True
 
-        resp_dict = _normalize_scanner_response(raw_data, is_scanning=is_scanning, total_universe=184, cache_timestamp=last_updated)
+        resp_dict = _normalize_scanner_response(
+            raw_data,
+            is_scanning=is_scanning,
+            total_universe=184,
+            cache_timestamp=last_updated,
+            ttl_seconds=ttl,
+        )
 
         if not debug:
             clean_data = {k: v for k, v in resp_dict.items() if k != "symbol_decision_traces"}
@@ -697,7 +901,8 @@ async def run_intraday_scanner(debug: bool = False):
         return resp_dict
     except Exception as e:
         logger.error(f"Error serving intraday scan: {e}", exc_info=True)
-        meta = _get_provider_metadata()
+        meta = _get_provider_metadata(scan_data={})
+        now_err = time.time()
         return {
             "total_universe": 184,
             "total_scanned": 0,
@@ -708,9 +913,16 @@ async def run_intraday_scanner(debug: bool = False):
             "watch_count": 0,
             "qualified_results": [],
             "is_scanning": False,
+            "is_stale": True,
             "status": "ERROR_FALLBACK",
             "error_detail": str(e),
-            **meta
+            **meta,
+            "server_timestamp": now_err,
+            "scan_timestamp": None,
+            "cache_timestamp": None,
+            "data_timestamp": None,
+            "timestamp": None,
+            "cache_age_seconds": None,
         }
 
 @v1_router.get("/scanner/audit", tags=["Scanner"])
@@ -2680,16 +2892,18 @@ async def get_brokers():
         from broker.broker_manager import BrokerManager
         bm = BrokerManager()
         active_name = type(bm.active_broker).__name__.lower().replace("broker", "") if bm.active_broker else "paytm"
+        now_b = time.time()
+        paytm_auth = _check_paytm_authenticated(now_b)
         
         brokers_list = [
             {
                 "name": "paytm",
                 "displayName": "Paytm Money (Primary)",
-                "connected": True,
-                "authenticated": True if os.getenv("PAYTM_ACCESS_TOKEN") else False,
+                "connected": paytm_auth,
+                "authenticated": paytm_auth,
                 "supportedFeatures": ["Orders", "Holdings", "Positions", "Funds", "Option Chain"],
-                "health": "ONLINE" if os.getenv("PAYTM_ACCESS_TOKEN") else "AUTH_REQUIRED",
-                "lastRefresh": time.time()
+                "health": "ONLINE" if paytm_auth else "AUTH_REQUIRED",
+                "lastRefresh": now_b
             },
             {
                 "name": "dhan",
@@ -2698,7 +2912,7 @@ async def get_brokers():
                 "authenticated": True if (bm.active_broker and active_name == "dhan" and getattr(bm.active_broker, 'access_token', None)) else False,
                 "supportedFeatures": ["Orders", "Holdings", "Positions", "Funds", "Option Chain", "WebSocket"],
                 "health": "ONLINE" if (bm.active_broker and active_name == "dhan" and getattr(bm.active_broker, 'access_token', None)) else "AUTH_REQUIRED",
-                "lastRefresh": time.time()
+                "lastRefresh": now_b
             },
             {
                 "name": "zerodha",
@@ -2707,7 +2921,7 @@ async def get_brokers():
                 "authenticated": True if (bm.active_broker and active_name == "zerodha" and getattr(bm.active_broker, 'access_token', None)) else False,
                 "supportedFeatures": ["Orders", "Holdings", "Positions", "Funds", "WebSocket"],
                 "health": "ONLINE" if (bm.active_broker and active_name == "zerodha" and getattr(bm.active_broker, 'access_token', None)) else "AUTH_REQUIRED",
-                "lastRefresh": time.time()
+                "lastRefresh": now_b
             },
             {
                 "name": "angel",
@@ -2716,7 +2930,7 @@ async def get_brokers():
                 "authenticated": True if (bm.active_broker and active_name == "angel" and getattr(bm.active_broker, 'auth_token', None)) else False,
                 "supportedFeatures": ["Orders", "Holdings", "Positions", "Funds", "WebSocket"],
                 "health": "ONLINE" if (bm.active_broker and active_name == "angel" and getattr(bm.active_broker, 'auth_token', None)) else "AUTH_REQUIRED",
-                "lastRefresh": time.time()
+                "lastRefresh": now_b
             }
         ]
         meta = _get_provider_metadata()
@@ -2736,7 +2950,7 @@ async def get_brokers():
                 {
                     "name": "paytm",
                     "displayName": "Paytm Money (Primary)",
-                    "connected": True,
+                    "connected": False,
                     "authenticated": False,
                     "supportedFeatures": ["Orders", "Holdings", "Positions", "Funds", "Option Chain"],
                     "health": "AUTH_REQUIRED",

@@ -53,7 +53,15 @@ class ScannerRepository {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        return ScanResponseModel.fromJson(data);
+        final parsed = ScanResponseModel.fromJson(data);
+        NetworkManager.instance.updateProviderTelemetry(
+          provider: parsed.provider,
+          providerHealth: parsed.providerHealth,
+          fallbackUsed: parsed.fallbackUsed,
+          paytmAuthenticated: parsed.paytmAuthenticated,
+          marketStatus: parsed.marketStatus,
+        );
+        return parsed;
       } else {
         throw Exception(
           'Failed to load swing scans. Status: ${response.statusCode}',
@@ -93,7 +101,15 @@ class ScannerRepository {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        return ScanResponseModel.fromJson(data);
+        final parsed = ScanResponseModel.fromJson(data);
+        NetworkManager.instance.updateProviderTelemetry(
+          provider: parsed.provider,
+          providerHealth: parsed.providerHealth,
+          fallbackUsed: parsed.fallbackUsed,
+          paytmAuthenticated: parsed.paytmAuthenticated,
+          marketStatus: parsed.marketStatus,
+        );
+        return parsed;
       } else {
         throw Exception(
           'Failed to load intraday scans. Status: ${response.statusCode}',
