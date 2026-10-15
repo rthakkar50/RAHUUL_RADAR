@@ -381,7 +381,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         return "SUCCESS"
 
     @staticmethod
-    def _resolve_date_range(period: str) -> Tuple[str, str, int]:
+    def _resolve_date_range(period: str, interval: str = "1d") -> Tuple[str, str, int]:
         """Resolve period string into (fromDate YYYY-MM-DD, toDate YYYY-MM-DD, lookback_days)."""
         period_map = {
             "1d": 2,
@@ -396,6 +396,12 @@ class PaytmMoneyProvider(MarketDataProvider):
             "5y": 89,
         }
         days = min(89, period_map.get(str(period or "3mo").strip().lower(), 85))
+
+        # SPRINT-185 STEP 44: Cap minute intervals to 5 calendar days to satisfy Paytm's 7-day limit
+        norm_inv = str(interval or "1d").strip().lower()
+        if norm_inv in ["1m", "5m", "15m", "30m", "60m", "1h", "minute"]:
+            days = min(days, 5)
+
         now_ist = datetime.now(IST_TZ)
         past_dt = now_ist - timedelta(days=days)
         # Official Paytm API requires toDate <= fromDate (fromDate = newer/end date, toDate = older/start date)
@@ -474,7 +480,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         is_index = clean_sym in self._INDEX_SECURITY_IDS or security_id in ["13", "25", "27", "442"]
         # Official Paytm historical contract requires instType "ES" (Equity Spot) and trading symbol
         inst_type = "INDEX" if is_index else "ES"
-        from_date, to_date, lookback_days = self._resolve_date_range(period)
+        from_date, to_date, lookback_days = self._resolve_date_range(period, interval=interval)
 
         payload = {
             "cont": "false",
