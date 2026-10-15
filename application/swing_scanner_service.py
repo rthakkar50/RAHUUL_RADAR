@@ -106,7 +106,61 @@ class SwingScannerService:
         }
         self.pipeline = MasterSignalPipeline(self.engines)
         self.last_results = []
-        
+        self.is_scanning = False
+        self.last_health = {}
+
+    @staticmethod
+    def compute_cache_status(
+        is_revalidating: bool = False,
+        is_scanning: bool = False,
+        configured_universe: int = 0,
+        downloaded_successfully: int = 0,
+        download_failed_count: int = 0,
+        yahoo_stats: Optional[Dict[str, Any]] = None,
+        paytm_stats: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Computes truthful cache status across 7 operational conditions (SPRINT-185 STEP 35/36):
+        1. Fresh data retrieved successfully for all tested symbols -> FRESH
+        2. All requests served from cache -> CACHED
+        3. Partial success / 1 succeeded, multiple failed -> PARTIAL_DEGRADED
+        4. Mix of fresh live data and cache -> MIXED
+        5. All requests failed -> STALE
+        6. Telemetry missing / unverified -> UNKNOWN
+        7. Background revalidation / active scan -> REVALIDATING / SCANNING
+        """
+        if is_revalidating:
+            return "REVALIDATING"
+        if is_scanning:
+            return "SCANNING"
+
+        yahoo_stats = yahoo_stats or {}
+        paytm_stats = paytm_stats or {}
+        total_activity = (
+            yahoo_stats.get("total_requests", 0)
+            + paytm_stats.get("success", 0)
+            + paytm_stats.get("fallback_count", 0)
+        )
+
+        if configured_universe == 0 or (downloaded_successfully == 0 and download_failed_count == 0 and total_activity == 0):
+            return "UNKNOWN"
+        if downloaded_successfully == 0 and download_failed_count > 0:
+            return "STALE"
+        if download_failed_count > 0 and downloaded_successfully > 0:
+            return "PARTIAL_DEGRADED"
+
+        y_hits = yahoo_stats.get("cache_hits", 0)
+        y_misses = yahoo_stats.get("cache_misses", 0)
+        p_success = paytm_stats.get("success", 0)
+
+        if y_hits > 0 and y_misses == 0 and p_success == 0:
+            return "CACHED"
+        if y_hits > 0 and (y_misses > 0 or p_success > 0):
+            return "MIXED"
+        if p_success > 0 or y_misses > 0 or downloaded_successfully > 0:
+            return "FRESH"
+        return "UNKNOWN"
+
     def calculate_bearish(self, data: dict) -> int:
         """
         Calculates independent bearish score (0-100) based on technical criteria (SPRINT-235).
@@ -170,12 +224,15 @@ class SwingScannerService:
         return self.execute_swing_scan(progress_callback=progress_callback)
 
     def execute_swing_scan(self, progress_callback=None) -> List[Dict[str, Any]]:
+        self.is_scanning = True
         start_time = time.time()
         logger.info(f"Entered Function: execute_swing_scan in core/swing_scanner_service.py")
         logger.info(f"Input: progress_callback present = {progress_callback is not None}")
         
         try:
             manager = MarketDataManager()
+            if hasattr(manager, 'paytm') and hasattr(manager, 'yahoo') and manager.paytm and manager.yahoo:
+                manager.paytm.fallback = manager.yahoo
             manager.connect()
             data_provider = manager
             
@@ -1212,16 +1269,40 @@ class SwingScannerService:
             except Exception as csv_err:
                 logger.warning(f"Failed to write scanner_audit.csv: {csv_err}")
 
-            # Provider Statistics
-            yahoo_stats = getattr(data_provider, 'stats', {
-                "total_requests": configured_universe,
-                "success": downloaded_successfully,
-                "failure": download_failed_count,
-                "timeout": timeout_count,
-                "average_latency_ms": round((exec_time * 1000) / max(1, configured_universe), 1)
-            })
-
+            # Provider Statistics (SPRINT-185 STEP 33: Read authentic stats from data_provider.yahoo.stats)
+            yahoo_p = getattr(data_provider, 'yahoo', None)
             paytm_p = getattr(data_provider, 'paytm', None)
+            paytm_fallback = getattr(paytm_p, 'fallback', None) if paytm_p else None
+
+            # Read Yahoo statistics directly from the Yahoo provider instance
+            raw_yahoo_stats = getattr(yahoo_p, 'stats', None) if yahoo_p else None
+            if raw_yahoo_stats is None:
+                raw_yahoo_stats = getattr(data_provider, 'stats', None)
+
+            if isinstance(raw_yahoo_stats, dict):
+                yahoo_stats = dict(raw_yahoo_stats)
+                # If paytm_fallback was a distinct instance and handled fallback queries, aggregate them
+                if paytm_fallback and paytm_fallback is not yahoo_p:
+                    fb_stats = getattr(paytm_fallback, 'stats', {})
+                    if fb_stats.get("total_requests", 0) > 0:
+                        yahoo_stats["total_requests"] = yahoo_stats.get("total_requests", 0) + fb_stats.get("total_requests", 0)
+                        yahoo_stats["success"] = yahoo_stats.get("success", 0) + fb_stats.get("success", 0)
+                        yahoo_stats["failure"] = yahoo_stats.get("failure", 0) + fb_stats.get("failure", 0)
+                        yahoo_stats["timeout"] = yahoo_stats.get("timeout", 0) + fb_stats.get("timeout", 0)
+                        yahoo_stats["cache_hits"] = yahoo_stats.get("cache_hits", 0) + fb_stats.get("cache_hits", 0)
+                        yahoo_stats["cache_misses"] = yahoo_stats.get("cache_misses", 0) + fb_stats.get("cache_misses", 0)
+                        combined_lat = yahoo_stats.get("total_latency_ms", 0.0) + fb_stats.get("total_latency_ms", 0.0)
+                        yahoo_stats["total_latency_ms"] = combined_lat
+                        yahoo_stats["average_latency_ms"] = round(combined_lat / max(1, yahoo_stats["total_requests"]), 1)
+            else:
+                yahoo_stats = {
+                    "total_requests": configured_universe,
+                    "success": downloaded_successfully,
+                    "failure": download_failed_count,
+                    "timeout": timeout_count,
+                    "average_latency_ms": round((exec_time * 1000) / max(1, configured_universe), 1)
+                }
+
             paytm_stats = getattr(paytm_p, 'stats', {
                 "success": 0,
                 "fallback_count": configured_universe if paytm_p is None else 0,
@@ -1297,16 +1378,57 @@ class SwingScannerService:
                 "sector_laggards": sector_laggards
             }
 
+            # Dynamic Provider Labels (SPRINT-185 STEP 33)
+            paytm_success = paytm_stats.get("success", 0)
+            paytm_fallback = paytm_stats.get("fallback_count", 0)
+            yahoo_success = yahoo_stats.get("success", 0) if isinstance(yahoo_stats, dict) else 0
+
+            if paytm_p and paytm_success > 0:
+                primary_provider_label = "Paytm Money (Historical Daily)"
+                if paytm_fallback > 0 or yahoo_success > 0:
+                    secondary_provider_label = "Yahoo Finance (MTF Fallback)"
+                    provider_mode = "MIXED"
+                else:
+                    secondary_provider_label = "Paytm Money (Live)"
+                    provider_mode = "PAYTM_PRIMARY"
+            else:
+                primary_provider_label = "Yahoo Finance (Live)"
+                secondary_provider_label = "Paytm Money (Standby)"
+                provider_mode = "YAHOO_PRIMARY"
+
+            # Truthful Cache Status (SPRINT-185 STEP 35)
+            last_ohlcv_status = getattr(data_provider, 'last_ohlcv_status', {})
+            candle_timestamps = [
+                meta.get("newest_candle_timestamp")
+                for meta in last_ohlcv_status.values()
+                if isinstance(meta, dict) and meta.get("newest_candle_timestamp")
+            ]
+            latest_candle_ts = max(candle_timestamps) if candle_timestamps else None
+
+            computed_cache_status = self.compute_cache_status(
+                is_revalidating=getattr(self, 'is_revalidating', False),
+                is_scanning=False,
+                configured_universe=configured_universe,
+                downloaded_successfully=downloaded_successfully,
+                download_failed_count=download_failed_count,
+                yahoo_stats=yahoo_stats,
+                paytm_stats=paytm_stats
+            )
+
+            data_feed_conn = getattr(data_provider, 'is_connected', lambda: True)()
             scanner_health = {
-                "data_feed_status": "CONNECTED",
-                "primary_provider": "Yahoo Finance (Live)",
-                "secondary_provider": "Paytm Money (Standby)",
-                "cache_status": "FRESH",
-                "api_status": "ONLINE",
+                "data_feed_status": "CONNECTED" if data_feed_conn else "DISCONNECTED",
+                "primary_provider": primary_provider_label,
+                "secondary_provider": secondary_provider_label,
+                "provider_mode": provider_mode,
+                "cache_status": computed_cache_status,
+                "latest_candle_timestamp": latest_candle_ts,
+                "api_status": "ONLINE" if data_feed_conn else "OFFLINE",
                 "latency_ms": round(exec_time * 1000, 1),
                 "failures_count": error_count,
                 "retries_count": 0
             }
+            self.last_health = scanner_health
 
             import psutil
             process = psutil.Process()
@@ -1374,6 +1496,24 @@ class SwingScannerService:
                 progress_callback(100)
             # Re-raise the exception to expose the error to the caller, preventing silent failure
             raise
+        finally:
+            self.is_scanning = False
+
+    def get_scanner_health(self) -> Dict[str, Any]:
+        """Returns the current health status of the scanner."""
+        if getattr(self, 'is_revalidating', False):
+            health = dict(self.last_health) if self.last_health else {}
+            health["cache_status"] = "REVALIDATING"
+            return health
+        if getattr(self, 'is_scanning', False):
+            health = dict(self.last_health) if self.last_health else {}
+            health["cache_status"] = "SCANNING"
+            return health
+        return dict(self.last_health) if self.last_health else {
+            "cache_status": "UNKNOWN",
+            "data_feed_status": "DISCONNECTED",
+            "api_status": "OFFLINE"
+        }
 
     def export_csv(self, results: List[Dict[str, Any]], filepath: str) -> str:
         try:

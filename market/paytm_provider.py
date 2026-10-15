@@ -2,11 +2,14 @@ import os
 import json
 import time
 import logging
+from datetime import datetime, timedelta, timezone
 import requests
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from market.data_provider import MarketDataProvider, OHLCV, MarketStatus
 from market.yahoo_provider import YahooFinanceProvider
 from market.paytm_websocket import PaytmLiveBroadcast
+
+IST_TZ = timezone(timedelta(hours=5, minutes=30))
 
 class PaytmMoneyProvider(MarketDataProvider):
     """
@@ -18,6 +21,8 @@ class PaytmMoneyProvider(MarketDataProvider):
     BASE_URL_DATA = "https://developer.paytmmoney.com/data"
     DEFAULT_HTTP_TIMEOUT = 5.0
     OPTION_CHAIN_CACHE_TTL = 60.0
+    # Official Paytm Money / NSE 1980-01-01T00:00:00Z epoch offset (pyPMClient epochConverterUtil)
+    PAYTM_EPOCH_OFFSET = 315532800
     
     def __init__(self, timeout: float = None):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -34,7 +39,9 @@ class PaytmMoneyProvider(MarketDataProvider):
         
         self.fallback = YahooFinanceProvider()
         self.ws_cache = PaytmLiveBroadcast.get_instance()
-        self._rest_cache: Dict[str, Dict[str, float]] = {}
+        self._rest_cache: Dict[str, Dict[str, Any]] = {}
+        self._last_quote_meta: Dict[str, Dict[str, Any]] = {}
+        self.last_ohlcv_status: Dict[str, Dict[str, Any]] = {}
         self._option_chain_cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
         self.stats = {
             "success": 0,
@@ -222,10 +229,72 @@ class PaytmMoneyProvider(MarketDataProvider):
         sec_id = PaytmMoneyProvider._symbol_to_security_id.get(clean_sym) or PaytmMoneyProvider._symbol_to_security_id.get(f"{clean_sym}-EQ")
         return str(sec_id).strip() if sec_id else clean_sym
 
+    @classmethod
+    def convert_paytm_epoch(cls, raw_epoch: Any) -> Optional[int]:
+        """
+        Converts Paytm Money's 1980-01-01 UTC offset epoch (pyPMClient epochConverterUtil)
+        into a standard 1970-01-01 Unix epoch timestamp in seconds.
+        """
+        if raw_epoch is None or raw_epoch == "":
+            return None
+        try:
+            val = float(raw_epoch)
+        except (ValueError, TypeError):
+            return None
+        if val <= 0:
+            return None
+        if val >= 1_000_000_000_000:
+            val = val / 1000.0
+        ival = int(val)
+        # Paytm live quote timestamps are seconds since 1980-01-01T00:00:00Z (+315532800s offset)
+        if 1_000_000_000 <= ival < 1_600_000_000:
+            return ival + cls.PAYTM_EPOCH_OFFSET
+        return ival
+
+    @classmethod
+    def _parse_candle_timestamp(cls, raw_ts: Any) -> Optional[datetime]:
+        """Parse Paytm candle timestamp (epoch or ISO/date string) into naive IST datetime."""
+        if raw_ts is None:
+            return None
+        if isinstance(raw_ts, datetime):
+            if raw_ts.tzinfo is not None:
+                return raw_ts.astimezone(IST_TZ).replace(tzinfo=None)
+            return raw_ts
+        if isinstance(raw_ts, (int, float)) or (isinstance(raw_ts, str) and raw_ts.strip().isdigit()):
+            unix_ts = cls.convert_paytm_epoch(raw_ts)
+            if not unix_ts:
+                return None
+            return datetime.fromtimestamp(unix_ts, tz=IST_TZ).replace(tzinfo=None)
+        if isinstance(raw_ts, str):
+            s = raw_ts.strip()
+            if not s:
+                return None
+            try:
+                dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+                if dt.tzinfo is not None:
+                    return dt.astimezone(IST_TZ).replace(tzinfo=None)
+                return dt
+            except ValueError:
+                pass
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d", "%d-%m-%Y %H:%M:%S", "%d-%m-%Y %H:%M", "%d-%m-%Y"):
+                try:
+                    return datetime.strptime(s, fmt)
+                except ValueError:
+                    continue
+        return None
+
+    def _has_unexpired_jwt(self, jwt_token: Optional[str]) -> bool:
+        if not jwt_token or not str(jwt_token).strip():
+            return False
+        exp = float(getattr(self, "token_expiry", 0.0) or 0.0)
+        if exp > 0 and time.time() >= exp:
+            return False
+        return True
+
     def get_last_price(self, symbol: str) -> float:
         self.logger.debug(f"Requesting LTP for {symbol} via Paytm Money...")
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
-        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token:
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not self._has_unexpired_jwt(jwt_token):
             return self.fallback.get_last_price(symbol) if self.fallback else 0.0
             
         security_id = self._get_security_id(symbol)
@@ -250,7 +319,7 @@ class PaytmMoneyProvider(MarketDataProvider):
         }
         
         jwt_token = self.read_access_token if self.read_access_token else self.access_token
-        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not jwt_token or not str(jwt_token).strip():
+        if not self.is_connected() or getattr(self, '_use_fallback_only', False) or not self._has_unexpired_jwt(jwt_token):
             return self.fallback.get_last_price(symbol) if self.fallback else 0.0
 
         headers = {
@@ -274,11 +343,16 @@ class PaytmMoneyProvider(MarketDataProvider):
             items = data.get('data', [])
             if not items:
                 self.logger.warning(f"No LTP data found for {symbol} in response: {data}")
-                print("RAW PAYTM DATA:", data)
                 return 0.0
                 
             first_item = items[0]
-            print("RAW PAYTM ITEM:", first_item)
+            raw_ltt = first_item.get("last_trade_time") or first_item.get("last_update_time")
+            converted_ltt = self.convert_paytm_epoch(raw_ltt)
+            self._last_quote_meta[symbol] = {
+                "raw_last_trade_time": raw_ltt,
+                "last_trade_time": converted_ltt,
+                "last_trade_datetime": datetime.fromtimestamp(converted_ltt, tz=IST_TZ).isoformat() if converted_ltt else None,
+            }
             # Extract LTP from the payload
             ltp = first_item.get('last_price', first_item.get('lastPrice', first_item.get('ltp', 0.0)))
             return float(ltp)
@@ -306,9 +380,214 @@ class PaytmMoneyProvider(MarketDataProvider):
             
         return "SUCCESS"
 
+    @staticmethod
+    def _resolve_date_range(period: str) -> Tuple[str, str, int]:
+        """Resolve period string into (fromDate YYYY-MM-DD, toDate YYYY-MM-DD, lookback_days)."""
+        period_map = {
+            "1d": 2,
+            "2d": 4,
+            "5d": 7,
+            "1wk": 7,
+            "1mo": 30,
+            "3mo": 85,
+            "6mo": 89,
+            "1y": 89,
+            "2y": 89,
+            "5y": 89,
+        }
+        days = min(89, period_map.get(str(period or "3mo").strip().lower(), 85))
+        now_ist = datetime.now(IST_TZ)
+        past_dt = now_ist - timedelta(days=days)
+        # Official Paytm API requires toDate <= fromDate (fromDate = newer/end date, toDate = older/start date)
+        return now_ist.strftime("%Y-%m-%d"), past_dt.strftime("%Y-%m-%d"), days
+
+    @staticmethod
+    def _map_historical_interval(interval: str) -> Optional[Tuple[str, int]]:
+        """
+        Map caller interval to (Paytm API interval, aggregation_factor).
+        Official Paytm price-charts/sym supports MINUTE and DAY intervals.
+        """
+        norm = str(interval or "1d").strip().lower()
+        mapping = {
+            "1m": ("MINUTE", 1),
+            "5m": ("MINUTE", 5),
+            "15m": ("MINUTE", 15),
+            "30m": ("MINUTE", 30),
+            "60m": ("MINUTE", 60),
+            "1h": ("MINUTE", 60),
+            "1d": ("DAY", 1),
+            "1wk": ("DAY", 5),
+            "1mo": ("DAY", 21),
+        }
+        return mapping.get(norm)
+
+    @staticmethod
+    def _aggregate_candles(candles: List[OHLCV], factor: int) -> List[OHLCV]:
+        if factor <= 1:
+            return candles
+        if len(candles) < factor:
+            return []
+        aggregated: List[OHLCV] = []
+        for idx in range(0, len(candles) - factor + 1, factor):
+            chunk = candles[idx:idx + factor]
+            aggregated.append(
+                OHLCV(
+                    timestamp=chunk[-1].timestamp,
+                    open=chunk[0].open,
+                    high=max(c.high for c in chunk),
+                    low=min(c.low for c in chunk),
+                    close=chunk[-1].close,
+                    volume=int(sum(c.volume for c in chunk)),
+                )
+            )
+        return aggregated
+
+    def _fetch_paytm_historical_ohlcv(self, symbol: str, interval: str, period: str) -> Tuple[List[OHLCV], Dict[str, Any]]:
+        """
+        Calls the official Paytm Money Historical Price Chart endpoint:
+        POST https://developer.paytmmoney.com/data/v1/price-charts/sym
+        Validates response status, candle structure, OHLCV bounds, chronological order, and recency.
+        """
+        meta: Dict[str, Any] = {
+            "endpoint": f"{self.BASE_URL_DATA}/v1/price-charts/sym",
+            "method": "POST",
+            "symbol": symbol,
+            "interval": interval,
+            "period": period,
+        }
+        jwt_token = self.read_access_token if self.read_access_token else self.access_token
+        if not self.is_connected() or getattr(self, "_use_fallback_only", False):
+            meta["error"] = "provider_not_connected"
+            return [], meta
+        if not self._has_unexpired_jwt(jwt_token):
+            meta["error"] = "jwt_missing_or_expired"
+            return [], meta
+
+        interval_spec = self._map_historical_interval(interval)
+        if not interval_spec:
+            meta["error"] = f"unsupported_interval:{interval}"
+            return [], meta
+        paytm_interval, agg_factor = interval_spec
+
+        clean_sym = str(symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+        security_id = self._get_security_id(symbol)
+        is_index = clean_sym in self._INDEX_SECURITY_IDS or security_id in ["13", "25", "27", "442"]
+        # Official Paytm historical contract requires instType "ES" (Equity Spot) and trading symbol
+        inst_type = "INDEX" if is_index else "ES"
+        from_date, to_date, lookback_days = self._resolve_date_range(period)
+
+        payload = {
+            "cont": "false",
+            "exchange": "NSE",
+            "fromDate": from_date,
+            "instType": inst_type,
+            "interval": paytm_interval,
+            "symbol": clean_sym,
+            "toDate": to_date,
+        }
+        meta["request_payload"] = payload
+        headers = {
+            "x-jwt-token": str(jwt_token).strip(),
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "openapi-client-src": "sdk",
+        }
+
+        try:
+            response = requests.post(meta["endpoint"], json=payload, headers=headers, timeout=self.timeout)
+            meta["http_status"] = response.status_code
+            if response.status_code != 200:
+                meta["error"] = f"HTTP_{response.status_code}"
+                return [], meta
+            body = response.json()
+        except Exception as e:
+            meta["error"] = f"request_error:{type(e).__name__}"
+            return [], meta
+
+        raw_candles = body.get("data") if isinstance(body, dict) else None
+        if not isinstance(raw_candles, list) or not raw_candles:
+            meta["error"] = "empty_or_malformed_data"
+            return [], meta
+
+        parsed: List[OHLCV] = []
+        for item in raw_candles:
+            try:
+                if isinstance(item, (list, tuple)) and len(item) >= 5:
+                    ts = self._parse_candle_timestamp(item[0])
+                    o, h, l, c = float(item[1]), float(item[2]), float(item[3]), float(item[4])
+                    v = int(float(item[5])) if len(item) >= 6 and item[5] is not None else 0
+                elif isinstance(item, dict):
+                    raw_t = item.get("timestamp") or item.get("time") or item.get("date") or item.get("start_time")
+                    ts = self._parse_candle_timestamp(raw_t)
+                    o = float(item.get("open", 0.0))
+                    h = float(item.get("high", 0.0))
+                    l = float(item.get("low", 0.0))
+                    c = float(item.get("close", 0.0))
+                    v = int(float(item.get("volume", item.get("volume_traded", 0)) or 0))
+                else:
+                    continue
+
+                if ts is None or o <= 0 or h <= 0 or l <= 0 or c <= 0 or v < 0:
+                    continue
+                if h < max(o, c, l) or l > min(o, c, h):
+                    continue
+                parsed.append(OHLCV(timestamp=ts, open=o, high=h, low=l, close=c, volume=v))
+            except (ValueError, TypeError):
+                continue
+
+        if not parsed:
+            meta["error"] = "no_valid_candles_after_validation"
+            return [], meta
+
+        parsed.sort(key=lambda bar: bar.timestamp)
+        if agg_factor > 1:
+            parsed = self._aggregate_candles(parsed, agg_factor)
+            if not parsed:
+                meta["error"] = f"insufficient_candles_for_aggregation:{agg_factor}"
+                return [], meta
+
+        # Verify newest candle is within the requested historical window and not stale (>7 days old)
+        now_naive_ist = datetime.now(IST_TZ).replace(tzinfo=None)
+        start_naive = datetime.strptime(to_date, "%Y-%m-%d")
+        newest_ts = parsed[-1].timestamp
+        if newest_ts < start_naive or (now_naive_ist - newest_ts).days > max(7, lookback_days):
+            meta["error"] = f"stale_candles:newest={newest_ts.isoformat()}"
+            return [], meta
+
+        meta["candle_count"] = len(parsed)
+        meta["newest_candle_timestamp"] = newest_ts.isoformat()
+        return parsed, meta
+
     def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "3mo") -> List[OHLCV]:
-        self.logger.debug(f"Using Yahoo fallback for {symbol} OHLCV as Paytm lacks historical API.")
-        return self.fallback.get_ohlcv(symbol, interval=interval, period=period)
+        candles, meta = self._fetch_paytm_historical_ohlcv(symbol, interval=interval, period=period)
+        if candles:
+            self.stats["success"] = int(self.stats.get("success", 0)) + 1
+            self.last_ohlcv_status[symbol] = {
+                "provider": "PaytmMoney",
+                "fallback_used": False,
+                "http_status": meta.get("http_status", 200),
+                "candle_count": len(candles),
+                "newest_candle_timestamp": meta.get("newest_candle_timestamp"),
+            }
+            return candles
+
+        # Explicit and truthful Yahoo Finance fallback
+        self.stats["fallback_count"] = int(self.stats.get("fallback_count", 0)) + 1
+        reason = meta.get("error", "paytm_historical_unavailable")
+        self.logger.info(
+            f"Paytm historical OHLCV unavailable for {symbol} ({interval}, {period}) [{reason}]. Using Yahoo Finance fallback."
+        )
+        fb_candles = self.fallback.get_ohlcv(symbol, interval=interval, period=period) if self.fallback else []
+        newest_fb_ts = fb_candles[-1].timestamp.isoformat() if fb_candles else None
+        self.last_ohlcv_status[symbol] = {
+            "provider": "YahooFinance (Fallback)",
+            "fallback_used": True,
+            "paytm_error": reason,
+            "http_status": meta.get("http_status"),
+            "candle_count": len(fb_candles),
+            "newest_candle_timestamp": newest_fb_ts,
+        }
+        return fb_candles
         
     def pre_cache(self, symbols: List[str], interval: str, period: str):
         if hasattr(self.fallback, 'pre_cache'):
@@ -542,18 +821,31 @@ class PaytmMoneyProvider(MarketDataProvider):
         }
 
     def get_historical(self, symbol: str, interval: str = "1d", period: str = "1mo") -> Any:
-        """TASK-3: Paytm is Live Provider ONLY. NO HISTORICAL DAILY DOWNLOADS."""
-        self.logger.warning(f"PaytmMoneyProvider: Historical daily data requested for {symbol}. Paytm is Live-only provider.")
-        return []
+        """Fetch historical OHLCV via Paytm price-charts/sym with explicit Yahoo fallback."""
+        return self.get_ohlcv(symbol, interval=interval, period=period)
 
     def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
-        """TASK-3 & TASK-7: Paytm Live Intraday candles/ticks with NO FALLBACK to Yahoo."""
+        """Fetch intraday OHLCV via Paytm price-charts/sym with explicit Yahoo fallback."""
         return self.get_ohlcv(symbol, interval=interval, period=period)
 
     def get_quote(self, symbol: str) -> Dict[str, Any]:
         ltp = self.get_last_price(symbol)
         vol = self.get_volume(symbol)
-        return {"symbol": symbol, "last_price": ltp, "volume": vol, "provider": "PaytmMoney"}
+        q_meta = self._last_quote_meta.get(symbol, {})
+        ltt = q_meta.get("last_trade_time")
+        now_ts = int(time.time())
+        is_stale = True if (ltt is None or (now_ts - int(ltt)) > 900) else False
+        return {
+            "symbol": symbol,
+            "last_price": ltp,
+            "volume": vol,
+            "provider": "PaytmMoney" if ltt is not None else "YahooFinance (Fallback)",
+            "fallback_used": ltt is None,
+            "raw_last_trade_time": q_meta.get("raw_last_trade_time"),
+            "last_trade_time": ltt,
+            "last_trade_datetime": q_meta.get("last_trade_datetime"),
+            "is_stale": is_stale,
+        }
 
     def health(self) -> Dict[str, Any]:
         from market.provider_health_manager import ProviderHealthManager

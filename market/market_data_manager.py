@@ -43,9 +43,15 @@ class MarketDataManager(MarketDataProvider):
 
     def get_historical(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """
-        Historical OHLCV routing -> Yahoo ONLY (TASK-4).
+        Historical OHLCV routing:
+        - Daily ('1d') -> Paytm Money primary (with transparent Yahoo fallback)
+        - Weekly / Monthly ('1wk', '1mo') -> Yahoo ONLY
         """
-        self.logger.debug(f"MarketDataManager: Historical OHLCV for {symbol} routed to Yahoo Finance")
+        if interval == "1d":
+            self.logger.debug(f"MarketDataManager: Daily OHLCV ('1d') for {symbol} routed to Paytm Money")
+            if self.paytm:
+                return self.paytm.get_ohlcv(symbol, interval=interval, period=period)
+        self.logger.debug(f"MarketDataManager: Historical OHLCV ({interval}) for {symbol} routed to Yahoo Finance")
         if self.yahoo:
             return self.yahoo.get_ohlcv(symbol, interval=interval, period=period)
         raise NotImplementedError("Yahoo Provider is not initialized for historical data.")
@@ -53,6 +59,11 @@ class MarketDataManager(MarketDataProvider):
     def get_history(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """Alias for get_historical to ensure 100% backward compatibility."""
         return self.get_historical(symbol, interval=interval, period=period)
+
+    @property
+    def last_ohlcv_status(self) -> Dict[str, Any]:
+        """Expose underlying provider OHLCV fallback and source metadata."""
+        return getattr(self.paytm, "last_ohlcv_status", {})
 
     def get_intraday(self, symbol: str, interval: str = "15m", period: str = "5d") -> Any:
         """
@@ -67,7 +78,8 @@ class MarketDataManager(MarketDataProvider):
     def get_ohlcv(self, symbol: str, interval: str = "1d", period: str = "3mo") -> Any:
         """
         Unified get_ohlcv routing based on interval/period:
-        - Daily / Weekly / Monthly -> Yahoo ONLY
+        - Daily ('1d') -> Paytm primary (with transparent Yahoo fallback)
+        - Weekly / Monthly -> Yahoo ONLY
         - Intraday (1m, 5m, 15m, 1h) -> Paytm ONLY
         """
         if interval in ["1d", "1wk", "1mo"] or period in ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"]:
