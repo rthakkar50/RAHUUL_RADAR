@@ -5,7 +5,7 @@ import logging
 import time
 import sqlite3
 from datetime import datetime
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 from config.config import AppConfig
 from market.market_data_manager import MarketDataManager
