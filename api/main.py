@@ -10,7 +10,8 @@ import os
 import sys
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+IST_TZ = timezone(timedelta(hours=5, minutes=30))
 from market.universe import get_fno_symbols, get_nifty200_symbols
 logger = get_logger(__name__)
 
@@ -120,6 +121,166 @@ def _extract_latest_data_timestamp(results: Any) -> Optional[str]:
                 latest_ts = ts_str
     return latest_ts
 
+def _evaluate_market_data_freshness(
+    latest_candle_ts: Optional[str],
+    market_status: str,
+    total_scanned: int = 0,
+    total_universe: int = 0,
+    candle_coverage_verified: bool = False,
+    source_tz: Optional[timezone] = None
+) -> Dict[str, Any]:
+    """
+    Evaluates market-data freshness against actual NSE trading session calendar (SPRINT-185 STEP 50/52).
+    Distinguishes underlying market-data age from scanner execution/cache age:
+    - FRESH: Underlying data matches the current live session (if OPEN) or latest completed session (if CLOSED),
+             with universe-wide candle coverage verified.
+    - PARTIAL: Newest candle is current, but universe coverage is unverified or truncated (<80%).
+    - STALE: Underlying candle timestamp is from an older trading session.
+    - UNKNOWN: Missing, unparseable, future, or holiday-unverifiable timestamp metadata.
+    """
+    if not latest_candle_ts or not isinstance(latest_candle_ts, str) or not latest_candle_ts.strip():
+        return {
+            "freshness": "UNKNOWN",
+            "market_data_timestamp": None,
+            "detail": "Underlying candle timestamp metadata unavailable; data freshness unverified."
+        }
+
+    # Partial scan check: do not declare entire universe fresh if scan was truncated
+    if total_universe > 0 and total_scanned > 0 and (total_scanned < total_universe * 0.8):
+        return {
+            "freshness": "PARTIAL",
+            "market_data_timestamp": latest_candle_ts,
+            "detail": f"Partial universe coverage ({total_scanned}/{total_universe} assets). Data freshness is partial."
+        }
+
+    clean_ts = latest_candle_ts.replace("Z", "+00:00").split(" | ")[0].strip()
+    candle_dt = None
+    try:
+        candle_dt = datetime.fromisoformat(clean_ts)
+    except Exception:
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+            try:
+                candle_dt = datetime.strptime(clean_ts, fmt)
+                break
+            except Exception:
+                pass
+
+    if candle_dt is None:
+        return {
+            "freshness": "UNKNOWN",
+            "market_data_timestamp": latest_candle_ts,
+            "detail": f"Unable to parse underlying candle timestamp '{latest_candle_ts}'."
+        }
+
+    if candle_dt.tzinfo is not None:
+        candle_ist = candle_dt.astimezone(IST_TZ)
+    else:
+        # Naive timestamp handling: Use explicitly established source_tz if provided,
+        # otherwise default to IST_TZ under Indian exchange convention (Paytm/NSE timestamps are IST)
+        target_tz = source_tz if source_tz is not None else IST_TZ
+        candle_ist = candle_dt.replace(tzinfo=target_tz).astimezone(IST_TZ)
+
+    candle_date = candle_ist.date()
+    now_ist = datetime.now(IST_TZ)
+    today_ist = now_ist.date()
+    weekday = now_ist.weekday()  # 0=Mon, 4=Fri, 5=Sat, 6=Sun
+
+    # 1. Absolute Future Calendar Date Check (Reject future dates immediately)
+    if candle_date > today_ist:
+        return {
+            "freshness": "UNKNOWN",
+            "market_data_timestamp": latest_candle_ts,
+            "detail": f"Future candle date detected ({candle_date} > current session {today_ist}); data integrity unverified."
+        }
+
+    sec_diff = (now_ist - candle_ist).total_seconds()
+
+    # 2. Material Future Timestamp / Clock Skew Check (Ahead by > 60 seconds)
+    if sec_diff < -60:
+        return {
+            "freshness": "UNKNOWN",
+            "market_data_timestamp": latest_candle_ts,
+            "detail": f"Future candle timestamp detected ({candle_ist.strftime('%Y-%m-%d %H:%M:%S')} is ahead of server time by {abs(sec_diff):.0f}s); data integrity unverified."
+        }
+
+    is_open = (str(market_status or "").upper() == "OPEN")
+    if is_open:
+        expected_session_date = today_ist
+        if candle_date < expected_session_date:
+            # Candle date is before today while market status is OPEN
+            prev_session = expected_session_date - timedelta(days=3 if weekday == 0 else 1)
+            if candle_date == prev_session:
+                return {
+                    "freshness": "UNKNOWN",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market evaluated as OPEN by time clock, but underlying candle is from previous session ({candle_date}). Cannot verify whether today is an exchange holiday or live feed is delayed."
+                }
+            else:
+                return {
+                    "freshness": "STALE",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market is OPEN. Underlying candle data ({candle_date}) is older than the previous trading session."
+                }
+
+        # candle_date == expected_session_date
+        if sec_diff <= 1800:
+            if candle_coverage_verified:
+                return {
+                    "freshness": "FRESH",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": "Market is OPEN. Underlying candle data is current with live session across verified universe."
+                }
+            else:
+                return {
+                    "freshness": "PARTIAL",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": "Market is OPEN. Newest observed candle is current with live session, but universe-wide freshness cannot be certified (per-asset coverage unverified)."
+                }
+        else:
+            return {
+                "freshness": "STALE",
+                "market_data_timestamp": latest_candle_ts,
+                "detail": f"Market is OPEN. Underlying candle data ({candle_date} {candle_ist.strftime('%H:%M')}) is delayed by {sec_diff/60:.0f}m (exceeds 30m window)."
+            }
+    else:
+        if weekday == 5:  # Saturday
+            expected_session_date = (now_ist - timedelta(days=1)).date()
+        elif weekday == 6:  # Sunday
+            expected_session_date = (now_ist - timedelta(days=2)).date()
+        elif now_ist.hour < 9 or (now_ist.hour == 9 and now_ist.minute < 15):
+            days_back = 3 if weekday == 0 else 1
+            expected_session_date = (now_ist - timedelta(days=days_back)).date()
+        else:
+            expected_session_date = today_ist
+
+        if candle_date == expected_session_date:
+            if candle_coverage_verified:
+                return {
+                    "freshness": "FRESH",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market is CLOSED. Underlying data matches latest completed NSE session ({expected_session_date}) across verified universe."
+                }
+            else:
+                return {
+                    "freshness": "PARTIAL",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market is CLOSED. Newest observed candle matches latest completed session ({expected_session_date}), but universe-wide freshness cannot be certified (per-asset coverage unverified)."
+                }
+        elif candle_date < expected_session_date:
+            prev_session = expected_session_date - timedelta(days=3 if weekday == 0 else 1)
+            if expected_session_date == today_ist and candle_date == prev_session:
+                return {
+                    "freshness": "UNKNOWN",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market is CLOSED. Underlying data is from previous session ({candle_date}), but current day ({today_ist}) has no settled data. Cannot distinguish unverified exchange holiday from missing current-session data."
+                }
+            else:
+                return {
+                    "freshness": "STALE",
+                    "market_data_timestamp": latest_candle_ts,
+                    "detail": f"Market is CLOSED. Underlying data ({candle_date}) is older than latest completed session ({expected_session_date})."
+                }
+
 def _check_paytm_authenticated(now_t: float) -> bool:
     """Verifies Paytm authentication status from PaytmAuthManager and JWT expiry without logging secrets."""
     try:
@@ -216,14 +377,20 @@ def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None)
         fallback_used = True
         provider_health = "HEALTHY" if (has_telemetry and yahoo_success > 0) else "UNKNOWN"
         provider_latency = float(yahoo_latency) if yahoo_latency is not None else None
+        provider_mode = "YAHOO_HISTORICAL"
+        provider_status_detail = "Operating in historical replay mode using Yahoo Finance data."
     elif not has_telemetry:
         # Missing telemetry must be reported as UNKNOWN, never HEALTHY
         if paytm_authenticated:
             provider_name = "Paytm Money (Unverified - No Scan Telemetry)"
             fallback_used = False
+            provider_mode = "UNVERIFIED"
+            provider_status_detail = "Paytm authenticated, but no scan telemetry recorded yet."
         else:
             provider_name = "Yahoo Finance (Fallback - Paytm Unauthenticated)"
             fallback_used = True
+            provider_mode = "UNVERIFIED"
+            provider_status_detail = "Paytm unauthenticated and scan telemetry unavailable."
         provider_health = "UNKNOWN"
         provider_latency = None
     else:
@@ -232,11 +399,24 @@ def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None)
             fallback_used = False
             provider_health = "HEALTHY"
             provider_latency = float(paytm_latency) if paytm_latency is not None else None
+            provider_mode = "NATIVE_PAYTM"
+            provider_status_detail = "Native Paytm direct feed active; zero fallback invocations."
         elif yahoo_success > 0 or paytm_fallback > 0 or not paytm_authenticated:
             if paytm_authenticated and paytm_success > 0 and yahoo_success > 0:
                 provider_name = "Paytm Money + Yahoo Finance (Fallback)"
+                provider_mode = "HYBRID_FALLBACK"
+                provider_status_detail = (
+                    "Operating in verified hybrid mode: Daily candles from Paytm Money, "
+                    "minute candles using Yahoo Finance fallback (Paytm historical minute data unavailable via API; "
+                    "per-request error status not recorded in summary telemetry)."
+                )
             else:
                 provider_name = "Yahoo Finance (Fallback)"
+                provider_mode = "YAHOO_FALLBACK_ONLY"
+                provider_status_detail = (
+                    "Operating in Yahoo Finance fallback mode (Paytm unauthenticated or historical minute data unavailable; "
+                    "per-request error status not recorded in summary telemetry)."
+                )
             fallback_used = True
             provider_health = "DEGRADED" if (yahoo_success > 0 or paytm_success > 0) else "OFFLINE"
             provider_latency = float(yahoo_latency) if yahoo_latency is not None else None
@@ -245,6 +425,8 @@ def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None)
             fallback_used = not paytm_authenticated
             provider_health = "UNKNOWN"
             provider_latency = None
+            provider_mode = "OUTAGE" if has_telemetry else "UNKNOWN"
+            provider_status_detail = "Provider outage: No data returned from primary or fallback providers."
 
     res = {
         "provider": provider_name,
@@ -253,6 +435,8 @@ def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None)
         "server_timestamp": now_t,
         "provider_latency": provider_latency,
         "provider_health": provider_health,
+        "provider_mode": provider_mode,
+        "provider_status_detail": provider_status_detail,
         "fallback_used": fallback_used,
         "paytm_authenticated": paytm_authenticated,
     }
@@ -332,8 +516,16 @@ async def health_check():
 
     now_h = time.time()
     swing_last = _SCANNER_CACHE.get("last_updated", 0.0) if "_SCANNER_CACHE" in globals() else 0.0
-    if _SCANNER_CACHE.get("data") is None:
-        scanner_status = "SCANNING" if _SCANNER_CACHE.get("is_scanning") else "UNKNOWN"
+    is_scanning = bool(
+        (_SCANNER_CACHE.get("is_scanning") if "_SCANNER_CACHE" in globals() else False)
+        or (_INTRADAY_CACHE.get("is_scanning") if "_INTRADAY_CACHE" in globals() else False)
+        or ("_ORCHESTRATION_IS_RUNNING" in globals() and _ORCHESTRATION_IS_RUNNING)
+    )
+
+    if is_scanning:
+        scanner_status = "SCANNING"
+    elif _SCANNER_CACHE.get("data") is None:
+        scanner_status = "UNKNOWN"
     elif (now_h - swing_last) > CACHE_TTL_SECONDS:
         scanner_status = "STALE"
     else:
@@ -342,12 +534,48 @@ async def health_check():
     broker_status = "HEALTHY" if meta.get("paytm_authenticated") else "UNAUTHENTICATED"
         
     uptime = round(now_h - _SERVER_START_TIME, 2)
+    cache_age_h = round(now_h - swing_last, 1) if swing_last > 0 else None
+    last_completed_iso = datetime.fromtimestamp(swing_last, tz=IST_TZ).isoformat() if swing_last > 0 else None
+
+    # Evaluate market data freshness from cached latest candle timestamp
+    cached_data = _SCANNER_CACHE.get("data") if "_SCANNER_CACHE" in globals() else None
+    latest_candle_ts = None
+    total_scanned = 0
+    total_universe = 0
+    coverage_verified = False
+    if isinstance(cached_data, dict):
+        total_scanned = cached_data.get("total_scanned", 0)
+        total_universe = cached_data.get("total_universe", 0)
+        coverage_verified = bool(cached_data.get("candle_coverage_verified", False))
+        sh = cached_data.get("scanner_health")
+        if isinstance(sh, dict):
+            latest_candle_ts = sh.get("latest_candle_timestamp")
+            if "candle_coverage_verified" in sh:
+                coverage_verified = bool(sh.get("candle_coverage_verified"))
+        if not latest_candle_ts:
+            latest_candle_ts = cached_data.get("latest_candle_timestamp")
+
+    freshness_eval = _evaluate_market_data_freshness(
+        latest_candle_ts=latest_candle_ts,
+        market_status=meta.get("market_status", "CLOSED"),
+        total_scanned=total_scanned,
+        total_universe=total_universe,
+        candle_coverage_verified=coverage_verified
+    )
+
     return {
         "status": "online",
         "application_health": "HEALTHY",
         "database_health": db_status,
         "broker_health": broker_status,
         "scanner_health": scanner_status,
+        "scanner_computation_health": scanner_status,
+        "scanner_cache_age_seconds": cache_age_h,
+        "scanner_last_completed": last_completed_iso,
+        "is_scanning": is_scanning,
+        "market_data_freshness": freshness_eval["freshness"],
+        "market_data_timestamp": freshness_eval["market_data_timestamp"],
+        "market_data_freshness_detail": freshness_eval["detail"],
         "risk_engine_health": "HEALTHY",
         "paper_trading_health": "HEALTHY",
         "version": "1.0.0",
@@ -452,10 +680,6 @@ def _load_cache_from_disk():
                 except Exception:
                     pass
             elif data and isinstance(data, dict) and data.get("qualified_results") is not None:
-                if "provider_statistics" not in data and isinstance(_SCANNER_CACHE.get("data"), dict):
-                    swing_ps = _SCANNER_CACHE["data"].get("provider_statistics")
-                    if isinstance(swing_ps, dict) and swing_ps:
-                        data["provider_statistics"] = swing_ps
                 with _INTRADAY_LOCK:
                     _INTRADAY_CACHE["data"] = data
                     _INTRADAY_CACHE["last_updated"] = cache_ts
@@ -533,6 +757,10 @@ def _run_enterprise_orchestration():
         now_ts = time.time()
         json_swing = json.loads(json.dumps(swing_res, default=str))
         json_swing["cache_timestamp"] = now_ts
+        swing_sh = swing_res.get("scanner_health") if isinstance(swing_res, dict) else None
+        latest_c_ts = swing_sh.get("latest_candle_timestamp") if isinstance(swing_sh, dict) else None
+        if latest_c_ts:
+            json_swing["latest_candle_timestamp"] = latest_c_ts
         with _CACHE_LOCK:
             existing_swing = _SCANNER_CACHE.get("data")
             is_expired = (_SCANNER_CACHE.get("last_updated", 0.0) == 0.0) or (now_ts - _SCANNER_CACHE.get("last_updated", 0.0) > CACHE_TTL_SECONDS)
@@ -565,6 +793,8 @@ def _run_enterprise_orchestration():
         # Final Swing Cache Update
         json_swing["qualified_results"] = json.loads(json.dumps(display_swing, default=str))
         json_swing["cache_timestamp"] = time.time()
+        if latest_c_ts:
+            json_swing["latest_candle_timestamp"] = latest_c_ts
         with _CACHE_LOCK:
             existing_swing = _SCANNER_CACHE.get("data")
             is_expired = (_SCANNER_CACHE.get("last_updated", 0.0) == 0.0) or (time.time() - _SCANNER_CACHE.get("last_updated", 0.0) > CACHE_TTL_SECONDS)
@@ -583,26 +813,31 @@ def _run_enterprise_orchestration():
         sell_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
         watch_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
         
+        # Update Intraday Cache: Isolated from Swing daily metadata (SPRINT-185 STEP 52)
         intra_cache_res = {
             "total_universe": total_universe,
             "total_scanned": total_universe, 
             "qualified_count": qualified_count,
-            "filter_rejected_count": total_universe - qualified_count,
+            "filter_rejected_count": max(0, total_universe - qualified_count),
             "no_data_count": 0,
             "buy_count": buy_count,
             "watch_count": watch_count,
             "sell_count": sell_count,
-            "rejected_count": total_universe - qualified_count,
+            "rejected_count": max(0, total_universe - qualified_count),
             "wait_count": 0,
             "error_count": 0,
             "market_quality": "HIGH",
             "exec_time": time.time() - start_time,
             "rejection_analytics": {},
             "pipeline_stages": [],
-            "scanner_health": {},
+            "scanner_health": {
+                "api_status": "ONLINE",
+                "latest_candle_timestamp": None,
+            },
+            "latest_candle_timestamp": None,
             "market_summary": {},
             "performance_metrics": {},
-            "provider_statistics": swing_res.get("provider_statistics", {}),
+            "provider_statistics": {},
             "qualified_results": json.loads(json.dumps(display_intra, default=str)),
             "cache_timestamp": time.time(),
         }
@@ -689,6 +924,9 @@ def _normalize_scanner_response(
             "scan_timestamp": None,
             "cache_timestamp": None,
             "data_timestamp": None,
+            "market_data_freshness": "UNKNOWN",
+            "market_data_timestamp": None,
+            "market_data_freshness_detail": "No market data or cache available.",
             "timestamp": None,
             "cache_age_seconds": None,
         }
@@ -701,6 +939,12 @@ def _normalize_scanner_response(
         cache_age = round(max(0.0, server_ts - scan_ts), 2) if scan_ts is not None else None
         is_stale = True if (cache_age is None or cache_age > ttl_seconds) else False
         data_ts = _extract_latest_data_timestamp(data)
+        freshness_eval = _evaluate_market_data_freshness(
+            latest_candle_ts=None,
+            market_status=meta.get("market_status", "CLOSED"),
+            total_scanned=len(data),
+            total_universe=total_universe
+        )
         res_dict = {
             "total_universe": total_universe,
             "total_attempted": total_universe,
@@ -723,6 +967,9 @@ def _normalize_scanner_response(
             "scan_timestamp": scan_ts,
             "cache_timestamp": scan_ts,
             "data_timestamp": data_ts,
+            "market_data_freshness": freshness_eval["freshness"],
+            "market_data_timestamp": freshness_eval["market_data_timestamp"],
+            "market_data_freshness_detail": freshness_eval["detail"],
             "timestamp": scan_ts,
             "cache_age_seconds": cache_age,
         }
@@ -744,15 +991,40 @@ def _normalize_scanner_response(
             res_dict["qualified_results"] = []
         data_ts = _extract_latest_data_timestamp(res_dict["qualified_results"]) or res_dict.get("data_timestamp")
 
+        latest_candle_ts = None
+        sh = res_dict.get("scanner_health")
+        if isinstance(sh, dict):
+            latest_candle_ts = sh.get("latest_candle_timestamp")
+        if not latest_candle_ts:
+            latest_candle_ts = res_dict.get("latest_candle_timestamp")
+
+        coverage_verified = bool(
+            res_dict.get("candle_coverage_verified")
+            or (isinstance(sh, dict) and sh.get("candle_coverage_verified"))
+        )
+
+        freshness_eval = _evaluate_market_data_freshness(
+            latest_candle_ts=latest_candle_ts,
+            market_status=meta.get("market_status", "CLOSED"),
+            total_scanned=res_dict.get("total_scanned", 0),
+            total_universe=res_dict.get("total_universe", total_universe),
+            candle_coverage_verified=coverage_verified
+        )
+
         res_dict["server_timestamp"] = server_ts
         res_dict["scan_timestamp"] = scan_ts
         res_dict["cache_timestamp"] = scan_ts
         res_dict["data_timestamp"] = data_ts
+        res_dict["market_data_freshness"] = freshness_eval["freshness"]
+        res_dict["market_data_timestamp"] = freshness_eval["market_data_timestamp"]
+        res_dict["market_data_freshness_detail"] = freshness_eval["detail"]
         res_dict["timestamp"] = scan_ts
         res_dict["cache_age_seconds"] = cache_age
         res_dict["is_stale"] = is_stale
         res_dict["is_scanning"] = bool(is_scanning)
 
+        if "qualified_count" not in res_dict:
+            res_dict["qualified_count"] = len(res_dict.get("qualified_results", []))
         if "total_attempted" not in res_dict:
             res_dict["total_attempted"] = res_dict.get("total_universe", total_universe)
         if "total_processed" not in res_dict:
