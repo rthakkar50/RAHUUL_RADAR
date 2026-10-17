@@ -145,8 +145,8 @@ def _evaluate_market_data_freshness(
             "detail": "Underlying candle timestamp metadata unavailable; data freshness unverified."
         }
 
-    # Partial scan check: do not declare entire universe fresh if scan was truncated
-    if total_universe > 0 and total_scanned > 0 and (total_scanned < total_universe * 0.8):
+    # Partial scan check: do not declare entire universe fresh if scan was truncated or zero
+    if total_universe > 0 and (total_scanned == 0 or total_scanned < total_universe * 0.8):
         return {
             "freshness": "PARTIAL",
             "market_data_timestamp": latest_candle_ts,
@@ -208,7 +208,8 @@ def _evaluate_market_data_freshness(
         expected_session_date = today_ist
         if candle_date < expected_session_date:
             # Candle date is before today while market status is OPEN
-            prev_session = expected_session_date - timedelta(days=3 if weekday == 0 else 1)
+            days_prior = 3 if expected_session_date.weekday() == 0 else 1
+            prev_session = expected_session_date - timedelta(days=days_prior)
             if candle_date == prev_session:
                 return {
                     "freshness": "UNKNOWN",
@@ -223,7 +224,8 @@ def _evaluate_market_data_freshness(
                 }
 
         # candle_date == expected_session_date
-        if sec_diff <= 1800:
+        is_daily_bar = (candle_ist.hour == 0 and candle_ist.minute == 0 and candle_ist.second == 0)
+        if sec_diff <= 1800 or is_daily_bar:
             if candle_coverage_verified:
                 return {
                     "freshness": "FRESH",
@@ -267,12 +269,13 @@ def _evaluate_market_data_freshness(
                     "detail": f"Market is CLOSED. Newest observed candle matches latest completed session ({expected_session_date}), but universe-wide freshness cannot be certified (per-asset coverage unverified)."
                 }
         elif candle_date < expected_session_date:
-            prev_session = expected_session_date - timedelta(days=3 if weekday == 0 else 1)
-            if expected_session_date == today_ist and candle_date == prev_session:
+            days_prior = 3 if expected_session_date.weekday() == 0 else 1
+            prev_session = expected_session_date - timedelta(days=days_prior)
+            if candle_date == prev_session:
                 return {
                     "freshness": "UNKNOWN",
                     "market_data_timestamp": latest_candle_ts,
-                    "detail": f"Market is CLOSED. Underlying data is from previous session ({candle_date}), but current day ({today_ist}) has no settled data. Cannot distinguish unverified exchange holiday from missing current-session data."
+                    "detail": f"Market is CLOSED. Underlying data is from previous session ({candle_date}), but expected session ({expected_session_date}) has no settled data. Cannot distinguish unverified exchange holiday from missing session data."
                 }
             else:
                 return {
@@ -280,6 +283,13 @@ def _evaluate_market_data_freshness(
                     "market_data_timestamp": latest_candle_ts,
                     "detail": f"Market is CLOSED. Underlying data ({candle_date}) is older than latest completed session ({expected_session_date})."
                 }
+        else:
+            # candle_date > expected_session_date
+            return {
+                "freshness": "UNKNOWN",
+                "market_data_timestamp": latest_candle_ts,
+                "detail": f"Market is CLOSED. Underlying candle date ({candle_date}) is later than expected completed session ({expected_session_date}); data integrity unverified."
+            }
 
 def _check_paytm_authenticated(now_t: float) -> bool:
     """Verifies Paytm authentication status from PaytmAuthManager and JWT expiry without logging secrets."""
@@ -407,7 +417,7 @@ def _get_provider_metadata(mode: str = "LIVE", scan_data: Optional[dict] = None)
                 provider_mode = "HYBRID_FALLBACK"
                 provider_status_detail = (
                     "Operating in verified hybrid mode: Daily candles from Paytm Money, "
-                    "minute candles using Yahoo Finance fallback (Paytm historical minute data unavailable via API; "
+                    "minute candles using Yahoo Finance fallback (historically observed Paytm MINUTE HTTP 405 during API tests; "
                     "per-request error status not recorded in summary telemetry)."
                 )
             else:
@@ -813,17 +823,16 @@ def _run_enterprise_orchestration():
         sell_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
         watch_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
         
-        # Update Intraday Cache: Isolated from Swing daily metadata (SPRINT-185 STEP 52)
         intra_cache_res = {
             "total_universe": total_universe,
             "total_scanned": total_universe, 
             "qualified_count": qualified_count,
-            "filter_rejected_count": max(0, total_universe - qualified_count),
+            "filter_rejected_count": total_universe - qualified_count,
             "no_data_count": 0,
             "buy_count": buy_count,
             "watch_count": watch_count,
             "sell_count": sell_count,
-            "rejected_count": max(0, total_universe - qualified_count),
+            "rejected_count": total_universe - qualified_count,
             "wait_count": 0,
             "error_count": 0,
             "market_quality": "HIGH",
@@ -999,8 +1008,8 @@ def _normalize_scanner_response(
             latest_candle_ts = res_dict.get("latest_candle_timestamp")
 
         coverage_verified = bool(
-            res_dict.get("candle_coverage_verified")
-            or (isinstance(sh, dict) and sh.get("candle_coverage_verified"))
+            res_dict.get("candle_coverage_verified", False)
+            or (isinstance(sh, dict) and sh.get("candle_coverage_verified", False))
         )
 
         freshness_eval = _evaluate_market_data_freshness(
@@ -1023,8 +1032,6 @@ def _normalize_scanner_response(
         res_dict["is_stale"] = is_stale
         res_dict["is_scanning"] = bool(is_scanning)
 
-        if "qualified_count" not in res_dict:
-            res_dict["qualified_count"] = len(res_dict.get("qualified_results", []))
         if "total_attempted" not in res_dict:
             res_dict["total_attempted"] = res_dict.get("total_universe", total_universe)
         if "total_processed" not in res_dict:
