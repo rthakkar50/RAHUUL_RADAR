@@ -365,7 +365,9 @@ class IntradayScannerService:
                 sym = item["symbol"]
                 sector = item.get("sector", "N/A")
                 stock_list.append(Stock(symbol=sym, company_name=sym, sector=sector, is_fno=True, is_nifty50=False))
-                
+
+            total_universe_val = len(stock_list)
+
             score_engine = ScoreEngine()
             
             import pandas as pd
@@ -510,7 +512,7 @@ class IntradayScannerService:
                     sector = getattr(r, "sector", "Unknown")
 
                     # Extract F&O data from ScanResult
-                    fno_data = {
+                    fno_metrics = {
                         "oi_change_pct": getattr(r, "oi_change_pct", 0),
                         "pcr": getattr(r, "pcr", 1.0),
                         "max_pain": getattr(r, "max_pain", 0),
@@ -567,7 +569,7 @@ class IntradayScannerService:
                     
                     # Apply F&O Filter
                     adx_val = safe_float(getattr(r, 'adx_value', 0.0), 0.0)
-                    oi_change_pct = fno_data.get("oi_change_pct", None)  # None = Paytm unavailable
+                    oi_change_pct = fno_metrics.get("oi_change_pct", None)  # None = Paytm unavailable
                     is_valid, filter_reason = self.fno_filter.validate_for_fno({
                         "Symbol": symbol,
                         "Score": score,
@@ -576,7 +578,7 @@ class IntradayScannerService:
                         "Volume": volume,
                         "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
                         "OI Change %": oi_change_pct,
-                        "PCR": fno_data.get("pcr", 1.0),
+                        "PCR": fno_metrics.get("pcr", 1.0),
                         "Signal": decision_str
                     })
 
@@ -600,18 +602,18 @@ class IntradayScannerService:
                         "Target 2": round(t2, 2),
                         "Risk Reward": f"1:{round(rr, 1)}" if isinstance(rr, (int, float)) else str(rr),
                         "Volume": int(volume),
-                        "OI": fno_data.get("total_oi", 0),
-                        "OI Change %": fno_data.get("oi_change_pct", 0),
-                        "PCR": fno_data.get("pcr", 1.0),
-                        "Max Pain": fno_data.get("max_pain", 0),
-                        "F&O Bias": fno_data.get("fno_bias", "NEUTRAL"),
+                        "OI": fno_metrics.get("total_oi", 0),
+                        "OI Change %": fno_metrics.get("oi_change_pct", 0),
+                        "PCR": fno_metrics.get("pcr", 1.0),
+                        "Max Pain": fno_metrics.get("max_pain", 0),
+                        "F&O Bias": fno_metrics.get("fno_bias", "NEUTRAL"),
                         "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
 
                     # Calculate F&O Grade
                     grade = self.fno_filter.calculate_grade(score, confidence, adx_val, rr,
-                                                            pcr=fno_data.get("pcr", 1.0),
-                                                            oi_change=fno_data.get("oi_change_pct", 0) or 0)
+                                                            pcr=fno_metrics.get("pcr", 1.0),
+                                                            oi_change=fno_metrics.get("oi_change_pct", 0) or 0)
 
                 except Exception as e:
                     logger.error(f"Error evaluating symbol {symbol}: {e}")
@@ -702,7 +704,6 @@ class IntradayScannerService:
                 secondary_provider_label = "Paytm Money (Standby)"
                 provider_mode = "YAHOO_PRIMARY"
 
-            total_universe_val = len(fno_data)
             total_scanned_val = len(processed_results)
 
             scanner_health = {
