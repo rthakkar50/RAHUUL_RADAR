@@ -785,7 +785,10 @@ def _run_enterprise_orchestration():
         # 2. Run Intraday Scan
         intra_service = IntradayScannerService()
         intra_res = intra_service.execute_intraday_scan()
-        intra_signals = intra_res.get("qualified_results", []) if isinstance(intra_res, dict) else (intra_res or [])
+        if hasattr(intra_res, "get"):
+            intra_signals = intra_res.get("qualified_results", [])
+        else:
+            intra_signals = intra_res or []
         
         # 3. Orchestrate Signals
         orchestrator = SignalOrchestrator()
@@ -800,9 +803,20 @@ def _run_enterprise_orchestration():
         display_swing = final_swing if final_swing else swing_signals
         display_intra = final_intra if final_intra else (intra_signals if intra_signals else swing_signals)
         
-        # Final Swing Cache Update
+        # Final Swing Cache Update: Reconcile counts post-orchestration (STEP 70)
         json_swing["qualified_results"] = json.loads(json.dumps(display_swing, default=str))
         json_swing["cache_timestamp"] = time.time()
+        json_swing["pre_orchestration_qualified_count"] = json_swing.get("qualified_count", len(swing_signals))
+        json_swing["qualified_count"] = len(display_swing)
+        json_swing["buy_count"] = sum(1 for x in display_swing if str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
+        json_swing["sell_count"] = sum(1 for x in display_swing if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
+        json_swing["watch_count"] = sum(1 for x in display_swing if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+        tot_scanned_swing = json_swing.get("total_scanned", len(display_swing))
+        if isinstance(tot_scanned_swing, int) and tot_scanned_swing > 0:
+            json_swing["filter_rejected_count"] = max(0, tot_scanned_swing - len(display_swing))
+            no_data_swing = json_swing.get("no_data_count", 0)
+            json_swing["rejected_count"] = json_swing["filter_rejected_count"] + (no_data_swing if isinstance(no_data_swing, int) else 0)
+
         if latest_c_ts:
             json_swing["latest_candle_timestamp"] = latest_c_ts
         with _CACHE_LOCK:
@@ -815,41 +829,89 @@ def _run_enterprise_orchestration():
             else:
                 logger.info("[SPRINT-196F] Preserved existing valid Swing cache on final orchestration.")
             
-        # Update Intraday Cache
+        # Update Intraday Cache: Extract verified candle metadata & telemetry (STEP 69/70)
         fno_symbols = get_fno_symbols()
         total_universe = len(fno_symbols)
         qualified_count = len(display_intra)
         buy_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
         sell_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
         watch_count = sum(1 for x in display_intra if str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+
+        intra_candle_ts = None
+        intra_coverage_verified = False
+        intra_health = {}
+        intra_provider_stats = {}
+        intra_scanned = total_universe
+        intra_tot_universe = total_universe
+
+        if hasattr(intra_res, "get"):
+            intra_candle_ts = intra_res.get("latest_candle_timestamp")
+            intra_coverage_verified = bool(intra_res.get("candle_coverage_verified", False))
+            if isinstance(intra_res.get("scanner_health"), dict):
+                intra_health = dict(intra_res.get("scanner_health"))
+            if isinstance(intra_res.get("provider_statistics"), dict):
+                intra_provider_stats = dict(intra_res.get("provider_statistics"))
+            if isinstance(intra_res.get("total_scanned"), int) and intra_res.get("total_scanned") > 0:
+                intra_scanned = intra_res.get("total_scanned")
+            if isinstance(intra_res.get("total_universe"), int) and intra_res.get("total_universe") > 0:
+                intra_tot_universe = intra_res.get("total_universe")
+
+        if not intra_candle_ts and hasattr(intra_service, "get_health"):
+            svc_health = intra_service.get_health()
+            if isinstance(svc_health, dict):
+                intra_candle_ts = svc_health.get("latest_candle_timestamp")
+                if "candle_coverage_verified" in svc_health:
+                    intra_coverage_verified = bool(svc_health.get("candle_coverage_verified", False))
+                if not intra_health:
+                    intra_health = dict(svc_health)
+
+        if hasattr(intra_service, "last_cache_payload") and isinstance(intra_service.last_cache_payload, dict):
+            payload = intra_service.last_cache_payload
+            if not intra_candle_ts:
+                intra_candle_ts = payload.get("latest_candle_timestamp")
+            if not intra_coverage_verified and "candle_coverage_verified" in payload:
+                intra_coverage_verified = bool(payload.get("candle_coverage_verified", False))
+            if not intra_provider_stats and isinstance(payload.get("provider_statistics"), dict):
+                intra_provider_stats = dict(payload.get("provider_statistics"))
+            if not intra_health and isinstance(payload.get("scanner_health"), dict):
+                intra_health = dict(payload.get("scanner_health"))
+
+        final_intra_health = dict(intra_health) if isinstance(intra_health, dict) else {}
+        final_intra_health.setdefault("api_status", "ONLINE")
+        final_intra_health["latest_candle_timestamp"] = intra_candle_ts
+        final_intra_health["candle_coverage_verified"] = intra_coverage_verified
         
         intra_cache_res = {
-            "total_universe": total_universe,
-            "total_scanned": total_universe, 
+            "total_universe": intra_tot_universe,
+            "total_scanned": intra_scanned,
+            "pre_orchestration_qualified_count": len(intra_signals),
             "qualified_count": qualified_count,
-            "filter_rejected_count": total_universe - qualified_count,
-            "no_data_count": 0,
+            "filter_rejected_count": max(0, intra_scanned - qualified_count),
+            "no_data_count": max(0, intra_tot_universe - intra_scanned),
             "buy_count": buy_count,
             "watch_count": watch_count,
             "sell_count": sell_count,
-            "rejected_count": total_universe - qualified_count,
+            "rejected_count": max(0, intra_tot_universe - qualified_count),
             "wait_count": 0,
             "error_count": 0,
             "market_quality": "HIGH",
             "exec_time": time.time() - start_time,
             "rejection_analytics": {},
             "pipeline_stages": [],
-            "scanner_health": {
-                "api_status": "ONLINE",
-                "latest_candle_timestamp": None,
-            },
-            "latest_candle_timestamp": None,
+            "scanner_health": final_intra_health,
+            "latest_candle_timestamp": intra_candle_ts,
+            "candle_coverage_verified": intra_coverage_verified,
             "market_summary": {},
             "performance_metrics": {},
-            "provider_statistics": {},
+            "provider_statistics": intra_provider_stats,
             "qualified_results": json.loads(json.dumps(display_intra, default=str)),
             "cache_timestamp": time.time(),
         }
+        if "primary_provider" in final_intra_health:
+            intra_cache_res["primary_provider"] = final_intra_health["primary_provider"]
+        if "secondary_provider" in final_intra_health:
+            intra_cache_res["secondary_provider"] = final_intra_health["secondary_provider"]
+
         with _INTRADAY_LOCK:
             _INTRADAY_CACHE["data"] = intra_cache_res
             _INTRADAY_CACHE["last_updated"] = time.time()
@@ -907,7 +969,7 @@ def _normalize_scanner_response(
 ) -> dict:
     """Normalizes raw cache data into a canonical response dictionary with truthful timestamps and provider metadata."""
     server_ts = time.time()
-    scan_dict = data if isinstance(data, dict) else {}
+    scan_dict = data if isinstance(data, dict) else (data.to_dict() if hasattr(data, "to_dict") else ({"provider_statistics": data.get("provider_statistics")} if hasattr(data, "get") else {}))
     meta = _get_provider_metadata(scan_data=scan_dict)
 
     if data is None:
@@ -948,21 +1010,96 @@ def _normalize_scanner_response(
         cache_age = round(max(0.0, server_ts - scan_ts), 2) if scan_ts is not None else None
         is_stale = True if (cache_age is None or cache_age > ttl_seconds) else False
         data_ts = _extract_latest_data_timestamp(data)
+
+        # Support IntradayScanResultList / list with candle metadata (STEP 69/70/72/73)
+        list_candle_ts = None
+        list_health = None
+        list_provider_stats = None
+
+        # Fix A: Explicit coverage metadata precedence (attribute False must remain False)
+        has_coverage_attr = hasattr(data, "candle_coverage_verified")
+        if has_coverage_attr:
+            raw_attr_cov = getattr(data, "candle_coverage_verified", None)
+            list_coverage_verified = bool(raw_attr_cov) if isinstance(raw_attr_cov, bool) else False
+        else:
+            list_coverage_verified = False
+
+        if hasattr(data, "latest_candle_timestamp"):
+            list_candle_ts = getattr(data, "latest_candle_timestamp", None)
+        if hasattr(data, "scanner_health"):
+            list_health = getattr(data, "scanner_health", None)
+        if hasattr(data, "provider_statistics"):
+            list_provider_stats = getattr(data, "provider_statistics", None)
+
+        # Fix B: Validate total_scanned count and derive consistent fallback counts
+        qual_count = len(data)
+        list_scanned = qual_count
+
+        # Getter-level extraction: fallback for absent attributes only
+        if hasattr(data, "get"):
+            if not list_candle_ts:
+                list_candle_ts = data.get("latest_candle_timestamp")
+            # Only consult .get() coverage when attribute was absent
+            if not has_coverage_attr and data.get("candle_coverage_verified") is not None:
+                raw_get_cov = data.get("candle_coverage_verified")
+                list_coverage_verified = bool(raw_get_cov) if isinstance(raw_get_cov, bool) else False
+            if list_health is None:
+                list_health = data.get("scanner_health")
+            if list_provider_stats is None:
+                list_provider_stats = data.get("provider_statistics")
+
+            # Validate total_scanned: positive int, not bool, >= len(data), and <= total_universe
+            raw_scanned = data.get("total_scanned")
+            if (isinstance(raw_scanned, int) and not isinstance(raw_scanned, bool)
+                    and raw_scanned > 0
+                    and raw_scanned >= qual_count
+                    and raw_scanned <= total_universe):
+                list_scanned = raw_scanned
+
+        # Fallback from scanner_health dictionary if coverage was absent everywhere else
+        if isinstance(list_health, dict):
+            if not list_candle_ts:
+                list_candle_ts = list_health.get("latest_candle_timestamp")
+            if not has_coverage_attr and (not hasattr(data, "get") or data.get("candle_coverage_verified") is None):
+                if "candle_coverage_verified" in list_health:
+                    raw_sh_cov = list_health.get("candle_coverage_verified")
+                    list_coverage_verified = bool(raw_sh_cov) if isinstance(raw_sh_cov, bool) else False
+
+        # Re-derive provider metadata if list_provider_stats was not present in initial scan_dict
+        if isinstance(list_provider_stats, dict) and not scan_dict.get("provider_statistics"):
+            meta = _get_provider_metadata(scan_data={"provider_statistics": list_provider_stats})
+
         freshness_eval = _evaluate_market_data_freshness(
-            latest_candle_ts=None,
+            latest_candle_ts=list_candle_ts,
             market_status=meta.get("market_status", "CLOSED"),
-            total_scanned=len(data),
-            total_universe=total_universe
+            total_scanned=list_scanned,
+            total_universe=total_universe,
+            candle_coverage_verified=list_coverage_verified
         )
+
+        # Consistent rejection and no-data counts
+        filter_rejected = max(0, list_scanned - qual_count)
+        no_data = max(0, total_universe - list_scanned)
+        if hasattr(data, "get"):
+            raw_fr = data.get("filter_rejected_count")
+            raw_nd = data.get("no_data_count")
+            if (isinstance(raw_fr, int) and not isinstance(raw_fr, bool) and raw_fr >= 0 and
+                    isinstance(raw_nd, int) and not isinstance(raw_nd, bool) and raw_nd >= 0 and
+                    raw_fr + qual_count <= list_scanned and
+                    raw_fr + raw_nd + qual_count == total_universe):
+                filter_rejected = raw_fr
+                no_data = raw_nd
+
         res_dict = {
             "total_universe": total_universe,
             "total_attempted": total_universe,
-            "total_processed": len(data),
-            "total_scanned": len(data),
-            "total_ranked": len(data),
-            "qualified_count": len(data),
-            "filter_rejected_count": max(0, total_universe - len(data)),
-            "no_data_count": 0,
+            "total_processed": qual_count,
+            "total_scanned": list_scanned,
+            "total_ranked": qual_count,
+            "qualified_count": qual_count,
+            "filter_rejected_count": filter_rejected,
+            "no_data_count": no_data,
+            "rejected_count": filter_rejected + no_data,
             "buy_count": buy_c,
             "sell_count": sell_c,
             "watch_count": watch_c,
@@ -982,6 +1119,13 @@ def _normalize_scanner_response(
             "timestamp": scan_ts,
             "cache_age_seconds": cache_age,
         }
+        if list_candle_ts:
+            res_dict["latest_candle_timestamp"] = list_candle_ts
+        res_dict["candle_coverage_verified"] = list_coverage_verified
+        if isinstance(list_health, dict):
+            res_dict["scanner_health"] = dict(list_health)
+        if isinstance(list_provider_stats, dict):
+            res_dict["provider_statistics"] = dict(list_provider_stats)
         return res_dict
         
     if isinstance(data, dict):
@@ -1032,8 +1176,39 @@ def _normalize_scanner_response(
         res_dict["is_stale"] = is_stale
         res_dict["is_scanning"] = bool(is_scanning)
 
+        if latest_candle_ts:
+            res_dict["latest_candle_timestamp"] = latest_candle_ts
+        res_dict["candle_coverage_verified"] = coverage_verified
+
+        # SPRINT-200 STEP 70: Guarantee strict qualified_count and breakdown alignment with displayed array
+        qr = res_dict.get("qualified_results", [])
+        if isinstance(qr, list):
+            actual_len = len(qr)
+            if res_dict.get("qualified_count") != actual_len:
+                if "pre_orchestration_qualified_count" not in res_dict and res_dict.get("qualified_count") is not None:
+                    res_dict["pre_orchestration_qualified_count"] = res_dict["qualified_count"]
+                res_dict["qualified_count"] = actual_len
+
+            # Align breakdown counts if they diverge from actual displayed items
+            if any(k in res_dict for k in ("buy_count", "sell_count", "watch_count")):
+                c_buy = sum(1 for x in qr if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["BUY", "STRONG_BUY", "INSTITUTIONAL_BUY"])
+                c_sell = sum(1 for x in qr if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() in ["SELL", "STRONG_SELL", "INSTITUTIONAL_SELL"])
+                c_watch = sum(1 for x in qr if isinstance(x, dict) and str(x.get("Signal", x.get("signal", ""))).upper() == "WATCH")
+                existing_breakdown_sum = (res_dict.get("buy_count") or 0) + (res_dict.get("sell_count") or 0) + (res_dict.get("watch_count") or 0)
+                if existing_breakdown_sum != actual_len:
+                    res_dict["buy_count"] = c_buy
+                    res_dict["sell_count"] = c_sell
+                    res_dict["watch_count"] = c_watch
+
         if "total_attempted" not in res_dict:
             res_dict["total_attempted"] = res_dict.get("total_universe", total_universe)
+        if "no_data_count" not in res_dict:
+            res_dict["no_data_count"] = max(0, res_dict.get("total_universe", total_universe) - res_dict.get("total_scanned", 0))
+        if "filter_rejected_count" not in res_dict:
+            scanned_c = res_dict.get("total_scanned", res_dict.get("total_universe", total_universe))
+            res_dict["filter_rejected_count"] = max(0, scanned_c - res_dict.get("qualified_count", 0))
+        if "rejected_count" not in res_dict:
+            res_dict["rejected_count"] = res_dict.get("filter_rejected_count", 0) + res_dict.get("no_data_count", 0)
         if "total_processed" not in res_dict:
             no_data = res_dict.get("no_data_count", 0)
             res_dict["total_processed"] = max(0, res_dict.get("total_universe", total_universe) - no_data)

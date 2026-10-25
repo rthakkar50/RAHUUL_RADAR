@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from config.config import AppConfig
 from market.yahoo_provider import YahooFinanceProvider
@@ -71,6 +71,101 @@ def safe_int(val, default=0):
         return int(val)
     except Exception:
         return default
+
+
+def _normalize_candle_timestamp(ts_input: Any) -> Optional[str]:
+    """
+    Normalizes verified candle timestamp to an ISO-8601 string in IST (+05:30).
+    Rejects missing, null, unparseable, or out-of-range timestamps.
+    Never fabricates timestamps.
+    """
+    if ts_input is None:
+        return None
+    try:
+        from datetime import timezone, timedelta
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+
+        if isinstance(ts_input, datetime):
+            if ts_input.tzinfo is not None:
+                dt_ist = ts_input.astimezone(ist_tz)
+            else:
+                dt_ist = ts_input.replace(tzinfo=ist_tz)
+            if 2020 <= dt_ist.year <= 2035:
+                return dt_ist.isoformat()
+            return None
+
+        if isinstance(ts_input, (int, float)):
+            if ts_input <= 0:
+                return None
+            dt = datetime.fromtimestamp(float(ts_input), tz=ist_tz)
+            if 2020 <= dt.year <= 2035:
+                return dt.isoformat()
+            return None
+
+        if isinstance(ts_input, str):
+            clean = ts_input.replace("Z", "+00:00").split(" | ")[0].strip()
+            if not clean or clean.upper() in ["NONE", "NULL", "UNKNOWN", "LIVE", "N/A"]:
+                return None
+            dt = None
+            try:
+                dt = datetime.fromisoformat(clean)
+            except Exception:
+                for fmt in ("%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+                    try:
+                        dt = datetime.strptime(clean, fmt)
+                        break
+                    except Exception:
+                        pass
+            if dt is not None:
+                if dt.tzinfo is not None:
+                    dt_ist = dt.astimezone(ist_tz)
+                else:
+                    dt_ist = dt.replace(tzinfo=ist_tz)
+                if 2020 <= dt_ist.year <= 2035:
+                    return dt_ist.isoformat()
+    except Exception:
+        pass
+    return None
+
+
+class IntradayScanResultList(list):
+    """
+    Canonical list subclass that encapsulates elite picks while exposing full scan payload
+    and verified underlying candle metadata. Ensures 100% backward compatibility with
+    list-expecting UI/widgets and dict-expecting API endpoints and consistency tests.
+    """
+    def __init__(self, items: Optional[List[Dict[str, Any]]] = None, payload: Optional[Dict[str, Any]] = None):
+        super().__init__(items or [])
+        self.payload = dict(payload) if payload else {}
+        self.latest_candle_timestamp = self.payload.get("latest_candle_timestamp")
+        self.candle_coverage_verified = bool(self.payload.get("candle_coverage_verified", False))
+        self.scanner_health = self.payload.get("scanner_health", {})
+
+    def get(self, key: str, default: Any = None) -> Any:
+        if key == "qualified_results":
+            return list(self)
+        if key in self.payload:
+            return self.payload[key]
+        return default
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            if key == "qualified_results":
+                return list(self)
+            if key in self.payload:
+                return self.payload[key]
+            raise KeyError(key)
+        return super().__getitem__(key)
+
+    def __contains__(self, item):
+        if isinstance(item, str) and item in self.payload:
+            return True
+        return super().__contains__(item)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = dict(self.payload)
+        d["qualified_results"] = list(self)
+        return d
 
 # Monkey-patches removed - native pipeline logic handles type extraction cleanly now.
 
@@ -204,9 +299,23 @@ class IntradayScannerService:
         self.validation_engine = InstitutionalValidationEngine()
         self.execution_center = TradeExecutionCenter()
         self.last_results = []
+        self.last_full_results = []
+        self.last_health = None
+        self.last_cache_payload = None
+        self.is_scanning = False
         
         # NEW: F&O Filter Engine
         self.fno_filter = FNOFilterEngine()
+
+    def get_health(self) -> Dict[str, Any]:
+        """Expose current health dictionary for Intraday scanner (mirroring SwingScannerService)."""
+        return dict(self.last_health) if getattr(self, "last_health", None) else {
+            "cache_status": "UNKNOWN",
+            "data_feed_status": "DISCONNECTED",
+            "api_status": "OFFLINE",
+            "latest_candle_timestamp": None,
+            "candle_coverage_verified": False
+        }
         
     def _get_market_trend(self, manager) -> str:
         try:
@@ -226,6 +335,8 @@ class IntradayScannerService:
 
     def execute_intraday_scan(self, timeframe: str = "5m", progress_callback=None) -> List[Dict[str, Any]]:
         start_time = time.time()
+        self.is_scanning = True
+        observed_candle_timestamps: Dict[str, str] = {}
         logger.info("Scan Started: Intraday Scanner")
         
         try:
@@ -327,6 +438,10 @@ class IntradayScannerService:
                     if decision_str not in ["WAIT", "NO_DATA", "EXCLUDED"]:
                         try:
                             ohlcv_intra = manager.get_history(symbol, interval="5m", period="5d")
+                            if ohlcv_intra and hasattr(ohlcv_intra[-1], 'timestamp'):
+                                parsed_intra_ts = _normalize_candle_timestamp(ohlcv_intra[-1].timestamp)
+                                if parsed_intra_ts:
+                                    observed_candle_timestamps[symbol] = parsed_intra_ts
                             ohlcv_15m = manager.get_history(symbol, interval="15m", period="5d")
                             ohlcv_1h = manager.get_history(symbol, interval="1h", period="1mo")
                             ohlcv_1d = manager.get_history(symbol, interval="1d", period="1mo")
@@ -547,11 +662,108 @@ class IntradayScannerService:
             self.last_results = elite_picks
             exec_time = time.time() - start_time
             logger.info(f"Scan Completed: Intraday Scanner. Found {len(processed_results)} assets. Filtered to {len(elite_picks)} Elite Picks. Exec time: {exec_time:.2f}s")
-            
+
+            # --- STAGE 3: UNDERLYING INTRADAY CANDLE METADATA EXTRACTION (STEP 69) ---
+            last_ohlcv_status = getattr(data_provider, 'last_ohlcv_status', {})
+            candle_timestamps: Dict[str, str] = dict(observed_candle_timestamps)
+            if isinstance(last_ohlcv_status, dict):
+                for sym, meta_item in last_ohlcv_status.items():
+                    if isinstance(meta_item, dict):
+                        raw_ts = meta_item.get("newest_candle_timestamp")
+                        parsed_ts = _normalize_candle_timestamp(raw_ts)
+                        if parsed_ts and sym not in candle_timestamps:
+                            candle_timestamps[sym] = parsed_ts
+
+            for r in raw_results:
+                sym = getattr(r, 'symbol', None)
+                if sym and sym not in candle_timestamps:
+                    raw_c_ts = getattr(r, 'candle_timestamp', None) or getattr(r, 'newest_candle_timestamp', None)
+                    parsed_ts = _normalize_candle_timestamp(raw_c_ts)
+                    if parsed_ts:
+                        candle_timestamps[sym] = parsed_ts
+
+            latest_candle_ts = max(candle_timestamps.values()) if candle_timestamps else None
+
+            # Truthful provider attribution
+            fb_count = sum(1 for s in last_ohlcv_status.values() if isinstance(s, dict) and s.get("fallback_used")) if isinstance(last_ohlcv_status, dict) else 0
+            paytm_p = getattr(data_provider, 'paytm', None)
+            data_feed_conn = getattr(data_provider, 'is_connected', lambda: True)()
+            if paytm_p and getattr(paytm_p, 'is_connected', lambda: False)():
+                if fb_count > 0:
+                    primary_provider_label = "Paytm Money + Yahoo Finance (Fallback)"
+                    secondary_provider_label = "Yahoo Finance (Intraday Fallback)"
+                    provider_mode = "HYBRID_FALLBACK"
+                else:
+                    primary_provider_label = "Paytm Money (Live)"
+                    secondary_provider_label = "Yahoo Finance (Standby)"
+                    provider_mode = "PAYTM_PRIMARY"
+            else:
+                primary_provider_label = "Yahoo Finance (Live)"
+                secondary_provider_label = "Paytm Money (Standby)"
+                provider_mode = "YAHOO_PRIMARY"
+
+            total_universe_val = len(fno_data)
+            total_scanned_val = len(processed_results)
+
+            scanner_health = {
+                "data_feed_status": "CONNECTED" if data_feed_conn else "DISCONNECTED",
+                "primary_provider": primary_provider_label,
+                "secondary_provider": secondary_provider_label,
+                "provider_mode": provider_mode,
+                "requested_interval": timeframe,
+                "cache_status": "COMPLETED",
+                "latest_candle_timestamp": latest_candle_ts,
+                "candle_coverage_verified": False,
+                "candles_observed_count": len(candle_timestamps),
+                "total_universe": total_universe_val,
+                "api_status": "ONLINE" if data_feed_conn else "OFFLINE",
+                "latency_ms": round(exec_time * 1000, 1),
+                "failures_count": 0,
+                "retries_count": 0
+            }
+            self.last_health = scanner_health
+
+            cache_payload = {
+                "total_universe": total_universe_val,
+                "total_scanned": total_scanned_val,
+                "qualified_count": len(elite_picks),
+                "filter_rejected_count": max(0, total_scanned_val - len(elite_picks)),
+                "no_data_count": max(0, total_universe_val - total_scanned_val),
+                "buy_count": len(buys),
+                "watch_count": len(watches),
+                "sell_count": len(sells),
+                "rejected_count": max(0, total_universe_val - len(elite_picks)),
+                "wait_count": 0,
+                "error_count": 0,
+                "market_quality": "HIGH",
+                "exec_time": exec_time,
+                "rejection_analytics": {},
+                "pipeline_stages": [],
+                "scanner_health": scanner_health,
+                "latest_candle_timestamp": latest_candle_ts,
+                "candle_coverage_verified": False,
+                "candles_observed_count": len(candle_timestamps),
+                "market_summary": {},
+                "performance_metrics": {
+                    "total_execution_sec": round(exec_time, 2),
+                    "memory_mb": 0.0,
+                    "cpu_usage_pct": 0.0
+                },
+                "provider_statistics": getattr(data_provider, "provider_statistics", {}),
+                "qualified_results": elite_picks,
+                "cache_timestamp": time.time(),
+                "requested_interval": timeframe,
+                "primary_provider": primary_provider_label
+            }
+            self.last_cache_payload = cache_payload
+
+            result_wrapper = IntradayScanResultList(elite_picks, payload=cache_payload)
+            self.last_results = result_wrapper
+
             if progress_callback:
                 progress_callback(100)
                 
-            return elite_picks
+            return result_wrapper
             
         except Exception as e:
             err_msg = f"Scanner Failed: {str(e)}"
@@ -559,6 +771,8 @@ class IntradayScannerService:
             if progress_callback:
                 progress_callback(100)
             raise Exception(err_msg)
+        finally:
+            self.is_scanning = False
 
     def export_csv(self, results: List[Dict[str, Any]], filepath: str) -> str:
         try:
