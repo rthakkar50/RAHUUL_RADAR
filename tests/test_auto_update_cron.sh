@@ -296,13 +296,54 @@ setup_fixture "$F6"
     export PATH="$F6/bin:$PATH"
     export AUTO_UPDATE_LOCK_FILE="$F6/lock"
 
-    # Pre-acquire the lock
-    mkdir -p "${AUTO_UPDATE_LOCK_FILE}.lockdir"
+    if command -v flock >/dev/null 2>&1; then
+        LOCK_ACQUIRED_SIGNAL="$F6/lock_acquired"
+        RELEASE_SIGNAL="$F6/release_lock"
+        rm -f "$LOCK_ACQUIRED_SIGNAL" "$RELEASE_SIGNAL"
 
-    bash scripts/auto_update_cron.sh
-    assert_true "grep -q 'Auto-update is already running' logs/auto_update.log"
+        # Background lock holder: opens and exclusively locks AUTO_UPDATE_LOCK_FILE
+        (
+            exec 200>"$AUTO_UPDATE_LOCK_FILE"
+            if flock -x 200; then
+                touch "$LOCK_ACQUIRED_SIGNAL"
+                for _ in {1..150}; do
+                    if [ -f "$RELEASE_SIGNAL" ]; then
+                        break
+                    fi
+                    sleep 0.1
+                done
+            fi
+        ) &
+        LOCK_PID=$!
+        trap 'touch "$RELEASE_SIGNAL" 2>/dev/null; kill "$LOCK_PID" 2>/dev/null || true' EXIT
 
-    rmdir "${AUTO_UPDATE_LOCK_FILE}.lockdir"
+        # Bounded wait for positive lock-acquired signal (up to 5s)
+        for _ in {1..50}; do
+            if [ -f "$LOCK_ACQUIRED_SIGNAL" ]; then
+                break
+            fi
+            sleep 0.1
+        done
+
+        assert_true "[ -f '$LOCK_ACQUIRED_SIGNAL' ]"
+
+        # Run updater; must fail to acquire lock and exit cleanly
+        bash scripts/auto_update_cron.sh
+        assert_true "grep -q 'Auto-update is already running' logs/auto_update.log"
+
+        # Release lock and wait for background holder to exit
+        touch "$RELEASE_SIGNAL"
+        wait "$LOCK_PID" 2>/dev/null || true
+        trap - EXIT
+    else
+        # Fallback for environments without flock (e.g. macOS default)
+        mkdir -p "${AUTO_UPDATE_LOCK_FILE}.lockdir"
+
+        bash scripts/auto_update_cron.sh
+        assert_true "grep -q 'Auto-update is already running' logs/auto_update.log"
+
+        rmdir "${AUTO_UPDATE_LOCK_FILE}.lockdir"
+    fi
 )
 PASSED_COUNT=$((PASSED_COUNT + 1))
 echo "✅ Test 6 Passed"
